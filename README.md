@@ -1,28 +1,27 @@
-# AI Base Template
+# LLM Application Testing Strategies
 
-A minimal Python template for AI/ML projects with modern tooling, designed to help you start projects faster with best practices built-in.
+A demonstration project showing how to effectively test LLM-powered applications, specifically LlamaIndex ReActAgent applications, using mock LLMs for deterministic, fast, and cost-effective testing.
 
 ## What is this?
 
-This is a simple, clean Python project template that comes pre-configured with:
-- Modern Python development tools
-- ML/Data science libraries
-- Testing infrastructure
-- Code quality automation
-- Clean project structure
+This project demonstrates a powerful testing pattern for LLM applications that allows you to:
+- Write deterministic unit tests without calling actual LLM APIs
+- Test complex agent behaviors and tool interactions
+- Run tests in CI/CD without API keys
+- Debug agent logic step-by-step
+- Save costs during development and testing
 
-Perfect for starting new AI/ML experiments, research projects, or proof-of-concepts without setting up all the tooling from scratch.
+The key innovation is creating mock LLM implementations that extend LlamaIndex's base LLM class, enabling full integration testing of ReActAgent workflows without network dependencies.
 
-## Features
+## 🎯 Key Features
 
-- 🐍 **Python 3.12** with modern packaging via uv
-- 🧪 **Testing setup** with pytest (unit, functional, integration markers)
-- 🔧 **Code quality** with Ruff (formatting + linting) and MyPy (type checking)
-- 📊 **ML-ready** with pre-configured data science libraries
-- 📝 **Type hints** and Pydantic for data validation
-- 🔍 **Logging** with loguru for better debugging
-- ⚡ **Make commands** for common development tasks
-- 📓 **Jupyter** support for experimentation
+- **Mock LLM Implementations**: Two mock classes that extend LlamaIndex's base LLM
+  - `MockLLMWithChain`: Returns predefined response sequences
+  - `MockLLMEchoStream`: Echoes input for testing streaming
+- **Full ReActAgent Support**: Works with LlamaIndex's workflow-based ReActAgent
+- **Deterministic Testing**: Control exact LLM responses for predictable tests
+- **Zero Network Calls**: Tests run offline without API dependencies
+- **Comprehensive Examples**: 25+ tests demonstrating various patterns
 
 ## Quick Start
 
@@ -32,10 +31,10 @@ Perfect for starting new AI/ML experiments, research projects, or proof-of-conce
 
 ### Setup
 
-1. Clone or use this template:
+1. Clone the repository:
 ```bash
-git clone <repository-url> my-ai-project
-cd my-ai-project
+git clone <repository-url> llm-testing-demo
+cd llm-testing-demo
 ```
 
 2. Create environment and install dependencies:
@@ -43,32 +42,94 @@ cd my-ai-project
 make environment-create
 ```
 
-3. Start coding! Your code goes in `ai_base_template/`
-
-4. Run tests to make sure everything works:
+3. Run the tests to see the patterns in action:
 ```bash
 make unit-test
+```
+
+## The Testing Pattern
+
+```python
+from llama_index.core.agent.workflow import ReActAgent
+from llama_index.core.tools import FunctionTool
+from ai_base_template.testing.mocks import MockLLMWithChain
+from ai_base_template.tools import add
+
+# 1. Create mock with predefined ReAct-formatted responses
+mock_llm = MockLLMWithChain(chain=[
+    "Thought: I need to add these numbers\nAction: add\nAction Input: {'a': 5, 'b': 3}",
+    "Thought: I have the result\nAnswer: The sum is 8"
+])
+
+# 2. Create agent with mock LLM
+agent = ReActAgent(
+    tools=[FunctionTool.from_defaults(fn=add)],
+    llm=mock_llm
+)
+
+# 3. Test deterministically
+response = await agent.run(user_msg="What is 5 + 3?")
+assert "8" in str(response)
 ```
 
 ## Project Structure
 
 ```
-ai-base-template/
-├── ai_base_template/      # Your Python package
-│   ├── __init__.py       # Package initialization
-│   └── main.py           # Example module
-├── tests/                # Test files
-│   └── test_main.py      # Example tests
-├── research/             # Notebooks and experiments
-│   └── EDA.ipynb        # Exploratory data analysis
-├── testing/              # Test utilities and scripts
-├── Makefile             # Development commands
-├── pyproject.toml       # Project configuration
-├── CLAUDE.md            # Development guide
-├── ADR.md               # Architecture Decision Record
-├── .gitignore           # Git ignore rules
-└── README.md            # This file
+llm-testing-demo/
+├── ai_base_template/
+│   ├── testing/
+│   │   ├── __init__.py
+│   │   └── mocks.py          # Mock LLM implementations
+│   └── tools.py              # Example tools for testing
+├── tests/
+│   ├── test_mock_llms.py    # Tests for mock implementations
+│   └── test_react_agent_with_mocks.py  # ReActAgent integration tests
+├── Makefile                 # Development commands
+├── pyproject.toml           # Project configuration
+├── ADR.md                   # Architecture Decision Record
+└── README.md                # This documentation
 ```
+
+## Mock LLM Implementations
+
+### MockLLMWithChain
+Returns a predefined sequence of responses. Perfect for testing ReAct agent reasoning chains:
+
+```python
+mock_llm = MockLLMWithChain(chain=[
+    "First response",
+    "Second response",
+    "Third response"
+])
+```
+
+### MockLLMEchoStream
+Echoes user input back in streaming chunks. Useful for testing streaming behavior:
+
+```python
+mock_llm = MockLLMEchoStream()
+# Will echo whatever the user sends, in chunks
+```
+
+## Testing Patterns Demonstrated
+
+### ✅ Basic Tool Usage
+Test that agents correctly use tools with expected inputs and handle outputs.
+
+### ✅ Multi-Step Reasoning
+Verify complex reasoning chains with multiple tool calls.
+
+### ✅ Error Handling
+Test how agents handle tool failures and edge cases.
+
+### ✅ Tool Selection
+Ensure agents select the right tool from multiple available options.
+
+### ✅ Direct Responses
+Test scenarios where agents answer without using tools.
+
+### ✅ Response Processing
+Verify response parsing and formatting.
 
 ## Development Workflow
 
@@ -77,108 +138,118 @@ ai-base-template/
 ```bash
 # Environment
 make environment-create   # First-time setup
-make environment-sync     # Update after changing dependencies
+make environment-sync     # Update dependencies
+
+# Testing
+make unit-test           # Run all tests
+make validate-branch     # Run linting and tests
 
 # Code Quality
 make format              # Auto-format code
 make lint               # Fix linting issues
-make type-check         # Check types
-make validate-branch    # Run all checks (before committing)
-
-# Testing
-make unit-test          # Run unit tests
-make functional-test    # Run functional tests
-make all-test          # Run all tests with coverage
 ```
 
-### Adding Code
+### Adding Your Own Tests
 
-1. Add your modules to `ai_base_template/`
-2. Write corresponding tests in `tests/`
-3. Use type hints for better code quality
-4. Run `make validate-branch` before committing
+1. Create mock response chains matching ReAct format
+2. Initialize ReActAgent with mock LLM and tools
+3. Run agent with test inputs
+4. Assert expected behaviors
 
-## Pre-installed Libraries
+## Benefits of This Approach
 
-### ML/Data Science
-- **numpy** - Numerical computing
-- **pandas** - Data manipulation
-- **scikit-learn** - Classical ML algorithms
-- **XGBoost** - Gradient boosting
-- **LightGBM** - Fast gradient boosting
-- **PyTorch** - Deep learning
-- **SHAP** - Model explainability
+### 🚀 Fast Development
+- No waiting for API responses
+- Instant test execution
+- Rapid iteration on agent logic
 
-### Development Tools
-- **pytest** - Testing framework
-- **ruff** - Fast Python linter/formatter
-- **mypy** - Static type checker
-- **pre-commit** - Git hooks
-- **loguru** - Better logging
-- **python-dotenv** - Environment variables
-- **jupyter** - Interactive notebooks
+### 💰 Cost-Effective
+- Zero API costs during testing
+- Unlimited test runs
+- No rate limiting concerns
 
-## Configuration
+### 🎯 Reliable Testing
+- 100% deterministic results
+- Reproducible test failures
+- Easy debugging with controlled responses
 
-Use environment variables for configuration. Create a `.env` file in the project root:
+### 🔧 CI/CD Ready
+- No API keys needed in CI
+- Tests run in isolated environments
+- Consistent results across runs
 
-```env
-# Example .env
-LOG_LEVEL=DEBUG
-DATA_PATH=./data
-MODEL_PATH=./models
-RANDOM_SEED=42
-```
+## Best Practices
 
-Load them in your code:
-```python
-from dotenv import load_dotenv
-load_dotenv()
-```
+1. **Be Specific with Responses**: Format your mock responses exactly as the ReAct agent expects them
+2. **Test Edge Cases**: Use mocks to test error conditions that are hard to reproduce with real LLMs
+3. **Reset Between Tests**: Call `mock_llm.reset()` to replay chains in multiple tests
+4. **Combine with Real LLMs**: Use mocks for unit tests, real LLMs for integration tests
+5. **Document Response Formats**: Keep examples of expected ReAct formatting for reference
 
-## Testing Strategy
+## Advanced Patterns
 
-The template includes three test levels:
+### Custom Mock Behaviors
+Extend the base mocks for specific testing needs:
 
 ```python
-@pytest.mark.unit        # Fast, isolated tests
-@pytest.mark.functional  # Feature/workflow tests
-@pytest.mark.integration # Tests with external dependencies
+class MockLLMWithConditionalResponse(MockLLMWithChain):
+    def chat(self, messages, **kwargs):
+        # Custom logic based on message content
+        if "error" in messages[-1].content.lower():
+            return ChatResponse(message=ChatMessage(
+                role=MessageRole.ASSISTANT,
+                content="Error handling response"
+            ))
+        return super().chat(messages, **kwargs)
 ```
 
-Run specific test types:
-```bash
-make unit-test
-make functional-test
-make integration-test
+### Testing Memory and Context
+The mocks preserve conversation context just like real LLMs:
+
+```python
+mock_llm = MockLLMWithChain(chain=[
+    "Response 1 based on context",
+    "Response 2 remembering previous"
+])
+
+agent = ReActAgent(tools=[], llm=mock_llm)
+response1 = await agent.run(user_msg="First question")
+response2 = await agent.run(user_msg="Follow-up question")
 ```
 
-## Starting Your Project
+## When to Use This Pattern
 
-1. **Rename the package**: Change `ai_base_template` to your project name
-2. **Update pyproject.toml**: Set your project name, version, and description
-3. **Clean up examples**: Remove the example code in `main.py`
-4. **Start building**: Add your own modules and logic
-5. **Document as you go**: Update this README with your project specifics
+✅ **Perfect for:**
+- Unit testing agent logic
+- Integration testing tool usage
+- Testing error handling
+- CI/CD pipelines
+- Local development
 
-## Best Practices Included
+❌ **Not suitable for:**
+- Testing actual LLM performance
+- Prompt engineering validation
+- Model behavior verification
+- Production response quality
 
-- ✅ Modern Python packaging with uv
-- ✅ Comprehensive .gitignore
-- ✅ Pre-configured linting and formatting
-- ✅ Type checking setup
-- ✅ Test structure with markers
-- ✅ Makefile automation
-- ✅ Clean project layout
-- ✅ Development guide (CLAUDE.md)
+## Limitations
 
-## Tips
+- Mock responses must match ReAct format exactly
+- Complex tool interactions may require careful response crafting
+- Streaming behavior is simplified compared to real LLMs
 
-- Use `make validate-branch` before every commit
-- Keep dependencies in `pyproject.toml`
-- Write tests as you code
-- Use type hints everywhere
-- Check CLAUDE.md for detailed guidelines
+## Contributing
+
+This pattern can be extended with:
+- Additional mock behaviors
+- More complex tool examples
+- Performance testing utilities
+- Test data generators
+
+## Related Documentation
+
+- [Architecture Decision Record](ADR.md) - Technical decisions and rationale
+- [LlamaIndex Docs](https://docs.llamaindex.ai/) - Official LlamaIndex documentation
 
 ## License
 
@@ -186,4 +257,4 @@ Apache License 2.0 - See [LICENSE](LICENSE) file for details.
 
 ---
 
-Built to help you start AI/ML projects faster 🚀
+**Built to demonstrate effective testing strategies for LLM applications** 🧪🤖

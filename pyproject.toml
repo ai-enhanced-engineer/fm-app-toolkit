@@ -1,7 +1,7 @@
 [project]
-name = "ai-base-template"
-version = "0.2.0"
-description = "AI Base Template - Python service with AI capabilities"
+name = "llm-testing-strategies"
+version = "1.0.0"
+description = "Demonstration of testing strategies for LLM applications using mock LLMs with LlamaIndex"
 authors = [{name="Leopoldo Garcia Vargas", email="lk13.dev@gmail.com"}]
 requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
@@ -24,6 +24,9 @@ dependencies = [
     # Core dependencies
     "pydantic>=2.11.5",
     "pydantic-settings>=2.9.1",
+    # LlamaIndex dependencies
+    "llama-index-core>=0.11.0",
+    "llama-cloud>=0.1.0",
 ]
 
 [project.optional-dependencies]
