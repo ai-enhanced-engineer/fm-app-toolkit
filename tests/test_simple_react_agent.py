@@ -36,6 +36,7 @@ class TestSimpleReActAgent:
         # Create agent
         agent = SimpleReActAgent(
             llm=mock_llm,
+            system_header="You are a helpful assistant.",
             tools=[add_tool],
             verbose=True
         )
@@ -68,6 +69,7 @@ class TestSimpleReActAgent:
         # Create agent
         agent = SimpleReActAgent(
             llm=mock_llm,
+            system_header="You are a helpful assistant.",
             tools=tools,
             verbose=True
         )
@@ -91,6 +93,7 @@ class TestSimpleReActAgent:
         # Create agent with tools (but won't use them)
         agent = SimpleReActAgent(
             llm=mock_llm,
+            system_header="You are a helpful assistant.",
             tools=[Tool(name="add", function=add, description="Add numbers")],
             verbose=True
         )
@@ -122,6 +125,7 @@ class TestSimpleReActAgent:
         # Create agent
         agent = SimpleReActAgent(
             llm=mock_llm,
+            system_header="You are a helpful assistant.",
             tools=[reverse_tool],
             verbose=False
         )
@@ -153,6 +157,7 @@ class TestSimpleReActAgent:
         # Create agent
         agent = SimpleReActAgent(
             llm=mock_llm,
+            system_header="You are a helpful assistant.",
             tools=[divide_tool],
             verbose=True
         )
@@ -165,32 +170,31 @@ class TestSimpleReActAgent:
         
     @pytest.mark.asyncio
     async def test_max_iterations_limit(self):
-        """Test that agent stops after max iterations."""
-        # Create mock that never provides an answer
+        """Test that agent stops after max reasoning steps."""
+        # Create mock that produces actual reasoning steps (actions)
         mock_llm = MockLLMWithChain(
             chain=[
-                "Thought: I need to think about this.",
-                "Thought: Still thinking...",
-                "Thought: This is complex...",
-                "Thought: More thinking needed...",
-                "Thought: Almost there...",
-                "Thought: Still processing..."
+                "Thought: I need to use a tool.\nAction: unknown_tool\nAction Input: {}",
+                "Thought: I need to use another tool.\nAction: another_tool\nAction Input: {}",
+                "Thought: Still need more.\nAction: third_tool\nAction Input: {}",
+                "Thought: More actions.\nAction: fourth_tool\nAction Input: {}"
             ]
         )
         
-        # Create agent with low max_iterations
+        # Create agent with low max_reasoning
         agent = SimpleReActAgent(
             llm=mock_llm,
-            tools=[],
-            max_iterations=3,
+            system_header="You are a helpful assistant.",
+            tools=[],  # No tools, so all actions will fail but still count as reasoning steps
+            max_reasoning=3,
             verbose=False
         )
         
         # Run agent
         result = await agent.run(user_msg="Complex query")
         
-        # Should return the max iterations message
-        assert "couldn't complete" in result.lower() or "iterations" in result.lower()
+        # Should return the max reasoning message
+        assert "couldn't complete" in result.lower() or "allowed" in result.lower()
         
     @pytest.mark.asyncio
     async def test_multiple_tools_selection(self):
@@ -214,6 +218,7 @@ class TestSimpleReActAgent:
         # Create agent
         agent = SimpleReActAgent(
             llm=mock_llm,
+            system_header="You are a helpful assistant.",
             tools=tools,
             verbose=True
         )
@@ -252,13 +257,13 @@ class TestToolFunctionality:
         ]
         
         mock_llm = MockLLMWithChain(chain=["Answer: Test"])
-        agent = SimpleReActAgent(llm=mock_llm, tools=tools)
+        agent = SimpleReActAgent(llm=mock_llm, system_header="You are a helpful assistant.", tools=tools)
         
         # Check registry
-        assert "add" in agent.tool_registry
-        assert "multiply" in agent.tool_registry
-        assert agent.tool_registry["add"].function == add
-        assert agent.tool_registry["multiply"].function == multiply
+        assert "add" in agent._tool_registry
+        assert "multiply" in agent._tool_registry
+        assert agent._tool_registry["add"].function == add
+        assert agent._tool_registry["multiply"].function == multiply
 
 
 class TestWorkflowIntegration:
@@ -271,7 +276,7 @@ class TestWorkflowIntegration:
             chain=["Thought: Simple response.\nAnswer: Test answer"]
         )
         
-        agent = SimpleReActAgent(llm=mock_llm, tools=[])
+        agent = SimpleReActAgent(llm=mock_llm, system_header="You are a helpful assistant.", tools=[])
         
         # Run with the underlying workflow method to get full result
         result = await agent.run(user_msg="Test")
@@ -291,7 +296,7 @@ class TestWorkflowIntegration:
         )
         
         add_tool = Tool(name="add", function=add, description="Add numbers")
-        agent = SimpleReActAgent(llm=mock_llm, tools=[add_tool])
+        agent = SimpleReActAgent(llm=mock_llm, system_header="You are a helpful assistant.", tools=[add_tool])
         
         result = await agent.run(user_msg="Add 2 and 3")
         assert "5" in result
