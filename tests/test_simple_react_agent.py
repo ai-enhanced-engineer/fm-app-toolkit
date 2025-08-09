@@ -7,9 +7,9 @@ mock LLMs for deterministic testing.
 
 import pytest
 
-from ai_base_template.agents.simple_react import SimpleReActAgent, Tool
-from ai_base_template.testing.mocks import MockLLMWithChain
-from ai_base_template.tools import add, divide, multiply, reverse_string, word_count
+from ai_test_lab.agents.simple_react import SimpleReActAgent, Tool
+from ai_test_lab.testing.mocks import MockLLMWithChain
+from ai_test_lab.tools import add, divide, multiply, reverse_string, word_count
 
 
 class TestSimpleReActAgent:

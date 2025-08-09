@@ -59,7 +59,7 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-    "ai_base_template*",
+    "ai_test_lab*",
 ]
 
 [tool.ruff]

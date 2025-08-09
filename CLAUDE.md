@@ -1,96 +1,180 @@
-# AI Base Template - Development Guide
+# LLM Testing Strategies - Development Guide
 
-A Python template for ML/AI projects with FastAPI, designed for rapid prototyping and clean architecture.
+A demonstration project for testing LLM-powered applications, specifically showcasing how to test LlamaIndex agents using mock LLMs for deterministic, fast, and cost-effective testing.
+
+## Project Overview
+
+This project demonstrates best practices for testing LLM applications by:
+- Creating mock LLM implementations that extend LlamaIndex's base classes
+- Testing ReAct agents without making actual API calls
+- Running deterministic tests with controlled LLM responses
+- Implementing both simple pedagogical agents and production-ready testing patterns
 
 ## Project Structure
 
 ```
-ai-base-template/
-├── ai_base_template/      # Main application code
-│   ├── __init__.py
-│   └── main.py           # FastAPI entry point
-├── tests/                # Test suite
-│   └── test_main.py
-├── research/             # Notebooks and experiments
-│   └── EDA.ipynb        # Exploratory data analysis
-├── testing/              # API testing utilities
-├── Makefile             # Development automation
-└── pyproject.toml       # Project config & dependencies
+ai-test-lab/
+├── ai_test_lab/              # Main package
+│   ├── agents/               # Agent implementations
+│   │   ├── simple_react.py  # Pedagogical ReAct agent using Workflow
+│   │   └── events.py        # Workflow events for agent communication
+│   ├── testing/             # Testing utilities
+│   │   └── mocks.py        # Mock LLM implementations
+│   ├── tools.py            # Example tools for agents
+│   └── main.py             # FastAPI entry point (optional)
+├── tests/                   # Comprehensive test suite
+│   ├── test_mock_llms.py   # Tests for mock implementations
+│   ├── test_react_agent_with_mocks.py  # ReActAgent tests
+│   └── test_simple_react_agent.py      # SimpleReActAgent tests
+├── research/                # Notebooks and experiments
+├── Makefile                # Development automation
+└── pyproject.toml          # Project config & dependencies
 ```
 
-## Quick Start
+## Key Components
 
-### Setup
-```bash
-make environment-create   # Creates Python 3.12 env with uv
-make environment-sync     # Updates dependencies
-```
+### Mock LLMs (`ai_test_lab/testing/mocks.py`)
+- **MockLLMWithChain**: Returns predefined response sequences
+- **MockLLMEchoStream**: Echoes input for testing streaming behavior
+- Both extend LlamaIndex's base LLM class for full compatibility
 
-### Development Commands
-```bash
-make format              # Auto-format with Ruff
-make lint                # Lint and auto-fix issues
-make type-check          # Type check with MyPy
-make validate-branch     # Run all checks before PR
-```
+### Simple ReAct Agent (`ai_test_lab/agents/simple_react.py`)
+- Pedagogical implementation of ReAct pattern
+- Subclasses from `llama_index.core.workflow.Workflow`
+- Uses standard ReActChatFormatter and ReActOutputParser
+- Demonstrates the reasoning loop and action calling clearly
 
-### Testing
-```bash
-make unit-test           # Run unit tests
-make functional-test     # Run functional tests
-make all-test           # Run all tests with coverage
-```
+### Workflow Events (`ai_test_lab/agents/events.py`)
+- Event-driven communication between workflow steps
+- PrepEvent, InputEvent, ToolCallEvent, StopEvent
+- Clean separation of concerns in agent workflow
 
 ## Development Workflow
 
-1. **Write code** following Python conventions:
-   - Classes: `PascalCase`
-   - Functions/variables: `snake_case` 
-   - Constants: `UPPER_SNAKE_CASE`
-   - Max line length: 120 characters
+### Quick Start
+```bash
+make environment-create   # Creates Python 3.12 env with uv
+make environment-sync     # Updates dependencies after changes
+```
 
-2. **Validate before committing**:
-   ```bash
-   make validate-branch     # Runs linting and tests
-   ```
+### Testing Commands
+```bash
+make unit-test           # Run all 32+ tests
+make validate-branch     # Run linting and tests before PR
+make all-test           # Run with coverage report
+```
 
-3. **Test thoroughly**:
-   - Unit tests: `@pytest.mark.unit`
-   - Functional tests: `@pytest.mark.functional`
-   - Integration tests: `@pytest.mark.integration`
+### Code Quality
+```bash
+make format              # Auto-format with Ruff
+make lint               # Lint and auto-fix issues
+make type-check         # Type check with MyPy
+```
 
-## Key Technologies
+## Testing Patterns Demonstrated
 
-- **FastAPI**: Modern Python web framework
-- **Pydantic**: Data validation using Python type annotations
-- **MyPy**: Static type checking
-- **Ruff**: Fast Python linter and formatter
+1. **Deterministic LLM Testing**: Control exact LLM responses
+2. **Tool Usage Testing**: Verify agents use tools correctly
+3. **Multi-Step Reasoning**: Test complex reasoning chains
+4. **Error Handling**: Test failure scenarios
+5. **Streaming Behavior**: Test async streaming responses
+6. **Workflow Integration**: Test event-driven agent workflows
+
+## Best Practices for This Project
+
+### When Adding New Tests
+- Use MockLLMWithChain for deterministic response sequences
+- Format mock responses to match ReAct format exactly
+- Reset mocks between test runs with `mock_llm.reset()`
+- Test both success and failure paths
+
+### When Modifying Agents
+- Maintain compatibility with existing mock LLMs
+- Keep the pedagogical clarity of SimpleReActAgent
+- Ensure all workflow events are properly handled
+- Add corresponding tests for new functionality
+
+### Code Conventions
+- Type hints on all functions (enforced by MyPy)
+- Max line length: 120 characters
+- Use `@step` decorators for workflow steps
+- Follow existing patterns in the codebase
+
+## Dependencies Management
+
+### Core Dependencies
+- **llama-index-core**: Base LlamaIndex functionality
+- **pydantic**: Data validation
+- **fastapi**: Optional web framework
+
+### Development Dependencies
 - **pytest**: Testing framework
-- **uv**: Fast Python package manager
+- **pytest-asyncio**: Async test support
+- **mypy**: Type checking
+- **ruff**: Linting and formatting
 
-## ML/Data Science Stack
+### Adding Dependencies
+```bash
+uv add <package>           # Add runtime dependency
+uv add --dev <package>     # Add development dependency
+make environment-sync      # Sync environment
+```
 
-- **scikit-learn**: Machine learning library
-- **XGBoost/LightGBM**: Gradient boosting frameworks
-- **PyTorch**: Deep learning framework
-- **pandas/numpy**: Data manipulation
-- **SHAP**: Model interpretability
+## Architecture Decisions
 
-## Best Practices
+### Why Workflow Pattern?
+- Clean separation of agent steps
+- Event-driven architecture
+- Better testability and debugging
+- Standard LlamaIndex pattern
 
-- Type hints on all functions
-- Pydantic models for data validation
-- Structured logging with loguru
-- Environment-based configuration
-- No hardcoded secrets
-- Test coverage > 80%
+### Why Mock LLMs?
+- Zero API costs during testing
+- Deterministic test results
+- Fast test execution
+- CI/CD friendly (no API keys needed)
 
-## Getting Started
+### Why ReAct Pattern?
+- Industry standard for agent reasoning
+- Clear thought-action-observation loop
+- Easy to understand and debug
+- Well-supported by LlamaIndex
 
-1. Clone the template
-2. Run `make environment-create`
-3. Start coding in `ai_base_template/`
-4. Add tests in `tests/`
-5. Use `make validate-branch` before commits
+## Common Tasks
 
-This template provides a solid foundation for ML/AI projects with all the modern Python tooling pre-configured.
+### Running a Specific Test
+```bash
+uv run python -m pytest tests/test_simple_react_agent.py::TestSimpleReActAgent::test_single_tool_execution -v
+```
+
+### Debugging Agent Behavior
+The SimpleReActAgent includes verbose logging:
+- Set verbose=True when creating the agent
+- Observe the reasoning steps and tool calls
+- Use mock LLMs to control the exact flow
+
+### Creating New Mock Patterns
+Extend MockLLMWithChain for custom behaviors:
+```python
+mock_llm = MockLLMWithChain(chain=[
+    "Thought: I need to...\nAction: tool_name\nAction Input: {...}",
+    "Thought: Now I have...\nAnswer: Final response"
+])
+```
+
+## Project Goals
+
+1. **Educational**: Demonstrate clear patterns for testing LLM applications
+2. **Practical**: Provide working code that can be adapted for real projects
+3. **Comprehensive**: Show various testing scenarios and edge cases
+4. **Maintainable**: Keep code simple and well-documented
+
+## Next Steps for Contributors
+
+- Add more mock LLM behaviors for specific test scenarios
+- Implement additional agent patterns (e.g., Plan-and-Execute)
+- Create performance benchmarks
+- Add integration tests with real LLMs (optional)
+- Expand tool library with more examples
+
+This project serves as both a learning resource and a practical template for testing LLM applications effectively.

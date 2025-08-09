@@ -4,7 +4,7 @@ import pytest
 from llama_cloud import MessageRole
 from llama_index.core.base.llms.types import ChatMessage
 
-from ai_base_template.testing.mocks import MockLLMEchoStream, MockLLMWithChain
+from ai_test_lab.testing.mocks import MockLLMEchoStream, MockLLMWithChain
 
 
 class TestMockLLMWithChain:
