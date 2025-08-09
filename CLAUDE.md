@@ -73,12 +73,48 @@ make type-check         # Type check with MyPy
 
 ## Testing Patterns Demonstrated
 
+### Core Testing Patterns
 1. **Deterministic LLM Testing**: Control exact LLM responses
 2. **Tool Usage Testing**: Verify agents use tools correctly
 3. **Multi-Step Reasoning**: Test complex reasoning chains
 4. **Error Handling**: Test failure scenarios
 5. **Streaming Behavior**: Test async streaming responses
 6. **Workflow Integration**: Test event-driven agent workflows
+
+### Advanced Testing Patterns
+
+#### Sequential Response Validation
+Test that MockLLMWithChain returns responses in exact order:
+```python
+async def test_mock_llm_chain_agent_integration_sequence():
+    chain = [
+        "Thought: First step.\nAction: tool1\nAction Input: {...}",
+        "Thought: Second step.\nAction: tool2\nAction Input: {...}",
+        "Thought: Done.\nAnswer: Final result"
+    ]
+    mock_llm = MockLLMWithChain(chain=chain)
+    # Agent receives responses in exact sequence
+```
+
+#### Cumulative Content Validation
+Verify streaming builds content correctly:
+```python
+def test_streaming_cumulative_content():
+    for i, chunk in enumerate(stream):
+        cumulative_content += chunk.delta
+        assert response.message.content == cumulative_content
+```
+
+#### Parametrized Edge Case Testing
+Test various message lengths and edge cases:
+```python
+@pytest.mark.parametrize("content,expected_chunks", [
+    ("", []),  # Empty content
+    ("Hi", ["Hi"]),  # Less than chunk size
+    ("1234567", ["1234567"]),  # Exactly chunk size
+    ("A" * 20, ["A" * 7, "A" * 7, "A" * 6"]),  # Multiple chunks
+])
+```
 
 ## Best Practices for This Project
 
@@ -87,6 +123,10 @@ make type-check         # Type check with MyPy
 - Format mock responses to match ReAct format exactly
 - Reset mocks between test runs with `mock_llm.reset()`
 - Test both success and failure paths
+- Use fixtures for mock creation to ensure consistency
+- Add helper functions for complex test patterns (e.g., `generate_expected_chunks()`)
+- Include parametrized tests for edge cases
+- Validate both delta and cumulative content in streaming tests
 
 ### When Modifying Agents
 - Maintain compatibility with existing mock LLMs
@@ -99,6 +139,13 @@ make type-check         # Type check with MyPy
 - Max line length: 120 characters
 - Use `@step` decorators for workflow steps
 - Follow existing patterns in the codebase
+
+### Test Organization
+- Use flat test structure without classes
+- Create reusable fixtures for common setup
+- Group related tests logically with comments
+- Use descriptive test names that explain what is being tested
+- Include docstrings that describe the test scenario
 
 ## Dependencies Management
 
@@ -144,7 +191,14 @@ make environment-sync      # Sync environment
 
 ### Running a Specific Test
 ```bash
-uv run python -m pytest tests/test_simple_react_agent.py::TestSimpleReActAgent::test_single_tool_execution -v
+# Run a single test
+uv run python -m pytest tests/test_simple_react_agent.py::test_single_tool_execution -v
+
+# Run parametrized tests
+uv run python -m pytest tests/test_mock_llms.py::test_mock_llm_echo_stream_various_lengths -v
+
+# Run with specific parameter
+uv run python -m pytest tests/test_mock_llms.py::test_mock_llm_echo_stream_various_lengths[Hi-expected_chunks1] -v
 ```
 
 ### Debugging Agent Behavior

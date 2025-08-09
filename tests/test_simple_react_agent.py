@@ -7,6 +7,11 @@ mock LLMs for deterministic testing.
 from typing import Any, Callable
 
 import pytest
+from llama_index.core.agent.react.types import (
+    ActionReasoningStep,
+    ObservationReasoningStep,
+    ResponseReasoningStep,
+)
 
 from ai_test_lab.agents.simple_react import SimpleReActAgent, Tool
 from ai_test_lab.testing.mocks import MockLLMWithChain
@@ -287,3 +292,65 @@ async def test_workflow_with_tools(setup_simple_react_agent: Callable) -> None:
     assert result["response"] == "The sum is 5"
     assert len(result["sources"]) == 1
     assert result["sources"][0] == 5
+
+
+@pytest.mark.asyncio
+async def test_mock_llm_chain_agent_integration_sequence(setup_simple_react_agent: Callable) -> None:
+    """Validate MockLLMWithChain returns responses in exact order when used by agent.
+    
+    This test validates that the mock LLM properly simulates a real LLM's behavior
+    by returning predefined responses in sequence, allowing deterministic testing
+    of multi-step agent workflows.
+    """
+    # Define exact sequence of LLM responses that the agent will receive
+    expected_chain = [
+        "Thought: I need to multiply 2 by 3 first.\nAction: multiply\nAction Input: {\"a\": 2, \"b\": 3}",
+        "Thought: Got 6. Now I'll add 4 to get the final result.\nAction: add\nAction Input: {\"a\": 6, \"b\": 4}",  
+        "Thought: The calculation is complete.\nAnswer: 2 × 3 + 4 = 10"
+    ]
+    
+    # Create agent with the chain
+    agent = setup_simple_react_agent(
+        chain=expected_chain,
+        tools=[
+            Tool(name="multiply", function=multiply, description="Multiply two numbers"),
+            Tool(name="add", function=add, description="Add two numbers")
+        ]
+    )
+    
+    # Execute the agent - it should receive responses in exact order
+    result = await agent.run(user_msg="Calculate 2 * 3 + 4")
+    
+    # Validate the agent received and processed all responses in order
+    assert result["response"] == "2 × 3 + 4 = 10"
+    
+    # Verify tool calls happened in the expected sequence
+    assert len(result["sources"]) == 2
+    assert result["sources"][0] == 6  # First tool call: multiply(2, 3)
+    assert result["sources"][1] == 10  # Second tool call: add(6, 4)
+    
+    # Validate reasoning steps match the expected sequence
+    reasoning = result["reasoning"]
+    assert len(reasoning) == 5  # 2 actions + 2 observations + 1 response
+    
+    # Verify first action (multiply)
+    assert isinstance(reasoning[0], ActionReasoningStep)
+    assert reasoning[0].action == "multiply"
+    assert reasoning[0].action_input == {"a": 2, "b": 3}
+    
+    # Verify first observation
+    assert isinstance(reasoning[1], ObservationReasoningStep)
+    assert reasoning[1].observation == "6"
+    
+    # Verify second action (add)
+    assert isinstance(reasoning[2], ActionReasoningStep)
+    assert reasoning[2].action == "add"
+    assert reasoning[2].action_input == {"a": 6, "b": 4}
+    
+    # Verify second observation
+    assert isinstance(reasoning[3], ObservationReasoningStep)
+    assert reasoning[3].observation == "10"
+    
+    # Verify final response
+    assert isinstance(reasoning[4], ResponseReasoningStep)
+    assert reasoning[4].response == "2 × 3 + 4 = 10"
