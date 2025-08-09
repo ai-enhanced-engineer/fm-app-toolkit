@@ -1,38 +1,65 @@
-# ADR-001: AI Base Template
+# ADR-001: LLM Testing Strategy Demonstration
 
 ## Status
 Accepted
 
 ## Context
-A minimal Python template for AI/ML projects that provides a standardized starting point with modern tooling, best practices, and pre-configured libraries for rapid prototyping and clean architecture.
+Demonstrating effective testing strategies for LLM-powered applications, specifically showing how to create deterministic unit tests for LlamaIndex ReActAgent applications without requiring network calls to actual LLM services.
 
 ## Decision
-Build a lightweight, opinionated template that balances simplicity with completeness, providing essential ML/data science tools while maintaining flexibility for different project types.
+Implement mock LLM classes that extend LlamaIndex's base LLM class, enabling developers to write fast, reliable, and cost-effective tests for their LLM applications by controlling exact response sequences.
 
 ## Consequences
-- **Pros**: Faster project initialization, consistent structure across projects, reduced setup time, built-in best practices
-- **Cons**: May include unnecessary dependencies for simple projects, opinionated choices may not suit all use cases
+- **Pros**: 
+  - Deterministic testing with predictable outcomes
+  - No API costs during test execution
+  - Fast test execution without network latency
+  - Full control over edge cases and error scenarios
+  - Tests can run in CI/CD without API keys
+- **Cons**: 
+  - Mock responses must be carefully crafted to match ReAct format
+  - Doesn't test actual LLM behavior or prompt engineering
+  - Requires maintaining mock response chains
 
 ## Technical Specification
-- **Stack**: Python 3.12, FastAPI, Pydantic, PyTorch, scikit-learn, XGBoost/LightGBM
-- **API**: FastAPI-based REST API with automatic OpenAPI documentation
-- **Dependencies**: uv for package management, pre-configured ML/data science libraries
-- **Data Flow**: Input → FastAPI endpoints → Processing modules → Response models
-- **State Management**: Stateless by default, configurable via environment variables
-- **Scaling**: Horizontal scaling supported via FastAPI async capabilities
+- **Stack**: Python 3.12, LlamaIndex Core, pytest-asyncio
+- **Mock Implementations**: 
+  - `MockLLMWithChain`: Returns predefined response sequences
+  - `MockLLMEchoStream`: Echoes input for streaming tests
+- **Agent Framework**: LlamaIndex workflow-based ReActAgent
+- **Testing Framework**: pytest with async support
+- **Integration**: Mock LLMs implement all required LlamaIndex LLM interface methods
+
+## Testing Pattern
+```python
+# 1. Create mock with predefined responses
+mock_llm = MockLLMWithChain(chain=[
+    "Thought: I need to calculate\nAction: add\nAction Input: {'a': 2, 'b': 3}",
+    "Thought: Done\nAnswer: The result is 5"
+])
+
+# 2. Initialize ReActAgent with mock
+agent = ReActAgent(tools=[add_tool], llm=mock_llm)
+
+# 3. Test deterministically
+response = await agent.run(user_msg="What is 2+3?")
+assert "5" in str(response)
+```
 
 ## Integration Points
-- **Consumes**: Environment variables, .env files for configuration
-- **Provides**: REST API endpoints, Jupyter notebook support for experimentation
-- **Protocols**: HTTP/REST, async support via FastAPI
+- **Extends**: `llama_index.core.llms.llm.LLM` base class
+- **Compatible With**: LlamaIndex ReActAgent, FunctionTool, workflows
+- **Test Coverage**: Unit tests for mocks, integration tests with ReActAgent
 
 ## Non-Functional Requirements
-- **Performance**: Async request handling, efficient ML model serving
-- **Availability**: Development/research focused, no specific SLA
-- **Security**: Environment-based configuration, no hardcoded secrets
-- **Scalability**: Suitable for prototypes to small/medium production deployments
+- **Performance**: Tests run in milliseconds without network calls
+- **Reliability**: 100% deterministic responses
+- **Maintainability**: Clear separation between mocks and production code
+- **Portability**: No external dependencies beyond LlamaIndex
 
-## Deployment
-- **Platform**: Local development, containerizable for K8s/cloud deployment
-- **Configuration**: Environment variables via .env files, python-dotenv
-- **Resources**: Depends on ML model complexity, baseline ~1GB RAM, 1 CPU core
+## Use Cases
+- **Unit Testing**: Test agent logic without LLM variability
+- **Integration Testing**: Verify tool execution and reasoning chains
+- **Error Handling**: Test edge cases and failure scenarios
+- **CI/CD**: Run tests without API keys or network access
+- **Development**: Rapid iteration without API costs
