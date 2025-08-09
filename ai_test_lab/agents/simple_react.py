@@ -283,6 +283,24 @@ class SimpleReActAgent(Workflow):
             # Parser couldn't parse the output - this might be a thought-only response
             if self._verbose:
                 print(f"Parser error (continuing): {e}")
+            
+            # Check if we should continue or have hit max reasoning
+            if len(current_reasoning) >= self._max_reasoning - 1:
+                # About to hit max reasoning, add final response step
+                current_reasoning.append(
+                    ResponseReasoningStep(
+                        thought="Exceeded max reasoning steps",
+                        response="I couldn't complete the reasoning in the allowed iterations."
+                    )
+                )
+                await ctx.set(CTX_CURRENT_REASONING, current_reasoning)
+                return stop_workflow(
+                    response="I couldn't complete the reasoning in the allowed iterations.",
+                    sources=self._sources,
+                    reasoning=current_reasoning,
+                    chat_history=self._memory_buffer.get()
+                )
+            
             # Continue with next iteration
             return PrepEvent()
         except Exception as e:
@@ -332,23 +350,30 @@ class SimpleReActAgent(Workflow):
             
         return PrepEvent()
         
-    async def run(self, user_msg: str, **kwargs: Any) -> str:  # type: ignore[override]
+    async def run(self, user_msg: str, **kwargs: Any) -> dict[str, Any]:  # type: ignore[override]
         """Run the workflow with a user message.
-        
-        This is a convenience method that starts the workflow and returns the result.
         
         Args:
             user_msg: The user's query
             **kwargs: Additional keyword arguments
             
         Returns:
-            The agent's response string
+            Dictionary containing:
+                - response: The agent's response string
+                - sources: List of sources/tool outputs
+                - reasoning: List of reasoning steps
+                - chat_history: The conversation history
         """
         result = await super().run(user_msg=user_msg, **kwargs)
         
-        # Extract just the response for backward compatibility
-        if isinstance(result, dict) and "response" in result:
-            # For simple use, return just the response text
-            # But the full result is available if needed
-            return str(result.get("response", ""))
-        return str(result)
+        # Ensure we return a dictionary with expected keys
+        if isinstance(result, dict):
+            return result
+        
+        # Fallback if somehow we don't get a dict (shouldn't happen with stop_workflow)
+        return {
+            "response": str(result),
+            "sources": [],
+            "reasoning": [],
+            "chat_history": []
+        }
