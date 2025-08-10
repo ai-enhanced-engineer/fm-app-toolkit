@@ -38,6 +38,8 @@ from llama_index.core.tools import (
 )
 from llama_index.core.workflow import Context
 
+from ai_test_lab.logging import get_logger
+
 # Context key for storing current reasoning steps
 CTX_CURRENT_REASONING = "current_reasoning"
 CTX_SOURCES = "sources"
@@ -120,6 +122,9 @@ class SimpleReActAgent(BaseWorkflowAgent):
         self._system_header = system_header
         self._extra_context = extra_context if extra_context is not None else ""
         
+        # Initialize logger for this instance
+        self._logger = get_logger(f"{__name__}.{self.name}")
+        
         # Initialize formatter with system header and extra context
         self._formatter = ReActChatFormatter(
             system_header=self._system_header,
@@ -180,7 +185,11 @@ class SimpleReActAgent(BaseWorkflowAgent):
         # Check if we've exceeded max reasoning steps
         if len(current_reasoning) >= self._max_reasoning:
             if self._verbose:
-                print(f"Exceeded max reasoning steps ({self._max_reasoning})")
+                self._logger.info(
+                    "Exceeded max reasoning steps",
+                    max_reasoning=self._max_reasoning,
+                    current_steps=len(current_reasoning)
+                )
             
             # Add final response step
             current_reasoning.append(
@@ -213,21 +222,32 @@ class SimpleReActAgent(BaseWorkflowAgent):
         )
         
         if self._verbose:
-            print(f"\n--- Reasoning Step {len(current_reasoning) + 1} ---")
+            self._logger.debug(
+                "Starting reasoning step",
+                step_number=len(current_reasoning) + 1
+            )
         
         # Get LLM response
         response = await self.llm.achat(formatted_messages)
         llm_output = response.message.content
         
         if self._verbose:
-            print(f"LLM Output:\n{llm_output}")
+            self._logger.debug(
+                "LLM response received",
+                output_length=len(llm_output) if llm_output else 0,
+                output_preview=llm_output[:100] if llm_output else None
+            )
         
         # Parse the output
         try:
             reasoning_step = self._output_parser.parse(llm_output or "", is_streaming=False)
         except ValueError as e:
             if self._verbose:
-                print(f"Parser error: {e}")
+                self._logger.warning(
+                    "Failed to parse LLM output",
+                    error=str(e),
+                    output=llm_output[:200] if llm_output else None
+                )
             
             # Return error with retry messages
             return AgentOutput(
@@ -251,7 +271,10 @@ class SimpleReActAgent(BaseWorkflowAgent):
         if reasoning_step.is_done:
             # Response step - we have an answer
             if self._verbose:
-                print(f"Final answer: {reasoning_step.response if hasattr(reasoning_step, 'response') else llm_output}")
+                self._logger.info(
+                    "Final answer reached",
+                    response=reasoning_step.response if hasattr(reasoning_step, 'response') else llm_output
+                )
             
             return AgentOutput(
                 response=ChatMessage(role="assistant", content=llm_output or ""),
@@ -262,7 +285,11 @@ class SimpleReActAgent(BaseWorkflowAgent):
         # Action step - need to execute tool
         if isinstance(reasoning_step, ActionReasoningStep):
             if self._verbose:
-                print(f"Executing tool: {reasoning_step.action}")
+                self._logger.debug(
+                    "Executing tool action",
+                    tool_name=reasoning_step.action,
+                    tool_input=reasoning_step.action_input
+                )
             
             # Create tool selection
             tool_selection = ToolSelection(
@@ -308,7 +335,12 @@ class SimpleReActAgent(BaseWorkflowAgent):
             observation = str(result.tool_output.content)
             
             if self._verbose:
-                print(f"Tool Output ({result.tool_name}): {observation}")
+                self._logger.debug(
+                    "Tool execution completed",
+                    tool_name=result.tool_name,
+                    output_preview=observation[:100] if len(observation) > 100 else observation,
+                    is_error=result.tool_output.is_error
+                )
             
             # Add observation to reasoning
             obs_step = ObservationReasoningStep(
@@ -456,7 +488,10 @@ class SimpleReActAgent(BaseWorkflowAgent):
                     sources = await ctx.store.get(CTX_SOURCES, default=[])
         except Exception as e:
             if self._verbose:
-                print(f"Warning: Could not retrieve context data: {e}")
+                self._logger.warning(
+                    "Could not retrieve context data",
+                    error=str(e)
+                )
         
         # Get memory for chat history
         memory = kwargs.get('memory', None)
