@@ -14,7 +14,7 @@ This project demonstrates best practices for testing LLM applications by:
 
 ```
 ai-test-lab/
-├── ai_test_lab/              # Main package
+├── fm_app_toolkit/              # Main package
 │   ├── agents/               # Agent implementations
 │   │   ├── simple_react.py  # Pedagogical ReAct agent using Workflow
 │   │   └── events.py        # Workflow events for agent communication
@@ -33,18 +33,18 @@ ai-test-lab/
 
 ## Key Components
 
-### Mock LLMs (`ai_test_lab/testing/mocks.py`)
+### Mock LLMs (`fm_app_toolkit/testing/mocks.py`)
 - **MockLLMWithChain**: Returns predefined response sequences
 - **MockLLMEchoStream**: Echoes input for testing streaming behavior
 - Both extend LlamaIndex's base LLM class for full compatibility
 
-### Simple ReAct Agent (`ai_test_lab/agents/simple_react.py`)
+### Simple ReAct Agent (`fm_app_toolkit/agents/simple_react.py`)
 - Pedagogical implementation of ReAct pattern
 - Subclasses from `llama_index.core.workflow.Workflow`
 - Uses standard ReActChatFormatter and ReActOutputParser
 - Demonstrates the reasoning loop and action calling clearly
 
-### Workflow Events (`ai_test_lab/agents/events.py`)
+### Workflow Events (`fm_app_toolkit/agents/events.py`)
 - Event-driven communication between workflow steps
 - PrepEvent, InputEvent, ToolCallEvent, StopEvent
 - Clean separation of concerns in agent workflow

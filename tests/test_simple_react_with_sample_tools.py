@@ -15,15 +15,15 @@ from llama_index.core.agent.react.types import (
     ResponseReasoningStep,
 )
 
-from ai_test_lab.agents.sample_tools import (
+from fm_app_toolkit.agents.sample_tools import (
     calculate,
     flip_coin,
     get_current_time,
     get_weather,
     roll_dice,
 )
-from ai_test_lab.agents.simple_react import SimpleReActAgent, Tool
-from ai_test_lab.testing.mocks import MockLLMWithChain, RuleBasedMockLLM
+from fm_app_toolkit.agents.simple_react import SimpleReActAgent, Tool
+from fm_app_toolkit.testing.mocks import MockLLMWithChain, RuleBasedMockLLM
 from tests.test_utilities import (
     assert_final_answer_contains,
     assert_reasoning_sequence,

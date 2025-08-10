@@ -1,29 +1,50 @@
-# LLM Application Testing Strategies
+# FM App Toolkit
 
-A demonstration project showing how to effectively test LLM-powered applications, specifically LlamaIndex agent implementations, using mock LLMs for deterministic, fast, and cost-effective testing.
+**Foundation Model Application Toolkit** - Concrete implementation and testing patterns for developing production-grade foundation model based applications.
 
-## What is this?
+## Mission
 
-This project demonstrates a powerful testing pattern for LLM applications that allows you to:
-- Write deterministic unit tests without calling actual LLM APIs
-- Test complex agent behaviors and tool interactions
-- Run tests in CI/CD without API keys
-- Debug agent logic step-by-step
-- Save costs during development and testing
+This toolkit provides battle-tested patterns for building production FM applications using LlamaIndex as a foundational layer, helping developers bring business logic closer to reality through:
 
-The key innovation is creating mock LLM implementations that extend LlamaIndex's base LLM class, enabling full integration testing of ReActAgent workflows without network dependencies.
+- **Deterministic Testing Strategies** - Mock LLMs for cost-effective, reliable testing
+- **Production-Ready Agent Implementations** - ReAct agents with clear reasoning patterns
+- **Reusable Patterns** - Common solutions for FM app challenges
+- **Cost-Effective Development** - Build and test without API calls
+- **Business Logic Integration** - Bridge the gap between FM capabilities and real-world requirements
 
-## 🎯 Key Features
+## 🎯 What Problems Does This Solve?
 
-- **Mock LLM Implementations**: Two mock classes that extend LlamaIndex's base LLM
-  - `MockLLMWithChain`: Returns predefined response sequences
-  - `MockLLMEchoStream`: Echoes input for testing streaming
-- **Multiple Agent Implementations**: 
-  - Standard LlamaIndex `ReActAgent` with mocks
-  - Custom `SimpleReActAgent` using Workflow pattern for pedagogical clarity
-- **Deterministic Testing**: Control exact LLM responses for predictable tests
-- **Zero Network Calls**: Tests run offline without API dependencies
-- **Comprehensive Examples**: 30+ tests demonstrating various patterns
+Building production FM applications presents unique challenges:
+
+1. **Testing Complexity** - How do you test non-deterministic LLM outputs?
+2. **Development Costs** - API calls during development add up quickly
+3. **Integration Patterns** - How do you connect FM capabilities to business logic?
+4. **Production Readiness** - Moving from prototype to production-grade code
+5. **Debugging Difficulty** - Understanding agent reasoning and decision-making
+
+This toolkit addresses each of these challenges with practical, reusable solutions.
+
+## 🚀 Key Components
+
+### Mock LLM Framework
+Complete mock implementations that extend LlamaIndex's base LLM class:
+- **MockLLMWithChain** - Sequential response patterns for multi-step workflows
+- **MockLLMEchoStream** - Streaming behavior testing
+- **RuleBasedMockLLM** - Dynamic responses based on configurable rules
+
+### Agent Implementations
+Production-ready agent patterns:
+- **SimpleReActAgent** - Clear implementation of the ReAct pattern using BaseWorkflowAgent
+- **WorkflowHandler Pattern** - Production-grade event handling and result extraction
+- **Tool Integration** - Seamless connection between agents and business logic
+
+### Testing Patterns
+Comprehensive testing strategies:
+- Deterministic unit tests without API calls
+- Multi-step reasoning validation
+- Error handling and edge cases
+- Tool selection and usage patterns
+- Streaming and async behavior
 
 ## Quick Start
 
@@ -31,307 +52,301 @@ The key innovation is creating mock LLM implementations that extend LlamaIndex's
 - Python 3.12+
 - Make
 
-### Setup
+### Installation
 
-1. Clone the repository:
 ```bash
-git clone <repository-url> ai-test-lab
-cd ai-test-lab
-```
+# Clone the repository
+git clone <repository-url> fm-app-toolkit
+cd fm-app-toolkit
 
-2. Create environment and install dependencies:
-```bash
+# Create environment and install dependencies
 make environment-create
-```
 
-3. Run the tests to see the patterns in action:
-```bash
+# Run tests to verify setup
 make unit-test
 ```
 
-## The Testing Pattern
+### Basic Usage
 
 ```python
-from llama_index.core.agent.workflow import ReActAgent
-from llama_index.core.tools import FunctionTool
-from ai_test_lab.testing.mocks import MockLLMWithChain
-from ai_test_lab.tools import add
+from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.testing import MockLLMWithChain
+from fm_app_toolkit.tools import Tool
 
-# 1. Create mock with predefined ReAct-formatted responses
-mock_llm = MockLLMWithChain(chain=[
-    "Thought: I need to add these numbers\nAction: add\nAction Input: {'a': 5, 'b': 3}",
-    "Thought: I have the result\nAnswer: The sum is 8"
-])
+# Define your business logic as tools
+def calculate_price(quantity: int, unit_price: float) -> float:
+    """Calculate total price with business rules."""
+    return quantity * unit_price * 0.9  # 10% discount
 
-# 2. Create agent with mock LLM
-agent = ReActAgent(
-    tools=[FunctionTool.from_defaults(fn=add)],
-    llm=mock_llm
+tool = Tool(
+    name="calculate_price",
+    function=calculate_price,
+    description="Calculate price with discount"
 )
 
-# 3. Test deterministically
-response = await agent.run(user_msg="What is 5 + 3?")
-assert "8" in str(response)
+# Create agent with mock for testing
+mock_llm = MockLLMWithChain(chain=[
+    "Thought: I need to calculate the price.\nAction: calculate_price\nAction Input: {'quantity': 5, 'unit_price': 10.0}",
+    "Thought: The discounted price is 45.0.\nAnswer: The total price with discount is $45.00"
+])
+
+agent = SimpleReActAgent(
+    llm=mock_llm,
+    tools=[tool],
+    system_header="You are a pricing assistant."
+)
+
+# Run the agent
+handler = agent.run(user_msg="What's the price for 5 items at $10 each?")
+result = await agent.get_results_from_handler(handler)
+print(result["response"])  # "The total price with discount is $45.00"
+```
+
+## Production Patterns
+
+### Testing Without API Costs
+
+```python
+# Development and testing with mocks
+def test_agent_business_logic():
+    mock_llm = MockLLMWithChain(chain=[...])
+    agent = SimpleReActAgent(llm=mock_llm, tools=[...])
+    # Test deterministically without API calls
+    
+# Production with real LLMs
+def create_production_agent():
+    from llama_index.llms.openai import OpenAI
+    real_llm = OpenAI(model="gpt-4")
+    agent = SimpleReActAgent(llm=real_llm, tools=[...])
+    return agent
+```
+
+### WorkflowHandler Pattern
+
+The toolkit uses LlamaIndex's production WorkflowHandler pattern:
+
+```python
+# Production-grade pattern
+handler = agent.run(user_msg="Process this request")
+
+# Extract structured results
+result = await agent.get_results_from_handler(handler)
+
+# Access all aspects of the execution
+print(result["response"])    # Final answer
+print(result["reasoning"])   # Step-by-step reasoning
+print(result["sources"])     # Tool outputs used
+print(result["chat_history"]) # Conversation context
+```
+
+### Rule-Based Testing
+
+For more flexible testing scenarios:
+
+```python
+from fm_app_toolkit.testing import RuleBasedMockLLM
+
+rules = {
+    "price": "Thought: Calculate pricing.\nAction: calculate_price\nAction Input: {...}",
+    "inventory": "Thought: Check inventory.\nAction: check_stock\nAction Input: {...}",
+    "order": "Thought: Process order.\nAction: place_order\nAction Input: {...}"
+}
+
+mock_llm = RuleBasedMockLLM(
+    rules=rules,
+    default_behavior="direct_answer"
+)
+
+# Agent responds intelligently based on query content
+response = agent.run(user_msg="What's the price?")  # Triggers price rule
 ```
 
 ## Project Structure
 
 ```
-ai-test-lab/
-├── ai_test_lab/
-│   ├── agents/
-│   │   ├── simple_react.py  # Pedagogical ReAct agent using BaseWorkflowAgent
-│   │   ├── sample_tools.py  # Sample tools for demonstration
-│   │   └── events.py        # Workflow events for agent communication
-│   ├── testing/
-│   │   ├── __init__.py
-│   │   ├── mocks.py         # Backward compatibility re-exports
-│   │   ├── mock_chain.py    # MockLLMWithChain for sequential testing
-│   │   ├── mock_echo.py     # MockLLMEchoStream for streaming tests
-│   │   ├── mock_rule_based.py # RuleBasedMockLLM for behavior-driven tests
-│   │   └── README.md        # Detailed testing documentation
-│   ├── tools.py             # Core tools for testing
-│   └── main.py              # FastAPI entry point (optional)
-├── tests/
-│   ├── test_mock_llms.py    # Tests for mock implementations
-│   ├── test_react_agent_with_mocks.py  # ReActAgent integration tests
-│   ├── test_simple_react_agent.py      # SimpleReActAgent tests
-│   ├── test_simple_react_reasoning.py  # Reasoning validation tests
-│   ├── test_simple_react_with_sample_tools.py  # Sample tools tests
+fm-app-toolkit/
+├── fm_app_toolkit/          # Main package
+│   ├── agents/              # Agent implementations
+│   │   ├── simple_react.py  # ReAct agent using BaseWorkflowAgent
+│   │   ├── sample_tools.py  # Example tools
+│   │   └── events.py        # Workflow events
+│   ├── testing/             # Testing utilities
+│   │   ├── mock_chain.py    # Sequential mock LLM
+│   │   ├── mock_echo.py     # Streaming mock LLM
+│   │   ├── mock_rule_based.py # Rule-based mock LLM
+│   │   └── mocks.py         # Backward compatibility
+│   ├── tools.py             # Core tool implementations
+│   └── main.py              # FastAPI integration (optional)
+├── tests/                   # Comprehensive test suite
+│   ├── test_*.py           # 100+ tests demonstrating patterns
 │   └── test_utilities.py    # Test helper functions
 ├── Makefile                 # Development commands
 ├── pyproject.toml           # Project configuration
-├── CLAUDE.md                # Project-specific development guide
-├── ADR.md                   # Architecture Decision Record
-└── README.md                # This documentation
+└── CLAUDE.md               # Development guide
 ```
 
-## Agent Implementations
+## Testing Patterns
 
-### SimpleReActAgent
-A pedagogical implementation that clearly demonstrates the ReAct pattern using LlamaIndex's BaseWorkflowAgent:
+### Deterministic Multi-Step Workflows
 
 ```python
-from ai_test_lab.agents.simple_react import SimpleReActAgent
-from ai_test_lab.testing.mocks import MockLLMWithChain
-
-# Create agent with mock LLM
-agent = SimpleReActAgent(
-    tools=tools,
-    llm=MockLLMWithChain(chain=["..."]),
-    verbose=True  # Shows reasoning steps
-)
-
-# Run the agent - returns WorkflowHandler for production compatibility
-handler = agent.run(user_msg="What is 5 + 3?")
-
-# Extract results from handler
-result = await agent.get_results_from_handler(handler)
-print(result["response"])  # The agent's answer
-print(result["sources"])   # Tool outputs used
-print(result["reasoning"]) # Reasoning steps taken
+def test_complex_business_workflow():
+    chain = [
+        "Thought: Check inventory first.\nAction: check_inventory\nAction Input: {'item': 'widget'}",
+        "Thought: Stock available. Calculate price.\nAction: calculate_price\nAction Input: {'quantity': 10}",
+        "Thought: Process the order.\nAction: place_order\nAction Input: {'items': [...]}",
+        "Thought: Order placed.\nAnswer: Order #12345 confirmed for $450.00"
+    ]
+    
+    mock_llm = MockLLMWithChain(chain=chain)
+    agent = SimpleReActAgent(llm=mock_llm, tools=business_tools)
+    
+    result = await agent.run("Order 10 widgets")
+    assert "Order #12345" in result["response"]
+    assert len(result["sources"]) == 3  # Three tools used
 ```
 
-### Standard ReActAgent
-You can also test the standard LlamaIndex ReActAgent with our mocks:
+### Error Handling
 
 ```python
-from llama_index.core.agent.workflow import ReActAgent
-
-agent = ReActAgent(
-    tools=tools,
-    llm=mock_llm
-)
+def test_handles_api_failures():
+    chain = [
+        "Thought: Call external API.\nAction: fetch_data\nAction Input: {'id': '123'}",
+        "Thought: API failed. Use fallback.\nAction: get_cached_data\nAction Input: {'id': '123'}",
+        "Thought: Retrieved from cache.\nAnswer: Here's the cached data..."
+    ]
+    
+    # Test graceful degradation and error recovery
 ```
-
-## Mock LLM Implementations
-
-Our mock LLMs are now organized into separate modules for clarity:
-
-### MockLLMWithChain (`mock_chain.py`)
-Returns a predefined sequence of responses. Perfect for testing ReAct agent reasoning chains:
-
-```python
-from ai_test_lab.testing.mock_chain import MockLLMWithChain
-
-mock_llm = MockLLMWithChain(chain=[
-    "Thought: I need to add.\\nAction: add\\nAction Input: {'a': 5, 'b': 3}",
-    "Thought: Got 8.\\nAnswer: The sum is 8"
-])
-```
-
-### MockLLMEchoStream (`mock_echo.py`)
-Echoes user input back in streaming chunks. Useful for testing streaming behavior:
-
-```python
-from ai_test_lab.testing.mock_echo import MockLLMEchoStream
-
-mock_llm = MockLLMEchoStream()
-# Will echo whatever the user sends, in chunks of CHUNK_SIZE (default 7)
-```
-
-### RuleBasedMockLLM (`mock_rule_based.py`)
-Dynamically generates responses based on rules. More flexible than predefined chains:
-
-```python
-from ai_test_lab.testing.mock_rule_based import RuleBasedMockLLM
-
-rules = {
-    "calculate": "Thought: I'll calculate.\\nAction: calculate\\nAction Input: {...}",
-    "weather": "Thought: Checking weather.\\nAction: get_weather\\nAction Input: {...}"
-}
-
-mock_llm = RuleBasedMockLLM(rules=rules, default_behavior="direct_answer")
-# Responds based on content patterns in the query
-```
-
-All mocks are also available via the backward-compatible `mocks.py`:
-```python
-from ai_test_lab.testing.mocks import MockLLMWithChain, MockLLMEchoStream, RuleBasedMockLLM
-```
-
-## Testing Patterns Demonstrated
-
-### ✅ Basic Tool Usage
-Test that agents correctly use tools with expected inputs and handle outputs.
-
-### ✅ Multi-Step Reasoning
-Verify complex reasoning chains with multiple tool calls.
-
-### ✅ Error Handling
-Test how agents handle tool failures and edge cases.
-
-### ✅ Tool Selection
-Ensure agents select the right tool from multiple available options.
-
-### ✅ Direct Responses
-Test scenarios where agents answer without using tools.
-
-### ✅ Response Processing
-Verify response parsing and formatting.
-
-### ✅ Workflow Events
-Test event-driven communication between workflow steps in the SimpleReActAgent.
 
 ## Development Workflow
 
 ### Essential Commands
 
 ```bash
-# Environment
+# Environment Management
 make environment-create   # First-time setup
 make environment-sync     # Update dependencies
 
-# Testing
-make unit-test           # Run all tests
-make validate-branch     # Run linting and tests
-
-# Code Quality
+# Development
 make format              # Auto-format code
 make lint               # Fix linting issues
+make type-check         # Type checking
+
+# Testing
+make unit-test          # Run all tests
+make validate-branch    # Pre-commit validation
+
+# Coverage
+make all-test           # Run with coverage report
 ```
 
-### Adding Your Own Tests
+### Adding New Patterns
 
-1. Create mock response chains matching ReAct format
-2. Initialize ReActAgent with mock LLM and tools
-3. Run agent with test inputs
-4. Assert expected behaviors
+1. **Create new tools** representing your business logic
+2. **Define mock chains** for testing scenarios
+3. **Implement agents** using the patterns provided
+4. **Test deterministically** with mocks
+5. **Deploy with real LLMs** in production
 
-## Benefits of This Approach
+## Why FM App Toolkit?
 
-### 🚀 Fast Development
-- No waiting for API responses
-- Instant test execution
-- Rapid iteration on agent logic
+### For Developers
+- **Faster Development** - No waiting for API responses during testing
+- **Lower Costs** - Zero API costs during development
+- **Better Testing** - Deterministic, reproducible tests
+- **Clear Patterns** - Production-ready implementations to build upon
 
-### 💰 Cost-Effective
-- Zero API costs during testing
-- Unlimited test runs
-- No rate limiting concerns
+### For Teams
+- **CI/CD Ready** - No API keys needed in pipelines
+- **Consistent Testing** - Same results across all environments
+- **Knowledge Sharing** - Clear patterns for FM app development
+- **Production Focus** - Bridge from prototype to production
 
-### 🎯 Reliable Testing
-- 100% deterministic results
-- Reproducible test failures
-- Easy debugging with controlled responses
-
-### 🔧 CI/CD Ready
-- No API keys needed in CI
-- Tests run in isolated environments
-- Consistent results across runs
+### For Business
+- **Reduced Development Costs** - Minimize API usage during development
+- **Faster Time-to-Market** - Rapid iteration and testing
+- **Quality Assurance** - Comprehensive testing without external dependencies
+- **Scalable Patterns** - Reusable components across projects
 
 ## Best Practices
 
-1. **Be Specific with Responses**: Format your mock responses exactly as the ReAct agent expects them
-2. **Test Edge Cases**: Use mocks to test error conditions that are hard to reproduce with real LLMs
-3. **Reset Between Tests**: Call `mock_llm.reset()` to replay chains in multiple tests
-4. **Combine with Real LLMs**: Use mocks for unit tests, real LLMs for integration tests
-5. **Document Response Formats**: Keep examples of expected ReAct formatting for reference
+### 1. Test-Driven Development
+Write tests with mocks first, then implement with real LLMs:
+```python
+# 1. Define expected behavior with mocks
+# 2. Implement business logic
+# 3. Validate with real LLMs
+# 4. Deploy to production
+```
+
+### 2. Separation of Concerns
+Keep business logic in tools, FM interaction in agents:
+```python
+# Business logic in tools
+def calculate_shipping(weight, distance):
+    # Pure business logic
+    return weight * distance * RATE
+
+# FM orchestration in agents
+agent = SimpleReActAgent(tools=[calculate_shipping])
+```
+
+### 3. Progressive Enhancement
+Start simple, add complexity gradually:
+```python
+# Start with MockLLMWithChain for basic flows
+# Move to RuleBasedMockLLM for dynamic scenarios
+# Finally integrate real LLMs for production
+```
 
 ## Advanced Patterns
 
 ### Custom Mock Behaviors
-Extend the base mocks for specific testing needs:
 
 ```python
-class MockLLMWithConditionalResponse(MockLLMWithChain):
+class BusinessMockLLM(MockLLMWithChain):
+    """Mock with business-specific behaviors."""
+    
     def chat(self, messages, **kwargs):
-        # Custom logic based on message content
-        if "error" in messages[-1].content.lower():
-            return ChatResponse(message=ChatMessage(
-                role=MessageRole.ASSISTANT,
-                content="Error handling response"
-            ))
+        # Add business rule validation
+        if "urgent" in messages[-1].content.lower():
+            # Prioritize urgent requests
+            return self.urgent_response()
         return super().chat(messages, **kwargs)
 ```
 
-### Testing Memory and Context
-The mocks preserve conversation context just like real LLMs:
+### Workflow Composition
 
 ```python
-mock_llm = MockLLMWithChain(chain=[
-    "Response 1 based on context",
-    "Response 2 remembering previous"
-])
+# Compose complex workflows from simple agents
+pricing_agent = SimpleReActAgent(tools=[pricing_tools])
+inventory_agent = SimpleReActAgent(tools=[inventory_tools])
+order_agent = SimpleReActAgent(tools=[order_tools])
 
-agent = ReActAgent(tools=[], llm=mock_llm)
-response1 = await agent.run(user_msg="First question")
-response2 = await agent.run(user_msg="Follow-up question")
+# Orchestrate multi-agent workflows
+async def process_order(request):
+    price = await pricing_agent.run(request)
+    stock = await inventory_agent.run(request)
+    order = await order_agent.run(f"Price: {price}, Stock: {stock}")
+    return order
 ```
-
-## When to Use This Pattern
-
-✅ **Perfect for:**
-- Unit testing agent logic
-- Integration testing tool usage
-- Testing error handling
-- CI/CD pipelines
-- Local development
-
-❌ **Not suitable for:**
-- Testing actual LLM performance
-- Prompt engineering validation
-- Model behavior verification
-- Production response quality
-
-## Limitations
-
-- Mock responses must match ReAct format exactly
-- Complex tool interactions may require careful response crafting
-- Streaming behavior is simplified compared to real LLMs
 
 ## Contributing
 
-This pattern can be extended with:
-- Additional mock behaviors
-- More complex tool examples
-- Performance testing utilities
-- Test data generators
+We welcome contributions that enhance the toolkit:
 
-## Related Documentation
+- **New Mock Patterns** - Additional testing strategies
+- **Agent Implementations** - Different reasoning patterns
+- **Tool Libraries** - Common business logic tools
+- **Documentation** - Tutorials and guides
+- **Integration Examples** - Real-world use cases
 
-- [Architecture Decision Record](ADR.md) - Technical decisions and rationale
-- [LlamaIndex Docs](https://docs.llamaindex.ai/) - Official LlamaIndex documentation
+## Related Resources
+
+- [LlamaIndex Documentation](https://docs.llamaindex.ai/) - Official LlamaIndex docs
+- [Foundation Models Guide](https://github.com/fm-guide) - FM best practices
+- [CLAUDE.md](CLAUDE.md) - Development guidelines for this project
 
 ## License
 
@@ -339,4 +354,6 @@ Apache License 2.0 - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built to demonstrate effective testing strategies for LLM applications** 🧪🤖
+**FM App Toolkit** - Building production-grade foundation model applications with confidence 🚀
+
+*Concrete patterns. Reliable testing. Production ready.*

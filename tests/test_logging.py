@@ -7,7 +7,7 @@ import pytest
 from pytest import LogCaptureFixture, MonkeyPatch
 from structlog.stdlib import BoundLogger
 
-from ai_test_lab.logging import (
+from fm_app_toolkit.logging import (
     LoggingContext,
     bind_contextvars,
     clear_context_fields,
@@ -111,7 +111,7 @@ def test__get_logger__uses_module_name_when_empty(caplog: LogCaptureFixture) -> 
     logger.info("Test default name")
 
     log_output: str = caplog.records[0].message
-    assert '"logger": "ai_test_lab.logging"' in log_output
+    assert '"logger": "fm_app_toolkit.logging"' in log_output
 
 
 def test__process_log_fields__conditionally_adds_thread_and_trace_fields(caplog: LogCaptureFixture) -> None:

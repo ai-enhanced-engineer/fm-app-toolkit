@@ -13,9 +13,9 @@ from llama_index.core.agent.react.types import (
     ResponseReasoningStep,
 )
 
-from ai_test_lab.agents.simple_react import SimpleReActAgent, Tool
-from ai_test_lab.testing.mocks import MockLLMWithChain
-from ai_test_lab.tools import add, multiply
+from fm_app_toolkit.agents.simple_react import SimpleReActAgent, Tool
+from fm_app_toolkit.testing.mocks import MockLLMWithChain
+from fm_app_toolkit.tools import add, multiply
 
 
 @pytest.fixture

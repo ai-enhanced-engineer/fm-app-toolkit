@@ -7,7 +7,7 @@ error handling and logging behavior.
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from ai_test_lab.agents.sample_tools import (
+from fm_app_toolkit.agents.sample_tools import (
     calculate,
     create_reminder,
     flip_coin,
