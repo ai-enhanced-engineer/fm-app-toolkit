@@ -12,6 +12,14 @@ Testing LLM-powered applications presents unique challenges:
 
 Our mock LLMs solve these problems by simulating LLM behavior with predefined, deterministic responses.
 
+## Module Organization
+
+The testing module is now organized into separate files for clarity:
+- `mock_chain.py` - MockLLMWithChain for sequential testing
+- `mock_echo.py` - MockLLMEchoStream for streaming tests
+- `mock_rule_based.py` - RuleBasedMockLLM for behavior-driven tests
+- `mocks.py` - Backward compatibility re-exports
+
 ## Available Mocks
 
 ### MockLLMWithChain
@@ -33,7 +41,8 @@ A mock that returns responses from a predefined sequence, perfect for testing mu
 
 **Example Usage:**
 ```python
-from ai_test_lab.testing.mocks import MockLLMWithChain
+from ai_test_lab.testing.mock_chain import MockLLMWithChain
+# Or: from ai_test_lab.testing.mocks import MockLLMWithChain
 
 # Define the sequence of LLM responses
 mock_llm = MockLLMWithChain(chain=[
@@ -41,9 +50,10 @@ mock_llm = MockLLMWithChain(chain=[
     "Thought: Found results. Now I'll summarize.\nAnswer: Python is a programming language."
 ])
 
-# Use with an agent
+# Use with an agent (BaseWorkflowAgent pattern)
 agent = SimpleReActAgent(llm=mock_llm, tools=[...])
-result = await agent.run("Tell me about Python")
+handler = agent.run(user_msg="Tell me about Python")
+result = await agent.get_results_from_handler(handler)
 
 # The agent will receive responses in order:
 # First LLM call -> First chain element (search action)
@@ -68,7 +78,8 @@ A mock that echoes the user's input back, useful for testing streaming behavior.
 
 **Example Usage:**
 ```python
-from ai_test_lab.testing.mocks import MockLLMEchoStream
+from ai_test_lab.testing.mock_echo import MockLLMEchoStream
+# Or: from ai_test_lab.testing.mocks import MockLLMEchoStream
 
 mock_llm = MockLLMEchoStream()
 
@@ -84,6 +95,42 @@ stream = mock_llm.stream_chat([
 ])
 for chunk in stream:
     print(chunk.delta)  # Prints: "Test me", "ssage"
+```
+
+### RuleBasedMockLLM
+
+A mock that dynamically generates responses based on configurable rules, offering more flexibility than predefined chains.
+
+**Key Features:**
+- Responds based on content patterns in queries
+- Configurable rules for different scenarios
+- Default behavior for unmatched patterns
+- More maintainable than long predefined chains
+
+**How It Works:**
+1. Define rules as pattern-response mappings
+2. Mock checks query content against patterns
+3. Returns appropriate response based on matched rule
+4. Falls back to default behavior if no match
+
+**Example Usage:**
+```python
+from ai_test_lab.testing.mock_rule_based import RuleBasedMockLLM
+# Or: from ai_test_lab.testing.mocks import RuleBasedMockLLM
+
+# Define behavior rules
+rules = {
+    "calculate": "Thought: I need to perform a calculation.\nAction: calculate\nAction Input: {...}",
+    "weather": "Thought: I'll check the weather.\nAction: get_weather\nAction Input: {...}",
+    "time": "Thought: I'll get the current time.\nAction: get_current_time\nAction Input: {}"
+}
+
+mock_llm = RuleBasedMockLLM(rules=rules, default_behavior="direct_answer")
+
+# The mock intelligently responds based on query content
+agent = SimpleReActAgent(llm=mock_llm, tools=[...])
+handler = agent.run(user_msg="What's the weather like?")  # Triggers weather rule
+result = await agent.get_results_from_handler(handler)
 ```
 
 ## Testing Patterns
@@ -109,7 +156,8 @@ def mock_calculation_agent():
     )
 
 async def test_multi_step_calculation(mock_calculation_agent):
-    result = await mock_calculation_agent.run("Calculate 5 * 3 + 7")
+    handler = mock_calculation_agent.run(user_msg="Calculate 5 * 3 + 7")
+    result = await mock_calculation_agent.get_results_from_handler(handler)
     assert result["response"] == "5 × 3 + 7 = 22"
     assert result["sources"] == [15, 22]  # Tool outputs
 ```
@@ -119,7 +167,7 @@ async def test_multi_step_calculation(mock_calculation_agent):
 Test how your agent handles parsing errors or invalid responses:
 
 ```python
-def test_agent_handles_invalid_response():
+async def test_agent_handles_invalid_response():
     chain = [
         "This is not a valid ReAct format",  # Will cause parser error
         "Thought: Retry with valid format.\nAnswer: Recovered from error"
@@ -128,7 +176,8 @@ def test_agent_handles_invalid_response():
     mock_llm = MockLLMWithChain(chain=chain)
     agent = SimpleReActAgent(llm=mock_llm)
     
-    result = await agent.run("Test error recovery")
+    handler = agent.run(user_msg="Test error recovery")
+    result = await agent.get_results_from_handler(handler)
     assert "Recovered from error" in result["response"]
 ```
 
@@ -220,7 +269,9 @@ async def test_mock_llm_chain_agent_integration_sequence():
         tools=[multiply_tool, add_tool]
     )
     
-    result = await agent.run("Calculate 2 * 3 + 4")
+    # Run agent with WorkflowHandler pattern
+    handler = agent.run(user_msg="Calculate 2 * 3 + 4")
+    result = await agent.get_results_from_handler(handler)
     
     # Validate the agent processed all responses in order
     assert result["response"] == "2 × 3 + 4 = 10"
@@ -318,9 +369,33 @@ def test_streaming():
         assert chunk.message.content == cumulative
 ```
 
+## WorkflowHandler Pattern (Production-Grade)
+
+SimpleReActAgent now follows production patterns by returning a WorkflowHandler:
+
+```python
+# Production-grade pattern with WorkflowHandler
+handler = agent.run(user_msg="What is 5 + 3?")
+
+# Extract results using helper method
+result = await agent.get_results_from_handler(handler)
+
+# Access extracted data
+print(result["response"])   # The agent's answer
+print(result["sources"])    # Tool outputs used
+print(result["reasoning"])  # Reasoning steps taken
+print(result["chat_history"])  # Conversation history
+```
+
+This pattern:
+- Matches how production LlamaIndex agents work
+- Provides access to streaming events if needed
+- Maintains compatibility with the LlamaIndex ecosystem
+- Shows clear separation between execution and result extraction
+
 ## Integration with LlamaIndex
 
-Both mocks extend `llama_index.core.llms.llm.LLM`, making them drop-in replacements for real LLMs:
+All mocks extend `llama_index.core.llms.llm.LLM`, making them drop-in replacements for real LLMs:
 
 ```python
 from llama_index.core.agent import ReActAgent
