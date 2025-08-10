@@ -27,6 +27,7 @@ dependencies = [
     # LlamaIndex dependencies
     "llama-index-core>=0.11.0",
     "llama-cloud>=0.1.0",
+    "structlog>=25.4.0",
 ]
 
 [project.optional-dependencies]
@@ -59,7 +60,7 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-    "ai_base_template*",
+    "ai_test_lab*",
 ]
 
 [tool.ruff]

@@ -1,6 +1,6 @@
 # LLM Application Testing Strategies
 
-A demonstration project showing how to effectively test LLM-powered applications, specifically LlamaIndex ReActAgent applications, using mock LLMs for deterministic, fast, and cost-effective testing.
+A demonstration project showing how to effectively test LLM-powered applications, specifically LlamaIndex agent implementations, using mock LLMs for deterministic, fast, and cost-effective testing.
 
 ## What is this?
 
@@ -18,10 +18,12 @@ The key innovation is creating mock LLM implementations that extend LlamaIndex's
 - **Mock LLM Implementations**: Two mock classes that extend LlamaIndex's base LLM
   - `MockLLMWithChain`: Returns predefined response sequences
   - `MockLLMEchoStream`: Echoes input for testing streaming
-- **Full ReActAgent Support**: Works with LlamaIndex's workflow-based ReActAgent
+- **Multiple Agent Implementations**: 
+  - Standard LlamaIndex `ReActAgent` with mocks
+  - Custom `SimpleReActAgent` using Workflow pattern for pedagogical clarity
 - **Deterministic Testing**: Control exact LLM responses for predictable tests
 - **Zero Network Calls**: Tests run offline without API dependencies
-- **Comprehensive Examples**: 25+ tests demonstrating various patterns
+- **Comprehensive Examples**: 30+ tests demonstrating various patterns
 
 ## Quick Start
 
@@ -33,8 +35,8 @@ The key innovation is creating mock LLM implementations that extend LlamaIndex's
 
 1. Clone the repository:
 ```bash
-git clone <repository-url> llm-testing-demo
-cd llm-testing-demo
+git clone <repository-url> ai-test-lab
+cd ai-test-lab
 ```
 
 2. Create environment and install dependencies:
@@ -52,8 +54,8 @@ make unit-test
 ```python
 from llama_index.core.agent.workflow import ReActAgent
 from llama_index.core.tools import FunctionTool
-from ai_base_template.testing.mocks import MockLLMWithChain
-from ai_base_template.tools import add
+from ai_test_lab.testing.mocks import MockLLMWithChain
+from ai_test_lab.tools import add
 
 # 1. Create mock with predefined ReAct-formatted responses
 mock_llm = MockLLMWithChain(chain=[
@@ -75,40 +77,117 @@ assert "8" in str(response)
 ## Project Structure
 
 ```
-llm-testing-demo/
-├── ai_base_template/
+ai-test-lab/
+├── ai_test_lab/
+│   ├── agents/
+│   │   ├── simple_react.py  # Pedagogical ReAct agent using BaseWorkflowAgent
+│   │   ├── sample_tools.py  # Sample tools for demonstration
+│   │   └── events.py        # Workflow events for agent communication
 │   ├── testing/
 │   │   ├── __init__.py
-│   │   └── mocks.py          # Mock LLM implementations
-│   └── tools.py              # Example tools for testing
+│   │   ├── mocks.py         # Backward compatibility re-exports
+│   │   ├── mock_chain.py    # MockLLMWithChain for sequential testing
+│   │   ├── mock_echo.py     # MockLLMEchoStream for streaming tests
+│   │   ├── mock_rule_based.py # RuleBasedMockLLM for behavior-driven tests
+│   │   └── README.md        # Detailed testing documentation
+│   ├── tools.py             # Core tools for testing
+│   └── main.py              # FastAPI entry point (optional)
 ├── tests/
 │   ├── test_mock_llms.py    # Tests for mock implementations
-│   └── test_react_agent_with_mocks.py  # ReActAgent integration tests
+│   ├── test_react_agent_with_mocks.py  # ReActAgent integration tests
+│   ├── test_simple_react_agent.py      # SimpleReActAgent tests
+│   ├── test_simple_react_reasoning.py  # Reasoning validation tests
+│   ├── test_simple_react_with_sample_tools.py  # Sample tools tests
+│   └── test_utilities.py    # Test helper functions
 ├── Makefile                 # Development commands
 ├── pyproject.toml           # Project configuration
+├── CLAUDE.md                # Project-specific development guide
 ├── ADR.md                   # Architecture Decision Record
 └── README.md                # This documentation
 ```
 
+## Agent Implementations
+
+### SimpleReActAgent
+A pedagogical implementation that clearly demonstrates the ReAct pattern using LlamaIndex's BaseWorkflowAgent:
+
+```python
+from ai_test_lab.agents.simple_react import SimpleReActAgent
+from ai_test_lab.testing.mocks import MockLLMWithChain
+
+# Create agent with mock LLM
+agent = SimpleReActAgent(
+    tools=tools,
+    llm=MockLLMWithChain(chain=["..."]),
+    verbose=True  # Shows reasoning steps
+)
+
+# Run the agent - returns WorkflowHandler for production compatibility
+handler = agent.run(user_msg="What is 5 + 3?")
+
+# Extract results from handler
+result = await agent.get_results_from_handler(handler)
+print(result["response"])  # The agent's answer
+print(result["sources"])   # Tool outputs used
+print(result["reasoning"]) # Reasoning steps taken
+```
+
+### Standard ReActAgent
+You can also test the standard LlamaIndex ReActAgent with our mocks:
+
+```python
+from llama_index.core.agent.workflow import ReActAgent
+
+agent = ReActAgent(
+    tools=tools,
+    llm=mock_llm
+)
+```
+
 ## Mock LLM Implementations
 
-### MockLLMWithChain
+Our mock LLMs are now organized into separate modules for clarity:
+
+### MockLLMWithChain (`mock_chain.py`)
 Returns a predefined sequence of responses. Perfect for testing ReAct agent reasoning chains:
 
 ```python
+from ai_test_lab.testing.mock_chain import MockLLMWithChain
+
 mock_llm = MockLLMWithChain(chain=[
-    "First response",
-    "Second response",
-    "Third response"
+    "Thought: I need to add.\\nAction: add\\nAction Input: {'a': 5, 'b': 3}",
+    "Thought: Got 8.\\nAnswer: The sum is 8"
 ])
 ```
 
-### MockLLMEchoStream
+### MockLLMEchoStream (`mock_echo.py`)
 Echoes user input back in streaming chunks. Useful for testing streaming behavior:
 
 ```python
+from ai_test_lab.testing.mock_echo import MockLLMEchoStream
+
 mock_llm = MockLLMEchoStream()
-# Will echo whatever the user sends, in chunks
+# Will echo whatever the user sends, in chunks of CHUNK_SIZE (default 7)
+```
+
+### RuleBasedMockLLM (`mock_rule_based.py`)
+Dynamically generates responses based on rules. More flexible than predefined chains:
+
+```python
+from ai_test_lab.testing.mock_rule_based import RuleBasedMockLLM
+
+rules = {
+    "calculate": "Thought: I'll calculate.\\nAction: calculate\\nAction Input: {...}",
+    "weather": "Thought: Checking weather.\\nAction: get_weather\\nAction Input: {...}"
+}
+
+mock_llm = RuleBasedMockLLM(rules=rules, default_behavior="direct_answer")
+# Responds based on content patterns in the query
+```
+
+All mocks are also available via the backward-compatible `mocks.py`:
+```python
+from ai_test_lab.testing.mocks import MockLLMWithChain, MockLLMEchoStream, RuleBasedMockLLM
 ```
 
 ## Testing Patterns Demonstrated
@@ -130,6 +209,9 @@ Test scenarios where agents answer without using tools.
 
 ### ✅ Response Processing
 Verify response parsing and formatting.
+
+### ✅ Workflow Events
+Test event-driven communication between workflow steps in the SimpleReActAgent.
 
 ## Development Workflow
 
