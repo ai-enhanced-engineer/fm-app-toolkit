@@ -1,35 +1,14 @@
 """Event definitions for the simple ReAct workflow.
 
-This module defines the events used in the workflow-based ReAct agent.
-These events facilitate communication between different workflow steps.
+This module defines helper functions for the ReAct agent.
+Since we now inherit from BaseWorkflowAgent, we use its built-in events.
 """
 
 from typing import Any, List
 
 from llama_index.core.agent.react.types import BaseReasoningStep
 from llama_index.core.base.llms.types import ChatMessage
-from llama_index.core.tools import ToolSelection
-from llama_index.core.workflow import Event, StopEvent
-
-
-class PrepEvent(Event):
-    """Event to signal preparation for the next reasoning step."""
-    pass
-
-
-class InputEvent(Event):
-    """Event containing formatted input for the LLM."""
-    input: List[ChatMessage]
-
-
-class ToolCallEvent(Event):
-    """Event containing tool calls to execute."""
-    tool_calls: List[ToolSelection]
-
-
-class StreamingEvent(Event):
-    """Event for streaming output chunks."""
-    chunk: str
+from llama_index.core.workflow import StopEvent
 
 
 def stop_workflow(

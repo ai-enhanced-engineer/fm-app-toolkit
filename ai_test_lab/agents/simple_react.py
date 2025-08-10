@@ -1,18 +1,19 @@
-"""A minimalistic ReAct agent implementation using Workflow pattern.
+"""A minimalistic ReAct agent implementation using BaseWorkflowAgent.
 
 This module demonstrates the core ReAct (Reasoning + Acting) pattern using
-llama_index's Workflow architecture:
+llama_index's BaseWorkflowAgent architecture:
 1. Thought: The agent reasons about what to do
 2. Action: The agent decides to use a tool (optional)
 3. Observation: The agent observes the tool's output
 4. Answer: The agent provides a final response
 
-This is a simplified version focusing on the reasoning loop and action calling,
-designed for educational purposes.
+This is a custom implementation that extends BaseWorkflowAgent while maintaining
+the pedagogical clarity of the ReAct pattern.
 """
 
+import uuid
 from dataclasses import dataclass
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Sequence, Union, cast
 
 from llama_index.core.agent.react import ReActChatFormatter
 from llama_index.core.agent.react.output_parser import ReActOutputParser
@@ -22,16 +23,24 @@ from llama_index.core.agent.react.types import (
     ObservationReasoningStep,
     ResponseReasoningStep,
 )
+from llama_index.core.agent.workflow.base_agent import BaseWorkflowAgent
+from llama_index.core.agent.workflow.workflow_events import (
+    AgentOutput,
+    ToolCallResult,
+)
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms.llm import LLM
-from llama_index.core.memory import ChatMemoryBuffer
-from llama_index.core.tools import ToolSelection
-from llama_index.core.workflow import Context, StartEvent, StopEvent, Workflow, step
-
-from .events import InputEvent, PrepEvent, ToolCallEvent, stop_workflow
+from llama_index.core.memory import BaseMemory
+from llama_index.core.tools import (
+    AsyncBaseTool,
+    FunctionTool,
+    ToolSelection,
+)
+from llama_index.core.workflow import Context
 
 # Context key for storing current reasoning steps
 CTX_CURRENT_REASONING = "current_reasoning"
+CTX_SOURCES = "sources"
 
 
 @dataclass
@@ -42,32 +51,30 @@ class Tool:
     description: str
 
 
-class SimpleReActAgent(Workflow):
-    """A minimalistic ReAct agent using the Workflow pattern.
+class SimpleReActAgent(BaseWorkflowAgent):
+    """A minimalistic ReAct agent using BaseWorkflowAgent.
     
-    This agent follows the ReAct pattern using workflow steps:
-    - Initialize context and format input
-    - Get LLM response and parse it
-    - Execute tools if needed
-    - Return final answer
+    This agent follows the ReAct pattern by implementing the required
+    abstract methods:
+    - take_step: Get LLM response and parse it
+    - handle_tool_call_results: Process tool outputs
+    - finalize: Clean up and format final response
     
-    This is designed for educational purposes to demonstrate the core
-    concepts without production complexity.
+    This custom implementation demonstrates how to build a ReAct agent
+    while leveraging LlamaIndex's BaseWorkflowAgent infrastructure.
     """
     
     def __init__(
         self,
-        *args: Any,
         llm: LLM,
         system_header: str,
         extra_context: Optional[str] = None,
         max_reasoning: Optional[int] = None,
         tools: Optional[List[Tool]] = None,
-        chat_history: Optional[List[ChatMessage]] = None,
         verbose: bool = False,
         **kwargs: Any
     ) -> None:
-        """Initialize the ReAct agent workflow.
+        """Initialize the ReAct agent.
         
         Args:
             llm: The language model to use for reasoning
@@ -75,28 +82,43 @@ class SimpleReActAgent(Workflow):
             extra_context: Additional context to include in prompts
             max_reasoning: Maximum reasoning iterations before stopping (default: 15)
             tools: List of available tools
-            chat_history: Optional initial chat history
             verbose: Whether to print reasoning steps
-            **kwargs: Additional workflow arguments
+            **kwargs: Additional BaseWorkflowAgent arguments
         """
-        super().__init__(*args, **kwargs)
+        # Convert our Tool objects to FunctionTools for BaseWorkflowAgent
+        function_tools: List[Union[FunctionTool, Callable[..., Any]]] = []
+        if tools:
+            for tool in tools:
+                try:
+                    func_tool = FunctionTool.from_defaults(
+                        fn=tool.function,
+                        name=tool.name,
+                        description=tool.description
+                    )
+                    function_tools.append(func_tool)
+                except Exception:
+                    pass
         
-        # Core components
-        self._llm = llm
+        # Combine system header and extra context for system prompt
+        system_prompt = system_header
+        if extra_context:
+            system_prompt = f"{system_header}\n\n{extra_context}"
+        
+        # Initialize BaseWorkflowAgent
+        super().__init__(
+            llm=llm,
+            system_prompt=system_prompt,
+            tools=function_tools,
+            name="SimpleReActAgent",
+            description="A pedagogical ReAct agent implementation",
+            **kwargs
+        )
+        
+        # Store additional configuration
+        self._max_reasoning = max_reasoning if max_reasoning is not None else 15
+        self._verbose = verbose
         self._system_header = system_header
         self._extra_context = extra_context if extra_context is not None else ""
-        self._max_reasoning = max_reasoning if max_reasoning is not None else 15
-        self._tools = tools if tools is not None else []
-        self._verbose = verbose
-        
-        # Create tool registry
-        self._tool_registry = {tool.name: tool for tool in self._tools}
-        
-        # Initialize memory buffer with optional chat history
-        self._memory_buffer = ChatMemoryBuffer.from_defaults(
-            llm=llm, 
-            chat_history=chat_history
-        )
         
         # Initialize formatter with system header and extra context
         self._formatter = ReActChatFormatter(
@@ -106,250 +128,273 @@ class SimpleReActAgent(Workflow):
         
         # Initialize parser - using LlamaIndex's built-in ReActOutputParser
         self._output_parser = ReActOutputParser()
+    
+    @property
+    def _tool_registry(self) -> dict[str, Any]:
+        """Provide backward compatibility for accessing tools as a registry.
         
-        # Track sources for the current query
-        self._sources: List[Any] = []
-        
-    @step
-    async def start(self, ctx: Context, ev: StartEvent) -> PrepEvent | StopEvent:
-        """Initialize the workflow and process the user input.
-        
-        Args:
-            ctx: The workflow context
-            ev: The start event containing the user query
-            
-        Returns:
-            PrepEvent to continue or StopEvent if no input
+        This property creates a tool registry from BaseWorkflowAgent's tools.
+        Returns Tool-like objects that have a 'function' attribute for compatibility.
         """
-        # Get user query from the event
-        user_query = ev.get("user_msg", "")
+        registry = {}
+        if self.tools:
+            for tool in self.tools:
+                name = tool.metadata.name if hasattr(tool, 'metadata') else getattr(tool, 'name', '')
+                # Create a simple wrapper that looks like our original Tool
+                if hasattr(tool, 'fn'):
+                    # FunctionTool case - wrap it to look like our Tool
+                    # Create a simple object with attributes (not methods)
+                    wrapper = type('ToolWrapper', (), {})()
+                    wrapper.name = name
+                    wrapper.function = tool.fn  # Store the actual function, not a method
+                    wrapper.description = tool.metadata.description if hasattr(tool, 'metadata') else ''
+                    registry[name] = wrapper
+                else:
+                    registry[name] = tool
+        return cast(dict[str, Any], registry)
+    
+    async def take_step(
+        self,
+        ctx: Context,
+        llm_input: List[ChatMessage],
+        tools: Sequence[AsyncBaseTool],
+        memory: BaseMemory,
+    ) -> AgentOutput:
+        """Take a single step with the ReAct agent.
         
-        if not user_query:
-            return stop_workflow(
-                response="",
-                sources=[],
-                reasoning=[],
-                chat_history=self._memory_buffer.get()
-            )
-            
-        # Add user message to memory
-        self._memory_buffer.put(ChatMessage(role="user", content=user_query))
-        
-        # Reset sources for new query
-        self._sources = []
-        
-        # Initialize current reasoning in context
-        await ctx.set(CTX_CURRENT_REASONING, [])
-        
-        # Store query in context for later use
-        await ctx.set("user_query", user_query)
-        await ctx.set("iteration_count", 0)
-        
-        if self._verbose:
-            print(f"Processing query: {user_query}")
-            
-        return PrepEvent()
-        
-    @step
-    async def format_llm_input(self, ctx: Context, ev: PrepEvent) -> InputEvent | StopEvent:
-        """Format the input for the LLM using ReActChatFormatter.
-        
-        Args:
-            ctx: The workflow context
-            ev: The prep event
-            
-        Returns:
-            InputEvent with formatted messages or StopEvent if max iterations reached
+        This implements the core ReAct reasoning loop:
+        1. Format input with current reasoning steps
+        2. Get LLM response
+        3. Parse the response to determine action or answer
+        4. Return appropriate AgentOutput
         """
-        # Get current reasoning from context
-        current_reasoning: List[BaseReasoningStep] = await ctx.get(CTX_CURRENT_REASONING, default=[])
+        # Get or initialize current reasoning from context
+        current_reasoning: List[BaseReasoningStep] = await ctx.store.get(
+            CTX_CURRENT_REASONING, default=[]
+        )
+        
+        # Get or initialize sources from context
+        # Not used in this method but needed in context
+        await ctx.store.get(CTX_SOURCES, default=[])
         
         # Check if we've exceeded max reasoning steps
         if len(current_reasoning) >= self._max_reasoning:
+            if self._verbose:
+                print(f"Exceeded max reasoning steps ({self._max_reasoning})")
+            
+            # Add final response step
             current_reasoning.append(
                 ResponseReasoningStep(
                     thought="Exceeded max reasoning steps",
-                    response="I couldn't complete the reasoning in the allowed iterations."
+                    response="I couldn't complete the reasoning in the allowed iterations.",
+                    is_streaming=False
                 )
             )
-            return stop_workflow(
-                response="I couldn't complete the reasoning in the allowed iterations.",
-                sources=self._sources,
-                reasoning=current_reasoning,
-                chat_history=self._memory_buffer.get()
-            )
+            await ctx.store.set(CTX_CURRENT_REASONING, current_reasoning)
             
-        # Get chat history
-        chat_history = self._memory_buffer.get()
+            return AgentOutput(
+                response=ChatMessage(
+                    role="assistant",
+                    content="I couldn't complete the reasoning in the allowed iterations."
+                ),
+                current_agent_name=self.name,
+                raw=None
+            )
         
-        # Create simple tool metadata for the formatter
-        from llama_index.core.tools import FunctionTool
+        # Remove system prompt if present, as BaseWorkflowAgent already handles it
+        if llm_input and llm_input[0].role == "system":
+            llm_input = llm_input[1:]
         
-        function_tools = []
-        for tool in self._tools:
-            # Create FunctionTool for proper formatting
-            try:
-                func_tool = FunctionTool.from_defaults(
-                    fn=tool.function,
-                    name=tool.name,
-                    description=tool.description
-                )
-                function_tools.append(func_tool)
-            except Exception:
-                # If FunctionTool creation fails, skip this tool
-                pass
-        
-        # Format the messages
+        # Format input using ReActChatFormatter
         formatted_messages = self._formatter.format(
-            function_tools,
-            chat_history,
+            tools,
+            llm_input,
             current_reasoning=current_reasoning if current_reasoning else None
         )
         
-        return InputEvent(input=formatted_messages)
-        
-    @step
-    async def get_llm_response(self, ctx: Context, ev: InputEvent) -> ToolCallEvent | PrepEvent | StopEvent:
-        """Get response from the LLM and parse it.
-        
-        Args:
-            ctx: The workflow context
-            ev: The input event with formatted messages
-            
-        Returns:
-            ToolCallEvent if action needed, PrepEvent to continue, or StopEvent with answer
-        """
-        messages = ev.input
-        
-        # Get current reasoning from context
-        current_reasoning: List[BaseReasoningStep] = await ctx.get(CTX_CURRENT_REASONING, default=[])
-        
-        # Update iteration count
-        iteration_count = await ctx.get("iteration_count", default=0)
-        await ctx.set("iteration_count", iteration_count + 1)
-        
         if self._verbose:
-            print(f"\n--- Iteration {iteration_count + 1} ---")
-            
+            print(f"\n--- Reasoning Step {len(current_reasoning) + 1} ---")
+        
         # Get LLM response
-        response = await self._llm.achat(messages)
+        response = await self.llm.achat(formatted_messages)
         llm_output = response.message.content
         
         if self._verbose:
             print(f"LLM Output:\n{llm_output}")
-            
-        # Parse the output using the built-in ReActOutputParser
+        
+        # Parse the output
         try:
-            reasoning_step = self._output_parser.parse(llm_output or "")
-            
-            if isinstance(reasoning_step, ActionReasoningStep):
-                # Action step - execute tool
-                current_reasoning.append(reasoning_step)
-                await ctx.set(CTX_CURRENT_REASONING, current_reasoning)
-                
-                # Create tool selection
-                tool_selection = ToolSelection(
-                    tool_id=f"tool_{iteration_count}",
-                    tool_name=reasoning_step.action,
-                    tool_kwargs=reasoning_step.action_input
-                )
-                
-                return ToolCallEvent(tool_calls=[tool_selection])
-                
-            elif isinstance(reasoning_step, ResponseReasoningStep):
-                # Response step - we have an answer
-                current_reasoning.append(reasoning_step)
-                await ctx.set(CTX_CURRENT_REASONING, current_reasoning)
-                
-                # Store assistant response in memory
-                self._memory_buffer.put(ChatMessage(role="assistant", content=llm_output))
-                
-                return stop_workflow(
-                    response=reasoning_step.response,
-                    sources=self._sources,
-                    reasoning=current_reasoning,
-                    chat_history=self._memory_buffer.get()
-                )
-                
-            else:
-                # Other reasoning step (e.g., ObservationReasoningStep) - continue
-                if self._verbose:
-                    print(f"Continuing reasoning with step type: {type(reasoning_step).__name__}")
-                current_reasoning.append(reasoning_step)
-                await ctx.set(CTX_CURRENT_REASONING, current_reasoning)
-                return PrepEvent()
-                
+            reasoning_step = self._output_parser.parse(llm_output or "", is_streaming=False)
         except ValueError as e:
-            # Parser couldn't parse the output - this might be a thought-only response
             if self._verbose:
-                print(f"Parser error (continuing): {e}")
+                print(f"Parser error: {e}")
             
-            # Check if we should continue or have hit max reasoning
-            if len(current_reasoning) >= self._max_reasoning - 1:
-                # About to hit max reasoning, add final response step
-                current_reasoning.append(
-                    ResponseReasoningStep(
-                        thought="Exceeded max reasoning steps",
-                        response="I couldn't complete the reasoning in the allowed iterations."
+            # Return error with retry messages
+            return AgentOutput(
+                response=response.message,
+                current_agent_name=self.name,
+                raw=response.raw if hasattr(response, 'raw') else None,
+                retry_messages=[
+                    response.message,
+                    ChatMessage(
+                        role="user",
+                        content=f"Error parsing output: {e}\\n\\nPlease format your response correctly."
                     )
-                )
-                await ctx.set(CTX_CURRENT_REASONING, current_reasoning)
-                return stop_workflow(
-                    response="I couldn't complete the reasoning in the allowed iterations.",
-                    sources=self._sources,
-                    reasoning=current_reasoning,
-                    chat_history=self._memory_buffer.get()
-                )
-            
-            # Continue with next iteration
-            return PrepEvent()
-        except Exception as e:
+                ]
+            )
+        
+        # Add reasoning step to context
+        current_reasoning.append(reasoning_step)
+        await ctx.store.set(CTX_CURRENT_REASONING, current_reasoning)
+        
+        # Handle different reasoning step types
+        if reasoning_step.is_done:
+            # Response step - we have an answer
             if self._verbose:
-                print(f"Error parsing LLM output: {e}")
-            # Continue with next iteration
-            return PrepEvent()
+                print(f"Final answer: {reasoning_step.response if hasattr(reasoning_step, 'response') else llm_output}")
             
-    @step
-    async def execute_tool(self, ctx: Context, ev: ToolCallEvent) -> PrepEvent:
-        """Execute the requested tools.
+            return AgentOutput(
+                response=ChatMessage(role="assistant", content=llm_output or ""),
+                current_agent_name=self.name,
+                raw=response.raw if hasattr(response, 'raw') else None
+            )
+        
+        # Action step - need to execute tool
+        if isinstance(reasoning_step, ActionReasoningStep):
+            if self._verbose:
+                print(f"Executing tool: {reasoning_step.action}")
+            
+            # Create tool selection
+            tool_selection = ToolSelection(
+                tool_id=str(uuid.uuid4()),
+                tool_name=reasoning_step.action,
+                tool_kwargs=reasoning_step.action_input
+            )
+            
+            return AgentOutput(
+                response=response.message,
+                tool_calls=[tool_selection],
+                current_agent_name=self.name,
+                raw=response.raw if hasattr(response, 'raw') else None
+            )
+        
+        # Shouldn't reach here, but continue if we do
+        return AgentOutput(
+            response=response.message,
+            current_agent_name=self.name,
+            raw=response.raw if hasattr(response, 'raw') else None
+        )
+    
+    async def handle_tool_call_results(
+        self, ctx: Context, results: List[ToolCallResult], memory: BaseMemory
+    ) -> None:
+        """Handle tool call results by adding observations to reasoning.
         
         Args:
             ctx: The workflow context
-            ev: The tool call event
-            
-        Returns:
-            PrepEvent to continue reasoning
+            results: List of tool call results
+            memory: The agent's memory
         """
         # Get current reasoning from context
-        current_reasoning: List[BaseReasoningStep] = await ctx.get(CTX_CURRENT_REASONING, default=[])
+        current_reasoning: List[BaseReasoningStep] = await ctx.store.get(
+            CTX_CURRENT_REASONING, default=[]
+        )
         
-        for tool_call in ev.tool_calls:
-            tool_name = tool_call.tool_name
-            tool_kwargs = tool_call.tool_kwargs
+        # Get sources from context
+        sources: List[Any] = await ctx.store.get(CTX_SOURCES, default=[])
+        
+        # Process each tool result
+        for result in results:
+            observation = str(result.tool_output.content)
             
-            if tool_name not in self._tool_registry:
-                observation = f"Error: Tool '{tool_name}' not found"
-            else:
-                try:
-                    tool = self._tool_registry[tool_name]
-                    result = tool.function(**tool_kwargs)
-                    observation = str(result)
-                    self._sources.append(result)
-                except Exception as e:
-                    observation = f"Error executing tool: {str(e)}"
-                    
             if self._verbose:
-                print(f"Tool Output: {observation}")
-                
+                print(f"Tool Output ({result.tool_name}): {observation}")
+            
             # Add observation to reasoning
-            observation_step = ObservationReasoningStep(observation=observation)
-            current_reasoning.append(observation_step)
+            obs_step = ObservationReasoningStep(
+                observation=observation,
+                return_direct=result.return_direct
+            )
+            current_reasoning.append(obs_step)
             
-        # Update reasoning in context
-        await ctx.set(CTX_CURRENT_REASONING, current_reasoning)
+            # Track sources if not an error
+            if not result.tool_output.is_error:
+                # Try to preserve the original type if possible
+                try:
+                    # If the content looks like a number, convert it
+                    if isinstance(result.tool_output.content, str) and result.tool_output.content.isdigit():
+                        sources.append(int(result.tool_output.content))
+                    else:
+                        sources.append(result.tool_output.content)
+                except Exception:
+                    sources.append(result.tool_output.content)
             
-        return PrepEvent()
+            # If return_direct, add response step
+            if result.return_direct and not result.tool_output.is_error:
+                current_reasoning.append(
+                    ResponseReasoningStep(
+                        thought=observation,
+                        response=observation,
+                        is_streaming=False
+                    )
+                )
+                break
         
+        # Update context
+        await ctx.store.set(CTX_CURRENT_REASONING, current_reasoning)
+        await ctx.store.set(CTX_SOURCES, sources)
+    
+    async def finalize(
+        self, ctx: Context, output: AgentOutput, memory: BaseMemory
+    ) -> AgentOutput:
+        """Finalize the agent's execution.
+        
+        This method:
+        1. Stores the complete reasoning chain in memory
+        2. Cleans up the response (removes "Answer:" prefix)
+        3. Clears the reasoning context for next interaction
+        
+        Args:
+            ctx: The workflow context
+            output: The agent's output
+            memory: The agent's memory
+            
+        Returns:
+            Finalized AgentOutput
+        """
+        # Get current reasoning from context
+        current_reasoning: List[BaseReasoningStep] = await ctx.store.get(
+            CTX_CURRENT_REASONING, default=[]
+        )
+        
+        # If we have reasoning steps and the last one is a response
+        if current_reasoning and isinstance(current_reasoning[-1], ResponseReasoningStep):
+            # Create reasoning string for memory
+            reasoning_str = "\\n".join([step.get_content() for step in current_reasoning])
+            
+            if reasoning_str:
+                # Store in memory
+                reasoning_msg = ChatMessage(role="assistant", content=reasoning_str)
+                await memory.aput(reasoning_msg)
+            
+            # Clean up response - remove "Answer:" prefix if present
+            if output.response.content and "Answer:" in output.response.content:
+                start_idx = output.response.content.find("Answer:")
+                if start_idx != -1:
+                    output.response.content = output.response.content[
+                        start_idx + len("Answer:"):
+                    ].strip()
+        
+        # Store reasoning and sources for later retrieval in run()
+        await ctx.store.set("final_reasoning", current_reasoning)
+        await ctx.store.set("final_sources", await ctx.store.get(CTX_SOURCES, default=[]))
+        
+        # Clear reasoning context for next interaction
+        await ctx.store.set(CTX_CURRENT_REASONING, [])
+        await ctx.store.set(CTX_SOURCES, [])
+        
+        return output
+    
     async def run(self, user_msg: str, **kwargs: Any) -> dict[str, Any]:  # type: ignore[override]
         """Run the workflow with a user message.
         
@@ -364,16 +409,69 @@ class SimpleReActAgent(Workflow):
                 - reasoning: List of reasoning steps
                 - chat_history: The conversation history
         """
-        result = await super().run(user_msg=user_msg, **kwargs)
+        from llama_index.core.memory import ChatMemoryBuffer
         
-        # Ensure we return a dictionary with expected keys
-        if isinstance(result, dict):
-            return result
+        # Use BaseWorkflowAgent's run method
+        handler = super().run(user_msg=user_msg, **kwargs)
         
-        # Fallback if somehow we don't get a dict (shouldn't happen with stop_workflow)
+        # Process all events
+        async for event in handler.stream_events():
+            pass
+        
+        # Get the final result
+        result = await handler
+        
+        # Extract the response from AgentOutput
+        if hasattr(result, 'response'):
+            response_content = result.response.content if hasattr(result.response, 'content') else str(result.response)
+        else:
+            response_content = str(result)
+        
+        # Get the workflow context to retrieve reasoning and sources
+        reasoning = []
+        sources = []
+        
+        # Try to access the handler's context
+        try:
+            # The handler should have a context attribute
+            if hasattr(handler, 'ctx'):
+                ctx = handler.ctx
+            elif hasattr(handler, '_context'):
+                ctx = handler._context  
+            elif hasattr(handler, 'workflow') and hasattr(handler.workflow, '_context'):
+                ctx = handler.workflow._context
+            else:
+                # Try to get it from the workflow instance
+                ctx = getattr(self, '_context', None)
+            
+            if ctx:
+                # Try to get final values stored in finalize
+                reasoning = await ctx.store.get("final_reasoning", default=[])
+                sources = await ctx.store.get("final_sources", default=[])
+                
+                # If not found, try the regular keys
+                if not reasoning:
+                    reasoning = await ctx.store.get(CTX_CURRENT_REASONING, default=[])
+                if not sources:
+                    sources = await ctx.store.get(CTX_SOURCES, default=[])
+        except Exception as e:
+            if self._verbose:
+                print(f"Warning: Could not retrieve context data: {e}")
+        
+        # Get memory for chat history
+        memory = kwargs.get('memory', None)
+        if not memory:
+            memory = ChatMemoryBuffer.from_defaults(llm=self.llm)
+        
+        chat_history: List[ChatMessage] = []
+        try:
+            chat_history = await memory.aget()
+        except Exception:
+            pass
+        
         return {
-            "response": str(result),
-            "sources": [],
-            "reasoning": [],
-            "chat_history": []
+            "response": response_content,
+            "sources": sources,
+            "reasoning": reasoning,
+            "chat_history": chat_history
         }
