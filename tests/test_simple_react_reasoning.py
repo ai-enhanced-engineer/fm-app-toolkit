@@ -60,7 +60,8 @@ async def test_thought_produces_expected_reasoning_and_action_call(
         max_reasoning=1
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="What is 2 + 2?")
+    handler = agent.run(user_msg="What is 2 + 2?")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Validate response is the max reasoning message due to limit
     assert "couldn't complete" in result["response"].lower()
@@ -109,7 +110,8 @@ async def test_thought_produces_expected_reasoning_and_direct_answer(
         ]
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="What is 2 + 2?")
+    handler = agent.run(user_msg="What is 2 + 2?")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Validate response
     assert result["response"] == "The sum of 2 and 2 is 4."
@@ -141,7 +143,9 @@ async def test_thought_produces_expected_reasoning_and_no_answer(
         ]
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="What is the weather?")
+    handler = agent.run(user_msg="What is the weather?")
+    
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Validate response
     assert result["response"] == "Sorry, I cannot answer this question with the available tools."
@@ -171,7 +175,9 @@ async def test_handles_empty_response_properly(
     """Test handling of empty LLM response."""
     agent = setup_simple_react_agent(chain=[""])  # Empty response
     
-    result: dict[str, Any] = await agent.run(user_msg="Can you help me?")
+    handler = agent.run(user_msg="Can you help me?")
+    
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # With empty response, ReActOutputParser returns ResponseReasoningStep with empty response
     assert result["response"] == ""
@@ -197,7 +203,9 @@ async def test_handles_untagged_output(
         max_reasoning=2
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="Tell me a joke.")
+    handler = agent.run(user_msg="Tell me a joke.")
+    
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # ReActOutputParser handles untagged output as direct response
     assert result["response"] == "This is an unexpected response format that does not follow the required structure."
@@ -215,7 +223,9 @@ async def test_handles_response_without_thought(
         chain=["Answer: Sure! I can help you with that."]
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="Can you help me?")
+    handler = agent.run(user_msg="Can you help me?")
+    
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # ReActOutputParser treats Answer without Thought as direct response
     # Note: SimpleReActAgent's finalize method removes "Answer:" prefix for cleaner output
@@ -249,7 +259,9 @@ async def test_handles_unrecognized_tool_call(
         max_reasoning=1
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="What is the result?")
+    handler = agent.run(user_msg="What is the result?")
+    
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Should hit max reasoning after failed tool call
     assert "couldn't complete" in result["response"].lower()
@@ -305,7 +317,9 @@ async def test_handles_thought_without_answer(
         max_reasoning=3  # Higher than chain length
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="What is the meaning of life?")
+    handler = agent.run(user_msg="What is the meaning of life?")
+    
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Parser will fail on first two, then get empty response from exhausted chain
     # Empty response is parsed as ResponseReasoningStep with empty content
@@ -342,7 +356,9 @@ async def test_max_reasoning_with_parser_errors(
         max_reasoning=1  # This limit doesn't apply to parser error retries
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="Test max reasoning")
+    handler = agent.run(user_msg="Test max reasoning")
+    
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # With parser errors and retry mechanism, we get an empty response
     # when the chain is exhausted
@@ -373,7 +389,8 @@ async def test_multi_step_reasoning_chain(
         max_reasoning=10
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="Calculate (3 * 4) + 5")
+    handler = agent.run(user_msg="Calculate (3 * 4) + 5")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Validate response
     assert result["response"] == "(3 × 4) + 5 = 17"

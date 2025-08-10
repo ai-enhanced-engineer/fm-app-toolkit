@@ -77,7 +77,9 @@ async def test_agent_multi_tool_sequential_reasoning(create_agent_with_sample_to
             tool_functions=[roll_dice, flip_coin]
         )
         
-        result = await agent.run("Roll two dice and flip a coin")
+        handler = agent.run("Roll two dice and flip a coin")
+        
+        result = await agent.get_results_from_handler(handler)
         
         # Verify multi-step execution
         assert "6" in result["response"]
@@ -117,7 +119,9 @@ async def test_agent_handles_tool_errors_gracefully(create_agent_with_sample_too
         tool_functions=[calculate]
     )
     
-    result = await agent.run("What is 10 divided by 0?")
+    handler = agent.run("What is 10 divided by 0?")
+    
+    result = await agent.get_results_from_handler(handler)
     
     # Verify error is handled gracefully
     assert "cannot divide" in result["response"].lower() or "undefined" in result["response"].lower()
@@ -157,7 +161,9 @@ async def test_agent_selects_appropriate_tool_from_many(create_agent_with_sample
                 ]
             )
             
-            result = await agent.run("What's the weather in Seattle?")
+            handler = agent.run("What's the weather in Seattle?")
+            
+            result = await agent.get_results_from_handler(handler)
             
             # Verify correct tool selection
             assert "75°F" in result["response"]
@@ -201,7 +207,8 @@ async def test_agent_with_rule_based_mock() -> None:
     )
     
     # The mock will intelligently respond based on the query content
-    result = await agent.run("What's the weather like?")
+    handler = agent.run("What's the weather like?")
+    result = await agent.get_results_from_handler(handler)
     
     # This is more realistic - the mock decides based on content, not scripts
     assert isinstance(result, dict)

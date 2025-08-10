@@ -53,7 +53,8 @@ async def test_single_tool_execution(setup_simple_react_agent: Callable) -> None
     )
     
     # Run agent and get full result
-    result: dict[str, Any] = await agent.run(user_msg="What is 5 plus 3?")
+    handler = agent.run(user_msg="What is 5 plus 3?")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Verify response
     assert result["response"] == "The sum of 5 and 3 is 8."
@@ -84,7 +85,8 @@ async def test_multi_step_reasoning(setup_simple_react_agent: Callable) -> None:
     )
     
     # Run agent
-    result: dict[str, Any] = await agent.run(user_msg="Calculate (4 * 5) + 10")
+    handler = agent.run(user_msg="Calculate (4 * 5) + 10")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Verify result
     assert result["response"] == "(4 × 5) + 10 = 30"
@@ -108,7 +110,8 @@ async def test_direct_answer_without_tools(setup_simple_react_agent: Callable) -
     )
     
     # Run agent
-    result: dict[str, Any] = await agent.run(user_msg="Hello!")
+    handler = agent.run(user_msg="Hello!")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Verify we got a greeting response
     assert "Hello" in result["response"]
@@ -132,7 +135,8 @@ async def test_string_manipulation(setup_simple_react_agent: Callable) -> None:
     )
     
     # Run agent
-    result: dict[str, Any] = await agent.run(user_msg="Reverse the word 'hello'")
+    handler = agent.run(user_msg="Reverse the word 'hello'")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Verify result
     assert "olleh" in result["response"]
@@ -154,7 +158,8 @@ async def test_error_handling(setup_simple_react_agent: Callable) -> None:
     )
     
     # Run agent - should handle error gracefully
-    result: dict[str, Any] = await agent.run(user_msg="What is 10 divided by 0?")
+    handler = agent.run(user_msg="What is 10 divided by 0?")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Should mention the error
     assert "zero" in result["response"].lower() or "undefined" in result["response"].lower()
@@ -180,7 +185,8 @@ async def test_max_reasoning_limit(setup_simple_react_agent: Callable) -> None:
     )
     
     # Run agent
-    result: dict[str, Any] = await agent.run(user_msg="Complex query")
+    handler = agent.run(user_msg="Complex query")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Should return the max reasoning message
     assert "couldn't complete" in result["response"].lower() or "allowed" in result["response"].lower()
@@ -208,7 +214,8 @@ async def test_multiple_tools_selection(setup_simple_react_agent: Callable) -> N
     )
     
     # Run agent
-    result: dict[str, Any] = await agent.run(user_msg="How many words in 'hello world test'?")
+    handler = agent.run(user_msg="How many words in 'hello world test'?")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Verify result
     assert "3" in result["response"]
@@ -263,7 +270,8 @@ async def test_workflow_returns_dict(setup_simple_react_agent: Callable) -> None
     )
     
     # Run and get full result
-    result: dict[str, Any] = await agent.run(user_msg="Test")
+    handler = agent.run(user_msg="Test")
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     # Check that we get a dictionary with expected keys
     assert isinstance(result, dict)
@@ -287,7 +295,9 @@ async def test_workflow_with_tools(setup_simple_react_agent: Callable) -> None:
         tools=[Tool(name="add", function=add, description="Add numbers")]
     )
     
-    result: dict[str, Any] = await agent.run(user_msg="Add 2 and 3")
+    handler = agent.run(user_msg="Add 2 and 3")
+    
+    result: dict[str, Any] = await agent.get_results_from_handler(handler)
     
     assert result["response"] == "The sum is 5"
     assert len(result["sources"]) == 1
@@ -319,7 +329,8 @@ async def test_mock_llm_chain_agent_integration_sequence(setup_simple_react_agen
     )
     
     # Execute the agent - it should receive responses in exact order
-    result = await agent.run(user_msg="Calculate 2 * 3 + 4")
+    handler = agent.run(user_msg="Calculate 2 * 3 + 4")
+    result = await agent.get_results_from_handler(handler)
     
     # Validate the agent received and processed all responses in order
     assert result["response"] == "2 × 3 + 4 = 10"

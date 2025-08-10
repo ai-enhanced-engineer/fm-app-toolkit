@@ -40,6 +40,9 @@ from llama_index.core.workflow import Context
 
 from ai_test_lab.logging import get_logger
 
+# Get logger for this module
+logger = get_logger(__name__)
+
 # Context key for storing current reasoning steps
 CTX_CURRENT_REASONING = "current_reasoning"
 CTX_SOURCES = "sources"
@@ -98,8 +101,15 @@ class SimpleReActAgent(BaseWorkflowAgent):
                         description=tool.description
                     )
                     function_tools.append(func_tool)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(
+                        "Failed to register tool",
+                        tool_name=tool.name,
+                        error=str(e)
+                    )
+                    if self._verbose:
+                        print(f"Warning: Failed to register tool '{tool.name}': {e}")
+                    # Continue processing other tools
         
         # Combine system header and extra context for system prompt
         system_prompt = system_header
@@ -427,24 +437,62 @@ class SimpleReActAgent(BaseWorkflowAgent):
         
         return output
     
-    async def run(self, user_msg: str, **kwargs: Any) -> dict[str, Any]:  # type: ignore[override]
-        """Run the workflow with a user message.
+    def _get_context(self, handler: Any) -> Optional[Context]:
+        """Get context from handler using multiple fallback strategies.
+        
+        The context can be stored in different locations depending on the
+        workflow implementation. This method tries common patterns:
+        1. handler.ctx - Direct context attribute
+        2. handler._context - Private context attribute
+        3. handler.workflow._context - Context via workflow reference
+        4. self._context - Context from the workflow instance itself
         
         Args:
-            user_msg: The user's query
-            **kwargs: Additional keyword arguments
+            handler: The handler object that may contain context
+            
+        Returns:
+            Context object if found, None otherwise
+        """
+        # Try direct context attribute (most common)
+        if hasattr(handler, 'ctx'):
+            return cast(Optional[Context], handler.ctx)
+            
+        # Try private context attribute
+        if hasattr(handler, '_context'):
+            return cast(Optional[Context], handler._context)
+            
+        # Try context via workflow reference
+        if hasattr(handler, 'workflow') and hasattr(handler.workflow, '_context'):
+            return cast(Optional[Context], handler.workflow._context)
+            
+        # Try context from self (workflow instance)
+        if hasattr(self, '_context'):
+            return cast(Optional[Context], getattr(self, '_context', None))
+            
+        return None
+    
+    async def get_results_from_handler(self, handler: Any) -> dict[str, Any]:
+        """Extract results from a WorkflowHandler for testing/debugging.
+        
+        This utility method shows how to work with WorkflowHandler results
+        in production code. It processes the handler's events and extracts
+        the response, reasoning steps, sources, and chat history.
+        
+        Args:
+            handler: The WorkflowHandler returned by run()
             
         Returns:
             Dictionary containing:
                 - response: The agent's response string
-                - sources: List of sources/tool outputs
-                - reasoning: List of reasoning steps
+                - sources: List of tool outputs used
+                - reasoning: List of reasoning steps taken
                 - chat_history: The conversation history
-        """
-        from llama_index.core.memory import ChatMemoryBuffer
         
-        # Use BaseWorkflowAgent's run method
-        handler = super().run(user_msg=user_msg, **kwargs)
+        Example:
+            >>> handler = agent.run(user_msg="What is 2 + 2?")
+            >>> results = await agent.get_results_from_handler(handler)
+            >>> print(results["response"])  # "The answer is 4"
+        """
         
         # Process all events
         async for event in handler.stream_events():
@@ -463,18 +511,9 @@ class SimpleReActAgent(BaseWorkflowAgent):
         reasoning = []
         sources = []
         
-        # Try to access the handler's context
+        # Try to access the handler's context using helper method
         try:
-            # The handler should have a context attribute
-            if hasattr(handler, 'ctx'):
-                ctx = handler.ctx
-            elif hasattr(handler, '_context'):
-                ctx = handler._context  
-            elif hasattr(handler, 'workflow') and hasattr(handler.workflow, '_context'):
-                ctx = handler.workflow._context
-            else:
-                # Try to get it from the workflow instance
-                ctx = getattr(self, '_context', None)
+            ctx = self._get_context(handler)
             
             if ctx:
                 # Try to get final values stored in finalize
@@ -488,19 +527,18 @@ class SimpleReActAgent(BaseWorkflowAgent):
                     sources = await ctx.store.get(CTX_SOURCES, default=[])
         except Exception as e:
             if self._verbose:
-                self._logger.warning(
+                logger.warning(
                     "Could not retrieve context data",
                     error=str(e)
                 )
         
-        # Get memory for chat history
-        memory = kwargs.get('memory', None)
-        if not memory:
-            memory = ChatMemoryBuffer.from_defaults(llm=self.llm)
-        
+        # Get memory for chat history - handler might have memory in its context
         chat_history: List[ChatMessage] = []
         try:
-            chat_history = await memory.aget()
+            if hasattr(handler, 'workflow') and hasattr(handler.workflow, '_memory'):
+                memory = handler.workflow._memory
+                if memory:
+                    chat_history = await memory.aget()
         except Exception:
             pass
         
