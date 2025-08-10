@@ -2,6 +2,10 @@
 
 <!-- version list -->
 
+## v1.0.0 (2025-08-10)
+
+- Initial Release
+
 ## v1.0.0 (2025-08-09)
 
 ### Major Changes
