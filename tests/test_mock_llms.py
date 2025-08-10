@@ -6,7 +6,7 @@ import pytest
 from llama_cloud import MessageRole
 from llama_index.core.base.llms.types import ChatMessage
 
-from ai_test_lab.testing.mocks import MockLLMEchoStream, MockLLMWithChain
+from fm_app_toolkit.testing.mocks import MockLLMEchoStream, MockLLMWithChain
 
 # ----------------------------------------------
 # FIXTURES

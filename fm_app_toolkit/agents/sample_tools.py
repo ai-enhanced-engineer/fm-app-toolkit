@@ -8,7 +8,7 @@ Note: Some tools return mock data and are intended for demonstration purposes.
 import random
 from datetime import datetime, timezone
 
-from ai_test_lab.logging import get_logger
+from fm_app_toolkit.logging import get_logger
 
 # Module-level logger
 logger = get_logger(__name__)

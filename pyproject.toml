@@ -1,7 +1,7 @@
 [project]
-name = "llm-testing-strategies"
+name = "fm-app-toolkit"
 version = "1.0.0"
-description = "Demonstration of testing strategies for LLM applications using mock LLMs with LlamaIndex"
+description = "Foundation Model Application Toolkit - Production patterns for FM-based applications using LlamaIndex"
 authors = [{name="Leopoldo Garcia Vargas", email="lk13.dev@gmail.com"}]
 requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
@@ -60,7 +60,7 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-    "ai_test_lab*",
+    "fm_app_toolkit*",
 ]
 
 [tool.ruff]

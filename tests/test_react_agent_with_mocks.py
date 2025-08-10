@@ -4,8 +4,8 @@ import pytest
 from llama_index.core.agent.workflow import ReActAgent
 from llama_index.core.tools import FunctionTool
 
-from ai_test_lab.testing.mocks import MockLLMEchoStream, MockLLMWithChain
-from ai_test_lab.tools import add, divide, multiply, reverse_string, word_count
+from fm_app_toolkit.testing.mocks import MockLLMEchoStream, MockLLMWithChain
+from fm_app_toolkit.tools import add, divide, multiply, reverse_string, word_count
 
 
 class TestReActAgentWithMockLLM:

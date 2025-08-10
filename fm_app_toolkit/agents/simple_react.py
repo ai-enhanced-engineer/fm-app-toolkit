@@ -38,7 +38,7 @@ from llama_index.core.tools import (
 )
 from llama_index.core.workflow import Context
 
-from ai_test_lab.logging import get_logger
+from fm_app_toolkit.logging import get_logger
 
 # Get logger for this module
 logger = get_logger(__name__)
