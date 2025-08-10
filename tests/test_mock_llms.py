@@ -16,8 +16,10 @@ from fm_app_toolkit.testing.mocks import MockLLMEchoStream, MockLLMWithChain
 @pytest.fixture
 def mock_llm_with_chain() -> Callable[[list[str]], MockLLMWithChain]:
     """Fixture to create MockLLMWithChain instances."""
+
     def _create(chain: list[str]) -> MockLLMWithChain:
         return MockLLMWithChain(chain=chain)
+
     return _create
 
 
@@ -150,7 +152,7 @@ def test_mock_llm_chain_metadata_properties(mock_llm_with_chain: Callable) -> No
 
 def test_mock_llm_chain_stream_preserves_full_messages(mock_llm_with_chain: Callable) -> None:
     """Test that streaming preserves the full message content from chain.
-    
+
     This test validates that character-by-character streaming doesn't corrupt
     the original messages, which is especially important for ReAct agent testing
     where exact formatting matters.
@@ -160,13 +162,13 @@ def test_mock_llm_chain_stream_preserves_full_messages(mock_llm_with_chain: Call
         "Thought: Found results.\nAnswer: Here are the search results.",
     ]
     mock_llm = mock_llm_with_chain(chain)
-    
+
     # Stream first message and verify full content
     stream1 = mock_llm.stream_chat([ChatMessage(role=MessageRole.USER, content="Query 1")])
     chunks1 = list(stream1)
     full_content1 = "".join(c.delta for c in chunks1)
     assert full_content1 == chain[0]
-    
+
     # Stream second message and verify full content
     stream2 = mock_llm.stream_chat([ChatMessage(role=MessageRole.USER, content="Query 2")])
     chunks2 = list(stream2)
@@ -182,7 +184,7 @@ async def test_mock_llm_chain_astream_preserves_full_messages(mock_llm_with_chai
         "Thought: Calculation complete.\nAnswer: The result is 42.",
     ]
     mock_llm = mock_llm_with_chain(chain)
-    
+
     # Async stream first message
     stream1 = await mock_llm.astream_chat([ChatMessage(role=MessageRole.USER, content="Q1")])
     chunks1 = []
@@ -190,7 +192,7 @@ async def test_mock_llm_chain_astream_preserves_full_messages(mock_llm_with_chai
         chunks1.append(chunk)
     full_content1 = "".join(c.delta for c in chunks1)
     assert full_content1 == chain[0]
-    
+
     # Async stream second message
     stream2 = await mock_llm.astream_chat([ChatMessage(role=MessageRole.USER, content="Q2")])
     chunks2 = []
@@ -294,7 +296,7 @@ def generate_expected_chunks(content: str, chunk_size: int = 7) -> list[str]:
     """Generate expected chunks from content for streaming validation."""
     if not content:
         return []  # Empty content produces no chunks
-    return [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
+    return [content[i : i + chunk_size] for i in range(0, len(content), chunk_size)]
 
 
 # ----------------------------------------------
@@ -306,23 +308,25 @@ def test_mock_llm_echo_stream_cumulative_content_building(mock_llm_echo: MockLLM
     """Test that streaming builds cumulative content correctly at each chunk."""
     test_content = "Tell me about the universe."  # 27 chars = 4 chunks (7+7+7+6)
     messages = [ChatMessage(role=MessageRole.USER, content=test_content)]
-    
+
     # Generate expected chunks
     expected_chunks = generate_expected_chunks(test_content)
     assert len(expected_chunks) == 4  # Verify we get 4 chunks
-    
+
     cumulative_content = ""
     stream = mock_llm_echo.stream_chat(messages)
-    
+
     for i, response in enumerate(stream):
         # Verify delta matches expected chunk
-        assert response.delta == expected_chunks[i], f"Chunk {i}: expected '{expected_chunks[i]}', got '{response.delta}'"
-        
+        assert response.delta == expected_chunks[i], (
+            f"Chunk {i}: expected '{expected_chunks[i]}', got '{response.delta}'"
+        )
+
         # Build and verify cumulative content
         cumulative_content += response.delta
         assert response.message.content == cumulative_content
         assert response.message.role == MessageRole.ASSISTANT
-    
+
     # Verify final content matches original
     assert cumulative_content == test_content
 
@@ -332,48 +336,52 @@ async def test_mock_llm_echo_astream_cumulative_content_building(mock_llm_echo: 
     """Test async streaming builds cumulative content correctly at each chunk."""
     test_content = "Tell me about the universe."  # 27 chars
     messages = [ChatMessage(role=MessageRole.USER, content=test_content)]
-    
+
     expected_chunks = generate_expected_chunks(test_content)
     cumulative_content = ""
-    
+
     stream = await mock_llm_echo.astream_chat(messages)
     chunk_index = 0
-    
+
     async for response in stream:
         # Verify delta matches expected chunk
-        assert response.delta == expected_chunks[chunk_index], \
+        assert response.delta == expected_chunks[chunk_index], (
             f"Chunk {chunk_index}: expected '{expected_chunks[chunk_index]}', got '{response.delta}'"
-        
+        )
+
         # Build and verify cumulative content
         cumulative_content += response.delta
         assert response.message.content == cumulative_content
         assert response.message.role == MessageRole.ASSISTANT
         chunk_index += 1
-    
+
     # Verify we processed all expected chunks
     assert chunk_index == len(expected_chunks)
     assert cumulative_content == test_content
 
 
-@pytest.mark.parametrize("content,expected_chunks", [
-    ("", []),  # Empty content - no chunks produced
-    ("Hi", ["Hi"]),  # Less than chunk size
-    ("1234567", ["1234567"]),  # Exactly chunk size (7)
-    ("12345678", ["1234567", "8"]),  # Slightly over
-    ("A" * 14, ["A" * 7, "A" * 7]),  # Exactly 2 chunks
-    ("A" * 20, ["A" * 7, "A" * 7, "A" * 6]),  # Multiple chunks with remainder
-    ("Test message for chunking", ["Test me", "ssage f", "or chun", "king"]),  # Real text
-])
+@pytest.mark.parametrize(
+    "content,expected_chunks",
+    [
+        ("", []),  # Empty content - no chunks produced
+        ("Hi", ["Hi"]),  # Less than chunk size
+        ("1234567", ["1234567"]),  # Exactly chunk size (7)
+        ("12345678", ["1234567", "8"]),  # Slightly over
+        ("A" * 14, ["A" * 7, "A" * 7]),  # Exactly 2 chunks
+        ("A" * 20, ["A" * 7, "A" * 7, "A" * 6]),  # Multiple chunks with remainder
+        ("Test message for chunking", ["Test me", "ssage f", "or chun", "king"]),  # Real text
+    ],
+)
 def test_mock_llm_echo_stream_various_lengths(
     mock_llm_echo: MockLLMEchoStream, content: str, expected_chunks: list[str]
 ) -> None:
     """Test streaming with various message lengths."""
     messages = [ChatMessage(role=MessageRole.USER, content=content)]
     stream = mock_llm_echo.stream_chat(messages)
-    
+
     chunks = [chunk.delta for chunk in stream]
     assert chunks == expected_chunks, f"Content '{content}': expected {expected_chunks}, got {chunks}"
-    
+
     # Also verify the final message content is correct
     if chunks:
         stream = mock_llm_echo.stream_chat(messages)
@@ -385,27 +393,31 @@ def test_mock_llm_echo_stream_various_lengths(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("content,expected_chunk_count", [
-    ("", 0),  # Empty produces no chunks
-    ("Short", 1),  # Less than 7 chars
-    ("Exactly7", 2),  # 8 chars = 2 chunks
-    ("A" * 21, 3),  # 21 chars = 3 chunks
-    ("This is a longer message for testing async streaming", 8),  # 52 chars
-])
+@pytest.mark.parametrize(
+    "content,expected_chunk_count",
+    [
+        ("", 0),  # Empty produces no chunks
+        ("Short", 1),  # Less than 7 chars
+        ("Exactly7", 2),  # 8 chars = 2 chunks
+        ("A" * 21, 3),  # 21 chars = 3 chunks
+        ("This is a longer message for testing async streaming", 8),  # 52 chars
+    ],
+)
 async def test_mock_llm_echo_astream_various_lengths(
     mock_llm_echo: MockLLMEchoStream, content: str, expected_chunk_count: int
 ) -> None:
     """Test async streaming with various message lengths."""
     messages = [ChatMessage(role=MessageRole.USER, content=content)]
     stream = await mock_llm_echo.astream_chat(messages)
-    
+
     chunks = []
     async for chunk in stream:
         chunks.append(chunk)
-    
-    assert len(chunks) == expected_chunk_count, \
+
+    assert len(chunks) == expected_chunk_count, (
         f"Content length {len(content)}: expected {expected_chunk_count} chunks, got {len(chunks)}"
-    
+    )
+
     # Verify reassembled content
     reassembled = "".join(chunk.delta for chunk in chunks)
     assert reassembled == content

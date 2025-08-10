@@ -191,10 +191,10 @@ _configured = False
 
 def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
     """Get a structured logger instance.
-    
+
     Args:
         name: The name of the logger. If empty, uses the module name.
-        
+
     Returns:
         A configured structlog BoundLogger instance.
     """
@@ -202,7 +202,7 @@ def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
     if not _configured:
         configure_structlog()
         _configured = True
-    
+
     if not name:
         name = __name__
     return structlog.get_logger(name)  # type: ignore

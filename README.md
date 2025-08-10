@@ -26,11 +26,22 @@ This toolkit addresses each of these challenges with practical, reusable solutio
 
 ## 🚀 Key Components
 
+### Data Loading with Repository Pattern
+Clean abstraction for document loading that enables testing without external services:
+- **DocumentRepository** - Abstract interface for consistent document handling
+- **LocalDocumentRepository** - Load documents from local filesystem for development/testing
+- **GCPDocumentRepository** - Production loading from Google Cloud Storage
+- Test with local files, deploy with cloud storage - same interface, zero code changes
+
+*📚 Full article on this pattern coming next week at [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)*
+
 ### Mock LLM Framework
 Complete mock implementations that extend LlamaIndex's base LLM class:
 - **MockLLMWithChain** - Sequential response patterns for multi-step workflows
 - **MockLLMEchoStream** - Streaming behavior testing
 - **RuleBasedMockLLM** - Dynamic responses based on configurable rules
+
+*See [testing/README.md](fm_app_toolkit/testing/README.md) for detailed documentation*
 
 ### Agent Implementations
 Production-ready agent patterns:
@@ -38,13 +49,7 @@ Production-ready agent patterns:
 - **WorkflowHandler Pattern** - Production-grade event handling and result extraction
 - **Tool Integration** - Seamless connection between agents and business logic
 
-### Testing Patterns
-Comprehensive testing strategies:
-- Deterministic unit tests without API calls
-- Multi-step reasoning validation
-- Error handling and edge cases
-- Tool selection and usage patterns
-- Streaming and async behavior
+*See [agents/README.md](fm_app_toolkit/agents/README.md) for implementation details*
 
 ## Quick Start
 
@@ -66,99 +71,85 @@ make environment-create
 make unit-test
 ```
 
-### Basic Usage
+## Basic Usage
+
+### Document Loading
+
+```python
+from fm_app_toolkit.data_loading import LocalDocumentRepository, GCPDocumentRepository
+
+# Development: Load from local files
+dev_repo = LocalDocumentRepository(input_dir="./data")
+documents = dev_repo.load_documents()
+
+# Production: Load from cloud storage  
+prod_repo = GCPDocumentRepository(bucket="my-bucket", prefix="docs/")
+documents = prod_repo.load_documents()
+
+# Same interface for both - build once, deploy anywhere
+```
+
+### Agent with Mock LLM
 
 ```python
 from fm_app_toolkit.agents import SimpleReActAgent
 from fm_app_toolkit.testing import MockLLMWithChain
-from fm_app_toolkit.tools import Tool
 
-# Define your business logic as tools
-def calculate_price(quantity: int, unit_price: float) -> float:
-    """Calculate total price with business rules."""
-    return quantity * unit_price * 0.9  # 10% discount
-
-tool = Tool(
-    name="calculate_price",
-    function=calculate_price,
-    description="Calculate price with discount"
-)
-
-# Create agent with mock for testing
+# Mock LLM for deterministic testing
 mock_llm = MockLLMWithChain(chain=[
-    "Thought: I need to calculate the price.\nAction: calculate_price\nAction Input: {'quantity': 5, 'unit_price': 10.0}",
-    "Thought: The discounted price is 45.0.\nAnswer: The total price with discount is $45.00"
+    "Thought: Calculate the price.\nAction: calculate_price\nAction Input: {'quantity': 5, 'unit_price': 10}",
+    "Thought: Done.\nAnswer: Total is $45 with 10% discount"
 ])
 
-agent = SimpleReActAgent(
-    llm=mock_llm,
-    tools=[tool],
-    system_header="You are a pricing assistant."
-)
-
-# Run the agent
-handler = agent.run(user_msg="What's the price for 5 items at $10 each?")
-result = await agent.get_results_from_handler(handler)
-print(result["response"])  # "The total price with discount is $45.00"
+# Create and run agent
+agent = SimpleReActAgent(llm=mock_llm, tools=[calculate_price_tool])
+result = await agent.run("What's the price for 5 items at $10 each?")
 ```
 
 ## Production Patterns
 
-### Testing Without API Costs
+### Swapping Mocks for Real LLMs
 
 ```python
-# Development and testing with mocks
-def test_agent_business_logic():
-    mock_llm = MockLLMWithChain(chain=[...])
-    agent = SimpleReActAgent(llm=mock_llm, tools=[...])
-    # Test deterministically without API calls
+def create_agent(environment="development"):
+    if environment == "development":
+        # Use mocks for testing
+        from fm_app_toolkit.testing import MockLLMWithChain
+        llm = MockLLMWithChain(chain=[...])
+    else:
+        # Use real LLM in production
+        from llama_index.llms.openai import OpenAI
+        llm = OpenAI(model="gpt-4")
     
-# Production with real LLMs
-def create_production_agent():
-    from llama_index.llms.openai import OpenAI
-    real_llm = OpenAI(model="gpt-4")
-    agent = SimpleReActAgent(llm=real_llm, tools=[...])
-    return agent
+    return SimpleReActAgent(llm=llm, tools=[...])
 ```
 
 ### WorkflowHandler Pattern
 
-The toolkit uses LlamaIndex's production WorkflowHandler pattern:
-
 ```python
-# Production-grade pattern
+# LlamaIndex production pattern for structured results
 handler = agent.run(user_msg="Process this request")
-
-# Extract structured results
 result = await agent.get_results_from_handler(handler)
 
-# Access all aspects of the execution
+# Access execution details
 print(result["response"])    # Final answer
 print(result["reasoning"])   # Step-by-step reasoning
-print(result["sources"])     # Tool outputs used
-print(result["chat_history"]) # Conversation context
+print(result["sources"])     # Tool outputs
 ```
 
 ### Rule-Based Testing
 
-For more flexible testing scenarios:
-
 ```python
 from fm_app_toolkit.testing import RuleBasedMockLLM
 
-rules = {
-    "price": "Thought: Calculate pricing.\nAction: calculate_price\nAction Input: {...}",
-    "inventory": "Thought: Check inventory.\nAction: check_stock\nAction Input: {...}",
-    "order": "Thought: Process order.\nAction: place_order\nAction Input: {...}"
-}
-
+# Dynamic responses based on query content
 mock_llm = RuleBasedMockLLM(
-    rules=rules,
+    rules={
+        "price": "Action: calculate_price",
+        "stock": "Action: check_inventory",
+    },
     default_behavior="direct_answer"
 )
-
-# Agent responds intelligently based on query content
-response = agent.run(user_msg="What's the price?")  # Triggers price rule
 ```
 
 ## Project Structure
@@ -167,64 +158,44 @@ response = agent.run(user_msg="What's the price?")  # Triggers price rule
 fm-app-toolkit/
 ├── fm_app_toolkit/          # Main package
 │   ├── agents/              # Agent implementations
-│   │   ├── simple_react.py  # ReAct agent using BaseWorkflowAgent
-│   │   ├── sample_tools.py  # Example tools
-│   │   └── events.py        # Workflow events
-│   ├── testing/             # Testing utilities
-│   │   ├── mock_chain.py    # Sequential mock LLM
-│   │   ├── mock_echo.py     # Streaming mock LLM
-│   │   ├── mock_rule_based.py # Rule-based mock LLM
-│   │   └── mocks.py         # Backward compatibility
-│   ├── tools.py             # Core tool implementations
-│   └── main.py              # FastAPI integration (optional)
-├── tests/                   # Comprehensive test suite
-│   ├── test_*.py           # 100+ tests demonstrating patterns
-│   └── test_utilities.py    # Test helper functions
-├── Makefile                 # Development commands
-├── pyproject.toml           # Project configuration
-└── CLAUDE.md               # Development guide
+│   ├── data_loading/        # Document loading patterns
+│   ├── testing/             # Mock LLM framework
+│   └── tools.py            # Core tool implementations
+├── tests/                   # 125+ tests demonstrating patterns
+├── Makefile                # Development commands
+└── CLAUDE.md              # Development guide
 ```
 
-## Testing Patterns
+Each module has its own README with detailed documentation and examples.
 
-### Deterministic Multi-Step Workflows
+## Testing Philosophy
+
+### Write Once, Test Everywhere
 
 ```python
-def test_complex_business_workflow():
-    chain = [
-        "Thought: Check inventory first.\nAction: check_inventory\nAction Input: {'item': 'widget'}",
-        "Thought: Stock available. Calculate price.\nAction: calculate_price\nAction Input: {'quantity': 10}",
-        "Thought: Process the order.\nAction: place_order\nAction Input: {'items': [...]}",
-        "Thought: Order placed.\nAnswer: Order #12345 confirmed for $450.00"
-    ]
+def test_business_workflow():
+    # Define deterministic test scenario
+    mock_llm = MockLLMWithChain(chain=[
+        "Thought: Check inventory.\nAction: check_stock",
+        "Thought: Calculate price.\nAction: calculate_price",
+        "Thought: Place order.\nAnswer: Order #123 confirmed"
+    ])
     
-    mock_llm = MockLLMWithChain(chain=chain)
     agent = SimpleReActAgent(llm=mock_llm, tools=business_tools)
-    
     result = await agent.run("Order 10 widgets")
-    assert "Order #12345" in result["response"]
-    assert len(result["sources"]) == 3  # Three tools used
-```
-
-### Error Handling
-
-```python
-def test_handles_api_failures():
-    chain = [
-        "Thought: Call external API.\nAction: fetch_data\nAction Input: {'id': '123'}",
-        "Thought: API failed. Use fallback.\nAction: get_cached_data\nAction Input: {'id': '123'}",
-        "Thought: Retrieved from cache.\nAnswer: Here's the cached data..."
-    ]
     
-    # Test graceful degradation and error recovery
+    assert "Order #123" in result["response"]
+    assert len(result["sources"]) == 2  # Two tools used
 ```
+
+*See [tests/](tests/) for comprehensive examples*
 
 ## Development Workflow
 
 ### Essential Commands
 
 ```bash
-# Environment Management
+# Environment
 make environment-create   # First-time setup
 make environment-sync     # Update dependencies
 
@@ -236,116 +207,48 @@ make type-check         # Type checking
 # Testing
 make unit-test          # Run all tests
 make validate-branch    # Pre-commit validation
-
-# Coverage
-make all-test           # Run with coverage report
 ```
-
-### Adding New Patterns
-
-1. **Create new tools** representing your business logic
-2. **Define mock chains** for testing scenarios
-3. **Implement agents** using the patterns provided
-4. **Test deterministically** with mocks
-5. **Deploy with real LLMs** in production
-
-## Why FM App Toolkit?
-
-### For Developers
-- **Faster Development** - No waiting for API responses during testing
-- **Lower Costs** - Zero API costs during development
-- **Better Testing** - Deterministic, reproducible tests
-- **Clear Patterns** - Production-ready implementations to build upon
-
-### For Teams
-- **CI/CD Ready** - No API keys needed in pipelines
-- **Consistent Testing** - Same results across all environments
-- **Knowledge Sharing** - Clear patterns for FM app development
-- **Production Focus** - Bridge from prototype to production
-
-### For Business
-- **Reduced Development Costs** - Minimize API usage during development
-- **Faster Time-to-Market** - Rapid iteration and testing
-- **Quality Assurance** - Comprehensive testing without external dependencies
-- **Scalable Patterns** - Reusable components across projects
 
 ## Best Practices
 
 ### 1. Test-Driven Development
-Write tests with mocks first, then implement with real LLMs:
-```python
-# 1. Define expected behavior with mocks
-# 2. Implement business logic
-# 3. Validate with real LLMs
-# 4. Deploy to production
-```
+Define expected behavior with mocks first, then implement with real LLMs
 
 ### 2. Separation of Concerns
-Keep business logic in tools, FM interaction in agents:
-```python
-# Business logic in tools
-def calculate_shipping(weight, distance):
-    # Pure business logic
-    return weight * distance * RATE
-
-# FM orchestration in agents
-agent = SimpleReActAgent(tools=[calculate_shipping])
-```
+Keep business logic in tools, FM orchestration in agents
 
 ### 3. Progressive Enhancement
-Start simple, add complexity gradually:
-```python
-# Start with MockLLMWithChain for basic flows
-# Move to RuleBasedMockLLM for dynamic scenarios
-# Finally integrate real LLMs for production
-```
+Start with MockLLMWithChain → Add RuleBasedMockLLM → Deploy with real LLMs
 
-## Advanced Patterns
+## Why FM App Toolkit?
 
-### Custom Mock Behaviors
+### For Developers
+- **Zero API costs during development** - Test with mocks
+- **Deterministic testing** - Reproducible results every time
+- **Clear patterns** - Production-ready code to build upon
 
-```python
-class BusinessMockLLM(MockLLMWithChain):
-    """Mock with business-specific behaviors."""
-    
-    def chat(self, messages, **kwargs):
-        # Add business rule validation
-        if "urgent" in messages[-1].content.lower():
-            # Prioritize urgent requests
-            return self.urgent_response()
-        return super().chat(messages, **kwargs)
-```
+### For Teams
+- **CI/CD Ready** - No API keys needed in pipelines
+- **Consistent Testing** - Same results across environments
+- **Knowledge Sharing** - Clear patterns for FM development
 
-### Workflow Composition
-
-```python
-# Compose complex workflows from simple agents
-pricing_agent = SimpleReActAgent(tools=[pricing_tools])
-inventory_agent = SimpleReActAgent(tools=[inventory_tools])
-order_agent = SimpleReActAgent(tools=[order_tools])
-
-# Orchestrate multi-agent workflows
-async def process_order(request):
-    price = await pricing_agent.run(request)
-    stock = await inventory_agent.run(request)
-    order = await order_agent.run(f"Price: {price}, Stock: {stock}")
-    return order
-```
+### For Business
+- **Reduced Costs** - Minimize API usage during development
+- **Faster Iteration** - Rapid testing without external dependencies
+- **Quality Assurance** - Comprehensive testing coverage
 
 ## Contributing
 
-We welcome contributions that enhance the toolkit:
-
+We welcome contributions:
 - **New Mock Patterns** - Additional testing strategies
 - **Agent Implementations** - Different reasoning patterns
 - **Tool Libraries** - Common business logic tools
 - **Documentation** - Tutorials and guides
-- **Integration Examples** - Real-world use cases
 
 ## Related Resources
 
 - [LlamaIndex Documentation](https://docs.llamaindex.ai/) - Official LlamaIndex docs
-- [Foundation Models Guide](https://github.com/fm-guide) - FM best practices
+- [AI Enhanced Engineer](https://aienhancedengineer.substack.com/) - Articles on FM patterns
 - [CLAUDE.md](CLAUDE.md) - Development guidelines for this project
 
 ## License
