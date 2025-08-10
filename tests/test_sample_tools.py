@@ -23,13 +23,13 @@ from fm_app_toolkit.agents.sample_tools import (
 def test_get_current_time() -> None:
     """Test that get_current_time returns a properly formatted timestamp."""
     result = get_current_time()
-    
+
     # Should start with "The current time is"
     assert result.startswith("The current time is")
-    
+
     # Should contain UTC
     assert "UTC" in result
-    
+
     # Should be parseable as a datetime
     time_str = result.replace("The current time is ", "")
     datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S UTC")
@@ -54,7 +54,7 @@ def test_calculate_invalid_characters() -> None:
     """Test that calculate rejects invalid characters."""
     result = calculate("2 + 2; print('hack')")
     assert result == "Error: Please use only numbers and basic operators (+, -, *, /)"
-    
+
     result = calculate("import os")
     assert result == "Error: Please use only numbers and basic operators (+, -, *, /)"
 
@@ -73,16 +73,16 @@ def test_calculate_malformed_expression() -> None:
     assert result.startswith("Error: Could not calculate")
 
 
-@patch('random.choice')
-@patch('random.randint')
+@patch("random.choice")
+@patch("random.randint")
 def test_get_weather(mock_randint: MagicMock, mock_choice: MagicMock) -> None:
     """Test weather retrieval with mocked random values."""
     mock_choice.return_value = "sunny"
     mock_randint.return_value = 75
-    
+
     result = get_weather("San Francisco")
     assert result == "Weather in San Francisco: 75°F and sunny"
-    
+
     result = get_weather("New York")
     assert result == "Weather in New York: 75°F and sunny"
 
@@ -90,30 +90,30 @@ def test_get_weather(mock_randint: MagicMock, mock_choice: MagicMock) -> None:
 def test_search_web() -> None:
     """Test web search returns mock results."""
     result = search_web("Python programming")
-    
+
     assert "Found information about Python programming" in result
     assert "Here's a relevant article on Python programming" in result
-    
+
     # Should return 2 results
     lines = result.split("\n")
     assert len(lines) == 2
 
 
-@patch('random.randint')
+@patch("random.randint")
 def test_create_reminder(mock_randint: MagicMock) -> None:
     """Test reminder creation with mocked ID."""
     mock_randint.return_value = 456
-    
+
     result = create_reminder("Team meeting", "2024-01-15 14:00")
     assert result == "✓ Reminder created: 'Team meeting' at 2024-01-15 14:00 (ID: REM-456)"
 
 
-@patch('random.choice')
+@patch("random.choice")
 def test_get_random_fact(mock_choice: MagicMock) -> None:
     """Test random fact retrieval."""
     expected_fact = "Python was named after Monty Python, not the snake."
     mock_choice.return_value = expected_fact
-    
+
     result = get_random_fact()
     assert result == f"Fun fact: {expected_fact}"
 
@@ -127,7 +127,7 @@ def test_get_random_fact_contains_valid_facts() -> None:
         "The first website is still online at http://info.cern.ch",
         "Git was created by Linus Torvalds in just 10 days.",
     ]
-    
+
     # Run multiple times to ensure it's returning from the valid set
     for _ in range(10):
         result = get_random_fact()
@@ -135,20 +135,20 @@ def test_get_random_fact_contains_valid_facts() -> None:
         assert fact_text in valid_facts
 
 
-@patch('random.randint')
+@patch("random.randint")
 def test_roll_dice_default(mock_randint: MagicMock) -> None:
     """Test rolling a default 6-sided dice."""
     mock_randint.return_value = 4
-    
+
     result = roll_dice()
     assert result == "Rolled a 6-sided dice: 4"
 
 
-@patch('random.randint')
+@patch("random.randint")
 def test_roll_dice_custom_sides(mock_randint: MagicMock) -> None:
     """Test rolling dice with custom number of sides."""
     mock_randint.return_value = 15
-    
+
     result = roll_dice(20)
     assert result == "Rolled a 20-sided dice: 15"
 
@@ -160,20 +160,20 @@ def test_roll_dice_invalid_sides() -> None:
     assert roll_dice(-5) == "Error: Dice must have at least 2 sides"
 
 
-@patch('random.choice')
+@patch("random.choice")
 def test_flip_coin_heads(mock_choice: MagicMock) -> None:
     """Test coin flip returning heads."""
     mock_choice.return_value = "Heads"
-    
+
     result = flip_coin()
     assert result == "Coin flip: Heads"
 
 
-@patch('random.choice')
+@patch("random.choice")
 def test_flip_coin_tails(mock_choice: MagicMock) -> None:
     """Test coin flip returning tails."""
     mock_choice.return_value = "Tails"
-    
+
     result = flip_coin()
     assert result == "Coin flip: Tails"
 
@@ -181,19 +181,19 @@ def test_flip_coin_tails(mock_choice: MagicMock) -> None:
 def test_flip_coin_valid_results() -> None:
     """Test that flip_coin only returns Heads or Tails."""
     valid_results = ["Coin flip: Heads", "Coin flip: Tails"]
-    
+
     # Run multiple times to check both outcomes are possible
     for _ in range(20):
         result = flip_coin()
         assert result in valid_results
 
 
-@patch('random.choice')
+@patch("random.choice")
 def test_get_joke(mock_choice: MagicMock) -> None:
     """Test joke retrieval."""
     expected_joke = "Why do programmers prefer dark mode? Because light attracts bugs!"
     mock_choice.return_value = expected_joke
-    
+
     result = get_joke()
     assert result == expected_joke
 
@@ -207,7 +207,7 @@ def test_get_joke_valid_jokes() -> None:
         "Why do Python programmers prefer snake_case? Because they can't C CamelCase!",
         "A SQL query walks into a bar, walks up to two tables and asks: 'Can I join you?'",
     ]
-    
+
     # Run multiple times to ensure it's returning from the valid set
     for _ in range(10):
         result = get_joke()

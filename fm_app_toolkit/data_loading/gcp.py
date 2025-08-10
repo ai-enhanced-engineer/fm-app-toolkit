@@ -1,6 +1,6 @@
 """Google Cloud Storage document repository implementation."""
 
-from typing import Optional
+from typing import Any, Optional
 
 from llama_index.core import Document
 from llama_index.readers.gcs import GCSReader
@@ -14,45 +14,45 @@ logger = get_logger(__name__)
 
 class GCPDocumentRepository(DocumentRepository):
     """Load documents from Google Cloud Storage using LlamaIndex GCSReader."""
-    
+
     def __init__(
         self,
         bucket: str,
         key: Optional[str] = None,
         prefix: Optional[str] = None,
-        service_account_key: Optional[dict] = None,
+        service_account_key: Optional[dict[str, Any]] = None,
     ):
         if not key and not prefix:
             raise ValueError("Either 'key' or 'prefix' must be provided")
-        
+
         self.bucket = bucket
         self.key = key
         self.prefix = prefix
         self.service_account_key = service_account_key
-        
+
         logger.info(
             "Initializing GCPDocumentRepository",
             bucket=bucket,
             key=key,
             prefix=prefix,
         )
-        
+
     def load_documents(self) -> list[Document]:
         """Load documents from GCS using GCSReader."""
         try:
-            reader_kwargs = {"bucket": self.bucket}
-            
+            reader_kwargs: dict[str, Any] = {"bucket": self.bucket}
+
             if self.key:
                 reader_kwargs["key"] = self.key
             elif self.prefix:
                 reader_kwargs["prefix"] = self.prefix
-                
+
             if self.service_account_key:
                 reader_kwargs["service_account_key"] = self.service_account_key
-                
+
             reader = GCSReader(**reader_kwargs)
-            documents = reader.load_data()
-            
+            documents: list[Document] = reader.load_data()
+
             logger.info(
                 f"Successfully loaded {len(documents)} documents from GCS",
                 bucket=self.bucket,

@@ -13,17 +13,17 @@ Key Features:
 
 Example Usage:
     Testing streaming chunk processing:
-    
+
     >>> mock_llm = MockLLMEchoStream()
     >>> messages = [
     ...     ChatMessage(role=MessageRole.USER, content="Hello, world!")
     ... ]
-    >>> 
+    >>>
     >>> # Streaming returns chunks: "Hello, ", "world!"
     >>> async for chunk in mock_llm.astream_chat(messages):
     ...     print(f"Delta: '{chunk.delta}'")
     ...     print(f"Cumulative: '{chunk.message.content}'")
-    
+
     Output:
     Delta: 'Hello, '
     Cumulative: 'Hello, '
@@ -57,18 +57,18 @@ CHUNK_SIZE = 7
 
 class MockLLMEchoStream(LLM):
     """Mock LLM that echoes user input back in streaming chunks.
-    
+
     This mock is essential for testing streaming behavior and ensuring
     your application correctly handles streaming responses. It takes
     the most recent user message and echoes it back, optionally in
     chunks for streaming methods.
-    
+
     The echo behavior makes it easy to verify that:
     1. User input is correctly extracted from messages
     2. Streaming chunks are processed in order
     3. Cumulative content builds correctly
     4. Final content matches the input
-    
+
     Streaming Behavior:
         The mock chunks responses into CHUNK_SIZE characters (default: 7).
         This helps test:
@@ -76,32 +76,32 @@ class MockLLMEchoStream(LLM):
         - UI updates with incomplete responses
         - Buffer handling in streaming
         - Progress indicators
-    
+
     Example:
         Basic echo test:
-        
+
         >>> mock_llm = MockLLMEchoStream()
         >>> response = mock_llm.chat([
         ...     ChatMessage(role=MessageRole.USER, content="Test message")
         ... ])
         >>> assert response.message.content == "Test message"
-        
+
         Streaming test:
-        
+
         >>> # Input: "Hello world" (11 chars)
         >>> # Chunks with CHUNK_SIZE=7: "Hello w", "orld"
         >>> chunks = []
         >>> for chunk in mock_llm.stream_chat(messages):
         ...     chunks.append(chunk.delta)
         >>> assert chunks == ["Hello w", "orld"]
-        
+
         Testing with no user message:
-        
+
         >>> response = mock_llm.chat([
         ...     ChatMessage(role=MessageRole.SYSTEM, content="System prompt")
         ... ])
         >>> assert response.message.content == ""  # No user message to echo
-    
+
     Note:
         Only the LAST user message is echoed. This simulates how LLMs
         typically respond to the most recent user input.
@@ -110,31 +110,25 @@ class MockLLMEchoStream(LLM):
     @llm_chat_callback()
     def stream_chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponseGen:
         """Stream the user's message back in chunks.
-        
+
         Extracts the last user message and streams it back in CHUNK_SIZE pieces.
         This helps test streaming response handling in your application.
-        
+
         Args:
             messages: List of chat messages, will echo the last USER message
             **kwargs: Additional arguments (ignored)
-            
+
         Yields:
             ChatResponse objects with cumulative content and chunk deltas
         """
+
         def gen() -> ChatResponseGen:
             # Get the most recent user message to echo
-            user_messages = [
-                message.content or "" 
-                for message in messages 
-                if message.role == MessageRole.USER
-            ]
+            user_messages = [message.content or "" for message in messages if message.role == MessageRole.USER]
 
             if not user_messages:
                 # No user message to echo - return empty
-                yield ChatResponse(
-                    message=ChatMessage(role=MessageRole.ASSISTANT, content=""), 
-                    delta=""
-                )
+                yield ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=""), delta="")
                 return
 
             full_content = user_messages[-1]  # Echo the last user message
@@ -156,29 +150,23 @@ class MockLLMEchoStream(LLM):
     @llm_chat_callback()
     async def astream_chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponseAsyncGen:
         """Async stream the user's message back in chunks.
-        
+
         Async version of stream_chat for testing async streaming workflows.
-        
+
         Args:
             messages: List of chat messages, will echo the last USER message
             **kwargs: Additional arguments (ignored)
-            
+
         Yields:
             ChatResponse objects with cumulative content and chunk deltas
         """
-        user_messages = [
-            message.content or "" 
-            for message in messages 
-            if message.role == MessageRole.USER
-        ]
+        user_messages = [message.content or "" for message in messages if message.role == MessageRole.USER]
 
         if not user_messages:
             # No user message to echo
             async def empty_gen() -> ChatResponseAsyncGen:
-                yield ChatResponse(
-                    message=ChatMessage(role=MessageRole.ASSISTANT, content=""), 
-                    delta=""
-                )
+                yield ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=""), delta="")
+
             return empty_gen()
 
         full_content = user_messages[-1]  # Echo the last user message
@@ -201,43 +189,35 @@ class MockLLMEchoStream(LLM):
 
     def chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
         """Echo the most recent user message.
-        
+
         Non-streaming version that returns the complete echo immediately.
-        
+
         Args:
             messages: List of chat messages, will echo the last USER message
             **kwargs: Additional arguments (ignored)
-            
+
         Returns:
             ChatResponse with the echoed user message or empty if no user message
         """
         # Find the last user message
-        user_messages = [
-            message 
-            for message in messages 
-            if message.role == MessageRole.USER
-        ]
+        user_messages = [message for message in messages if message.role == MessageRole.USER]
 
         if user_messages:
             content = user_messages[-1].content or ""
-            return ChatResponse(
-                message=ChatMessage(role=MessageRole.ASSISTANT, content=content)
-            )
+            return ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=content))
 
         # No user message - return empty
-        return ChatResponse(
-            message=ChatMessage(role=MessageRole.ASSISTANT, content="")
-        )
+        return ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=""))
 
     async def achat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
         """Async echo the most recent user message.
-        
+
         Simply delegates to sync version since no real I/O is involved.
-        
+
         Args:
             messages: List of chat messages, will echo the last USER message
             **kwargs: Additional arguments (ignored)
-            
+
         Returns:
             ChatResponse with the echoed user message
         """
@@ -262,7 +242,7 @@ class MockLLMEchoStream(LLM):
     @property
     def metadata(self) -> LLMMetadata:
         """Return mock metadata.
-        
+
         Returns metadata indicating this is a chat model for testing.
         """
         return LLMMetadata(

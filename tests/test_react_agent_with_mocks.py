@@ -125,7 +125,7 @@ class TestReActAgentWithMockLLM:
 
         # Test with workflow run
         response = await agent.run(user_msg="Count words in 'hello world test'")
-        
+
         # Verify we got a response
         assert response is not None
         response_str = str(response)
@@ -149,9 +149,7 @@ class TestReActAgentWithMockLLM:
         reverse_tool = FunctionTool.from_defaults(fn=reverse_string, name="reverse_string")
 
         # Create agent with multiple tools
-        agent = ReActAgent(
-            tools=[add_tool, multiply_tool, word_count_tool, reverse_tool], llm=mock_llm, verbose=True
-        )
+        agent = ReActAgent(tools=[add_tool, multiply_tool, word_count_tool, reverse_tool], llm=mock_llm, verbose=True)
 
         # Run the agent
         response = await agent.run(user_msg="How many words are in 'hello world test'?")
@@ -204,7 +202,7 @@ class TestReActAgentStreamingPatterns:
 
         # Run the agent
         response = await agent.run(user_msg="Tell me about Python")
-        
+
         # Verify we got a response
         assert response is not None
         response_str = str(response)
@@ -229,6 +227,6 @@ class TestReActAgentStreamingPatterns:
 
         # Run the agent
         response = await agent.run(user_msg="What is 15 + 25?")
-        
+
         # Verify the response contains the answer
         assert "40" in str(response)

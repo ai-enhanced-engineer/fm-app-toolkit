@@ -240,24 +240,20 @@ def test__configure_structlog__logs_correct_level_and_stream(monkeypatch: Monkey
 def test__bind_contextvars__adds_context_variables(caplog: LogCaptureFixture) -> None:
     """Test that bind_contextvars adds context variables to logs."""
     configure_structlog()
-    
+
     # Bind some context variables
-    bind_contextvars(
-        correlation_id="test-correlation-123",
-        user_id="user-456",
-        request_path="/api/test"
-    )
-    
+    bind_contextvars(correlation_id="test-correlation-123", user_id="user-456", request_path="/api/test")
+
     logger = get_logger("test_logger")
     logger.info("Test with context vars")
-    
+
     log_output: str = caplog.records[0].message
-    
+
     # These should be in the extra fields
     assert "test-correlation-123" in log_output
     assert "user-456" in log_output
     assert "/api/test" in log_output
-    
+
     # Clear for other tests
     clear_context_fields()
 
@@ -266,22 +262,18 @@ def test__get_contextvars__returns_all_context_variables() -> None:
     """Test that get_contextvars returns all bound context variables."""
     configure_structlog()
     clear_context_fields()
-    
+
     # Start with empty context
     assert get_contextvars() == {}
-    
+
     # Bind some variables
-    bind_contextvars(
-        correlation_id="test-123",
-        user_id="user-789",
-        session_id="session-abc"
-    )
-    
+    bind_contextvars(correlation_id="test-123", user_id="user-789", session_id="session-abc")
+
     contextvars = get_contextvars()
     assert contextvars["correlation_id"] == "test-123"
     assert contextvars["user_id"] == "user-789"
     assert contextvars["session_id"] == "session-abc"
-    
+
     # Clear for other tests
     clear_context_fields()
 
@@ -290,14 +282,14 @@ def test__get_correlation_id__returns_correct_value() -> None:
     """Test that get_correlation_id returns the correct correlation ID."""
     configure_structlog()
     clear_context_fields()
-    
+
     # Should return "unknown" when not set
     assert get_correlation_id() == "unknown"
-    
+
     # Bind a correlation ID
     bind_contextvars(correlation_id="test-correlation-999")
     assert get_correlation_id() == "test-correlation-999"
-    
+
     # Clear for other tests
     clear_context_fields()
 
@@ -306,19 +298,19 @@ def test__multiple_loggers__share_context(caplog: LogCaptureFixture) -> None:
     """Test that multiple logger instances share the same context variables."""
     configure_structlog()
     clear_context_fields()
-    
+
     # Bind context that should be shared
     bind_contextvars(shared_context="shared-value-123")
-    
+
     logger1 = get_logger("logger1")
     logger2 = get_logger("logger2")
-    
+
     logger1.info("Message from logger1")
     logger2.info("Message from logger2")
-    
+
     # Both log messages should contain the shared context
     assert all("shared-value-123" in record.message for record in caplog.records)
-    
+
     # Clear for other tests
     clear_context_fields()
 
@@ -328,18 +320,18 @@ def test__logger_with_different_levels(caplog: LogCaptureFixture, monkeypatch: M
     # Set to WARNING level
     monkeypatch.setenv("LOGGING_LEVEL", "WARNING")
     configure_structlog()
-    
+
     logger = get_logger("test_logger")
-    
+
     # These should not appear in logs
     logger.debug("Debug message")
     logger.info("Info message")
-    
+
     # These should appear
     logger.warning("Warning message")
     logger.error("Error message")
     logger.critical("Critical message")
-    
+
     # Only WARNING and above should be captured
     assert len(caplog.records) == 3
     messages = [record.message for record in caplog.records]

@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 class LocalDocumentRepository(DocumentRepository):
     """Load documents from local filesystem using LlamaIndex SimpleDirectoryReader."""
-    
+
     def __init__(
         self,
         input_dir: str,
@@ -27,14 +27,14 @@ class LocalDocumentRepository(DocumentRepository):
         self.required_exts = required_exts
         self.exclude_hidden = exclude_hidden
         self.num_files_limit = num_files_limit
-        
+
         logger.info(
             "Initializing LocalDocumentRepository",
             input_dir=input_dir,
             recursive=recursive,
             required_exts=required_exts,
         )
-        
+
     def load_documents(self) -> list[Document]:
         """Load documents using SimpleDirectoryReader."""
         try:

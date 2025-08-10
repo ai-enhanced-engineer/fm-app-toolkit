@@ -15,6 +15,6 @@ from .mock_rule_based import RuleBasedMockLLM
 
 __all__ = [
     "MockLLMWithChain",
-    "MockLLMEchoStream", 
+    "MockLLMEchoStream",
     "RuleBasedMockLLM",
 ]

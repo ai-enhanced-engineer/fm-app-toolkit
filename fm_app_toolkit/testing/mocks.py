@@ -5,7 +5,7 @@ to maintain backward compatibility with existing test imports.
 
 All new code should import directly from the specific modules:
 - fm_app_toolkit.testing.mock_chain for MockLLMWithChain
-- fm_app_toolkit.testing.mock_echo for MockLLMEchoStream  
+- fm_app_toolkit.testing.mock_echo for MockLLMEchoStream
 - fm_app_toolkit.testing.mock_rule_based for RuleBasedMockLLM
 """
 
