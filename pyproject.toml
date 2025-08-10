@@ -1,6 +1,6 @@
 [project]
 name = "fm-app-toolkit"
-version = "1.0.0"
+version = "1.1.0"
 description = "Foundation Model Application Toolkit - Production patterns for FM-based applications using LlamaIndex"
 authors = [{name="Leopoldo Garcia Vargas", email="lk13.dev@gmail.com"}]
 requires-python = ">=3.12"

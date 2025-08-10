@@ -2,6 +2,21 @@
 
 <!-- version list -->
 
+## v1.1.0 (2025-08-10)
+
+### Bug Fixes
+
+- Apply linting and type fixes to data loading module
+  ([#5](https://github.com/ai-enhanced-engineer/fm-app-toolkit/pull/5),
+  [`84962fa`](https://github.com/ai-enhanced-engineer/fm-app-toolkit/commit/84962fa8561a59d76d32ab7b13e592fd64ab8498))
+
+### Features
+
+- Add Repository pattern for data loading
+  ([#5](https://github.com/ai-enhanced-engineer/fm-app-toolkit/pull/5),
+  [`84962fa`](https://github.com/ai-enhanced-engineer/fm-app-toolkit/commit/84962fa8561a59d76d32ab7b13e592fd64ab8498))
+
+
 ## v1.0.0 (2025-08-10)
 
 - Initial Release
