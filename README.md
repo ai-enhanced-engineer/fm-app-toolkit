@@ -2,52 +2,67 @@
 
 **Foundation Model Application Toolkit** - Concrete implementation and testing patterns for developing production-grade foundation model based applications.
 
-## Mission
+## Where This Fits: The Three-Layer AI Stack
 
-This toolkit provides battle-tested patterns for building production FM applications using LlamaIndex as a foundational layer, helping developers bring business logic closer to reality through:
+In her book ["AI Engineering"](https://www.oreilly.com/library/view/ai-engineering/9781098166298/), Chip Huyen describes the modern AI stack as a pyramid with three interconnected layers. At the foundation lies the infrastructure layer—the massive compute resources, GPUs, and cloud platforms that power everything above. In the middle sits the model layer, where foundation models like GPT, Claude, and Gemini are trained and fine-tuned. At the top, where most of us work, is the application layer.
 
-- **Deterministic Testing Strategies** - Mock LLMs for cost-effective, reliable testing
-- **Production-Ready Agent Implementations** - ReAct agents with clear reasoning patterns
-- **Reusable Patterns** - Common solutions for FM app challenges
-- **Cost-Effective Development** - Build and test without API calls
-- **Business Logic Integration** - Bridge the gap between FM capabilities and real-world requirements
+As noted in [The AI Engineering Stack](https://newsletter.pragmaticengineer.com/p/the-ai-engineering-stack) by Gergely Orosz and Chip Huyen, this application layer "has seen the most action in the last two years, and it's still rapidly evolving." It's where foundation model capabilities meet real-world business needs, where ChatGPT becomes a customer service agent, and where Claude helps developers write better code.
 
-## 🎯 What Problems Does This Solve?
+![AI Stack Pyramid - Three Layers: Infrastructure (bottom), Model (middle), Application (top)](assets/images/ai-stack-pyramid.png)
+*The AI Stack Pyramid: Each layer depends on the one below, with accessibility increasing as you move up. Source: Adapted from Chip Huyen's AI Engineering framework.*
 
-Building production FM applications presents unique challenges:
+The pyramid structure reveals an important truth: as you move up the stack, the technology becomes more accessible to non-specialists, but paradoxically, building production-grade applications at this layer presents unique challenges. You're working with models you don't control, infrastructure you don't manage, and outputs that aren't deterministic. This is where the FM App Toolkit comes in.
 
-1. **Testing Complexity** - How do you test non-deterministic LLM outputs?
-2. **Development Costs** - API calls during development add up quickly
-3. **Integration Patterns** - How do you connect FM capabilities to business logic?
-4. **Production Readiness** - Moving from prototype to production-grade code
-5. **Debugging Difficulty** - Understanding agent reasoning and decision-making
+## The Reality of Building at the Application Layer
 
-This toolkit addresses each of these challenges with practical, reusable solutions.
+Imagine this scenario: You've just discovered Claude's API or GPT-4's capabilities. Within hours, you've prototyped something amazing—an agent that can handle complex customer queries, analyze documents, or automate workflows. It works perfectly in your Jupyter notebook. The future feels bright.
 
-## 🚀 Key Components
+Then you try to move to production.
+
+Suddenly, your tests are flaky because the LLM gives different responses each time. Your development costs spiral as every test run burns through API credits. When your agent makes an unexpected decision, you can't debug why. The elegant prototype code doesn't translate to production—it needs error handling, monitoring, cost controls, and a dozen other things you hadn't considered.
+
+These aren't edge cases or theoretical problems. They're the daily reality of working at the application layer, where you're orchestrating powerful models you don't control. As Andrew Ng and others have noted, the application layer is "the place to be" because of its lower barriers to entry and proximity to end users. But those low barriers don't mean the engineering challenges disappear—they just shift.
+
+This toolkit emerged from real-world experience building foundation model applications in production. It provides concrete, battle-tested solutions to these exact problems, using LlamaIndex as our foundation to ensure compatibility with the broader ecosystem while maintaining clean abstractions that make testing and development practical.
+
+## 🚀 Key Components: Bridging the Layers
 
 ### Data Loading with Repository Pattern
-Clean abstraction for document loading that enables testing without external services:
+**Abstracting Infrastructure Concerns**
+
+At the infrastructure layer, data lives in various places—cloud storage, databases, file systems. The Repository pattern provides a clean abstraction that lets you develop locally and deploy to the cloud without changing your application code. You write once against the interface, then swap implementations based on your environment.
+
 - **DocumentRepository** - Abstract interface for consistent document handling
 - **LocalDocumentRepository** - Load documents from local filesystem for development/testing
 - **GCPDocumentRepository** - Production loading from Google Cloud Storage
-- Test with local files, deploy with cloud storage - same interface, zero code changes
+
+This pattern exemplifies how application-layer code can remain agnostic to infrastructure-layer details, enabling the "build once, deploy anywhere" philosophy that makes rapid iteration possible.
 
 *📚 Full article on this pattern coming next week at [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)*
 
 ### Mock LLM Framework
-Complete mock implementations that extend LlamaIndex's base LLM class:
+**Simulating the Model Layer for Testing**
+
+When you don't control the model layer, how do you write reliable tests? Our mock LLMs simulate foundation model behavior with perfect determinism, extending LlamaIndex's base LLM class for drop-in compatibility. This approach lets you test your application logic without making costly API calls or dealing with non-deterministic outputs.
+
 - **MockLLMWithChain** - Sequential response patterns for multi-step workflows
 - **MockLLMEchoStream** - Streaming behavior testing
 - **RuleBasedMockLLM** - Dynamic responses based on configurable rules
 
+These mocks effectively create a controllable "model layer" for development, letting you test edge cases, error conditions, and complex reasoning chains that would be impossible or expensive to test with real models.
+
 *See [testing/README.md](fm_app_toolkit/testing/README.md) for detailed documentation*
 
 ### Agent Implementations
-Production-ready agent patterns:
-- **SimpleReActAgent** - Clear implementation of the ReAct pattern using BaseWorkflowAgent
+**Application-Layer Orchestration**
+
+Agents represent the quintessential application-layer construct—they orchestrate foundation models to accomplish complex tasks. Our implementations demonstrate production-ready patterns that bridge the gap between model capabilities and business requirements.
+
+- **SimpleReActAgent** - Clear, pedagogical implementation of the ReAct pattern using BaseWorkflowAgent
 - **WorkflowHandler Pattern** - Production-grade event handling and result extraction
 - **Tool Integration** - Seamless connection between agents and business logic
+
+These patterns show how to build reliable, debuggable agents that can reason through problems while maintaining the transparency and control necessary for production systems.
 
 *See [agents/README.md](fm_app_toolkit/agents/README.md) for implementation details*
 
@@ -220,22 +235,18 @@ Keep business logic in tools, FM orchestration in agents
 ### 3. Progressive Enhancement
 Start with MockLLMWithChain → Add RuleBasedMockLLM → Deploy with real LLMs
 
-## Why FM App Toolkit?
+## Why This Matters: Democratizing the Application Layer
+
+The beauty of the three-layer model is that each layer becomes progressively more accessible. You don't need millions in capital to work at the application layer—you just need good engineering practices and the right patterns. This toolkit provides both.
 
 ### For Developers
-- **Zero API costs during development** - Test with mocks
-- **Deterministic testing** - Reproducible results every time
-- **Clear patterns** - Production-ready code to build upon
+Work confidently at the application layer without worrying about the complexities below. Test your logic without burning API credits. Debug your agents' reasoning. Move from prototype to production with patterns that actually work.
 
 ### For Teams
-- **CI/CD Ready** - No API keys needed in pipelines
-- **Consistent Testing** - Same results across environments
-- **Knowledge Sharing** - Clear patterns for FM development
+Build robust CI/CD pipelines without embedding API keys. Share knowledge through clear, testable patterns. Ensure consistent behavior across development, staging, and production environments.
 
 ### For Business
-- **Reduced Costs** - Minimize API usage during development
-- **Faster Iteration** - Rapid testing without external dependencies
-- **Quality Assurance** - Comprehensive testing coverage
+As Chip Huyen notes, the application layer is where business value is created—it's where AI capabilities become real products. This toolkit reduces the cost and risk of building at this layer while maintaining the quality and reliability your users expect.
 
 ## Contributing
 
@@ -247,6 +258,12 @@ We welcome contributions:
 
 ## Related Resources
 
+### Essential Reading
+- [AI Engineering Book](https://www.oreilly.com/library/view/ai-engineering/9781098166298/) - Chip Huyen's comprehensive guide to AI engineering
+- [The AI Engineering Stack](https://newsletter.pragmaticengineer.com/p/the-ai-engineering-stack) - Gergely Orosz and Chip Huyen on the modern AI stack
+- [Building A Generative AI Platform](https://huyenchip.com/2024/07/25/genai-platform.html) - Chip Huyen on platform considerations
+
+### Technical Resources
 - [LlamaIndex Documentation](https://docs.llamaindex.ai/) - Official LlamaIndex docs
 - [AI Enhanced Engineer](https://aienhancedengineer.substack.com/) - Articles on FM patterns
 - [CLAUDE.md](CLAUDE.md) - Development guidelines for this project
