@@ -2,24 +2,26 @@
 
 **Foundation Model Application Toolkit** - Battle-tested patterns and concrete implementations for building production-grade AI applications.
 
-## Where This Fits: The Three-Layer AI Stack
+📚 **Read more on [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)** - Deep dives into production AI patterns and practices.
 
-In her book [AI Engineering](https://www.oreilly.com/library/view/ai-engineering/9781098166298/), Chip Huyen describes the modern AI stack as a pyramid with three interconnected layers. At the foundation lies the infrastructure layer—the massive compute resources, GPUs, and cloud platforms that power everything above. In the middle sits the model layer, where foundation models like GPT, Claude, and Gemini are trained and fine-tuned. At the top, where most of us work, is the application layer—which, as noted in [The AI Engineering Stack](https://newsletter.pragmaticengineer.com/p/the-ai-engineering-stack), has seen explosive growth and is where foundation model capabilities meet real-world business needs.
+## 🏗️ The Three-Layer AI Stack
+
+In her book [AI Engineering](https://www.oreilly.com/library/view/ai-engineering/9781098166298/), Chip Huyen describes the modern AI stack as a pyramid with **three interconnected layers**. At the foundation lies the **infrastructure layer**—the massive compute resources, GPUs, and cloud platforms that power everything above. In the middle sits the **model layer**, where foundation models like GPT, Claude, and Gemini are trained and fine-tuned. At the top, where most of us work, is the **application layer**—which, as noted in [The AI Engineering Stack](https://newsletter.pragmaticengineer.com/p/the-ai-engineering-stack), has seen **explosive growth** and is where foundation model capabilities meet real-world business needs.
 
 ![AI Stack Pyramid - Three Layers: Infrastructure (bottom), Model (middle), Application (top)](assets/images/ai-stack-pyramid.png)
 *The AI Stack Pyramid: Each layer depends on the one below, with accessibility increasing as you move up. Source: Adapted from Chip Huyen's AI Engineering framework.*
 
-The pyramid structure reveals an important truth: as you move up the stack, the technology becomes more accessible to non-specialists, but paradoxically, building production-grade applications at this layer presents unique challenges. You're working with models you don't control, infrastructure you don't manage, and outputs that aren't deterministic. This is where the FM App Toolkit comes in.
+The pyramid structure reveals an important truth: as you move up the stack, the technology becomes **more accessible** to non-specialists, but paradoxically, building production-grade applications at this layer presents **unique challenges**. You're working with **models you don't control**, **infrastructure you don't manage**, and **outputs that aren't deterministic**<sup>[1](#ref1)</sup>. This is where the FM App Toolkit comes in.
 
-## The Reality of Building at the Application Layer
+## 💡 The Reality of Building at the Application Layer
 
-Everyone talks about shipping AI apps to production, but few actually show you how. We've gathered nearly a decade of experience deploying production-grade ML and AI applications, and this repository shares our hard-won insights in a concrete, practical way. Our goal is simple: enable you to rapidly build trustworthy, observable AI applications that can serve real users at scale.
+Everyone talks about shipping AI apps to production, but **few actually show you how**. We've gathered **nearly a decade of experience** deploying production-grade ML and AI applications, and this repository shares our hard-won insights in a concrete, practical way. Our goal is simple: enable you to rapidly build trustworthy, observable AI applications that can serve real users at scale.
 
-The challenges are real and immediate. Your LLM-powered prototype works perfectly in development, but production is a different beast entirely. Tests become flaky with non-deterministic outputs. Development costs explode as every test run consumes API credits. When your agent makes an unexpected decision, debugging becomes a detective story without clues. The elegant notebook code needs error handling, monitoring, cost controls, and resilience patterns you hadn't considered.
+The challenges are real and immediate. Your LLM-powered prototype works perfectly in development, but **production is a different beast entirely**<sup>[2](#ref2)</sup>. **Tests become flaky** with non-deterministic outputs<sup>[3](#ref3)</sup>. **Development costs explode** as every test run consumes API credits. When your agent makes an unexpected decision, **debugging becomes a detective story** without clues. The elegant notebook code needs error handling, monitoring, cost controls, and resilience patterns you hadn't considered<sup>[4](#ref4)</sup>.
 
-We've been there. We've built these systems. And we've distilled our experience into this toolkit—concrete, battle-tested patterns that bridge the gap between prototype and production. Using LlamaIndex as our foundation ensures compatibility with the broader ecosystem while our abstractions make testing deterministic and development cost-effective.
+**We've been there.** We've built these systems. And we've distilled our experience into this toolkit—**concrete, battle-tested patterns** that bridge the gap between prototype and production<sup>[5](#ref5)</sup>. Using LlamaIndex as our foundation ensures compatibility with the broader ecosystem while our abstractions make testing deterministic and development cost-effective.
 
-## 🚀 Key Components: Bridging the Layers
+## 🔧 Key Components: Bridging the Layers
 
 ### Data Loading with Repository Pattern
 **Abstracting Infrastructure Concerns**
@@ -33,7 +35,7 @@ The [Repository pattern](https://www.cosmicpython.com/book/chapter_02_repository
 ### Mock LLM Framework
 **Simulating the Model Layer for Testing**
 
-We've all heard it: "There's simply no way to unit test that—it uses an LLM." This toolkit proves that misconception wrong. Our mock LLMs provide deterministic responses for unit tests without ever hitting the internet, making your test suite fast, reliable, and free.
+We've all heard it: "You can't unit test LLM code." This toolkit proves that wrong. Our mock LLMs provide deterministic responses for unit tests without ever hitting the internet, making your test suite fast, reliable, and free.
 
 The framework extends LlamaIndex's base LLM class for drop-in compatibility. Use `MockLLMWithChain` for sequential multi-step workflows, `MockLLMEchoStream` for testing streaming behavior, or `RuleBasedMockLLM` for dynamic query-based responses. These mocks create a controllable "model layer" for development, enabling you to test edge cases, error conditions, and complex reasoning chains that would be impossible or prohibitively expensive with real models.
 
@@ -48,15 +50,15 @@ Our `SimpleReActAgent` provides a clear, pedagogical implementation of the ReAct
 
 *See [agents/README.md](fm_app_toolkit/agents/README.md) for implementation details*
 
-## Testing Philosophy
+## 🎯 Testing Philosophy
 
 **Write Once, Test Everywhere**
 
-Our testing approach is inspired by the principles in [Architecture Patterns with Python](https://www.cosmicpython.com/book/), particularly the rule: "don't mock what you don't own." Instead of mocking external LLM APIs directly, we own the abstraction—our mock LLMs extend LlamaIndex's base class, creating a clean boundary between our code and external services.
+Our testing approach is inspired by the principles in [Architecture Patterns with Python](https://www.cosmicpython.com/book/), particularly the rule: **"don't mock what you don't own."** Instead of mocking external LLM APIs directly, **we own the abstraction**—our mock LLMs extend LlamaIndex's base class, creating a **clean boundary** between our code and external services.
 
-This pattern avoids "Mock Hell" where tests become brittle and hard to maintain. By owning the interface, we can test our business logic in isolation with deterministic mocks, while the adapter pattern ensures our core application code remains unchanged even if we switch LLM providers.
+This pattern avoids **"Mock Hell"** where tests become brittle and hard to maintain. By owning the interface, we can test our **business logic in isolation** with deterministic mocks, while the adapter pattern ensures our core application code **remains unchanged** even if we switch LLM providers.
 
-The foundation of reliable AI applications is deterministic testing. Our approach lets you define expected agent behavior with perfect control, then swap in real LLMs for production without changing your application code.
+The foundation of reliable AI applications is **deterministic testing**. Our approach lets you define expected agent behavior with **perfect control**, then swap in real LLMs for production **without changing your application code**.
 
 ```python
 def test_business_workflow():
@@ -76,11 +78,11 @@ def test_business_workflow():
 
 *See [tests/](tests/) for comprehensive examples with 125+ test cases.*
 
-## Quick Start
+## ⚡ Quick Start
 
 ### Prerequisites
-- Python 3.12+
-- Make
+• Python 3.12+
+• Make
 
 ### Installation
 
@@ -106,8 +108,6 @@ documents = dev_repo.load_documents()
 # Production: Load from cloud storage  
 prod_repo = GCPDocumentRepository(bucket="my-bucket", prefix="docs/")
 documents = prod_repo.load_documents()
-
-# Same interface for both - build once, deploy anywhere
 ```
 
 ### Agent with Mock LLM
@@ -127,7 +127,7 @@ agent = SimpleReActAgent(llm=mock_llm, tools=[calculate_price_tool])
 result = await agent.run("What's the price for 5 items at $10 each?")
 ```
 
-## Production Patterns
+## 🏭 Production Patterns
 
 ### Environment-Based Configuration
 
@@ -178,9 +178,7 @@ fm-app-toolkit/
 
 Each module has its own README with detailed documentation and examples.
 
-
-
-## Development Workflow
+## 🛠️ Development Workflow
 
 ### Essential Commands
 
@@ -207,7 +205,7 @@ The best way to understand these patterns is to see them in action. Explore our 
 - [agents/README.md](fm_app_toolkit/agents/README.md) - Agent implementation details
 - [data_loading/README.md](fm_app_toolkit/data_loading/README.md) - Repository pattern guide
 
-## Contributing
+## 🤝 Contributing
 
 This toolkit grows stronger with community input. We especially welcome:
 - Battle-tested patterns from your production deployments
@@ -227,12 +225,31 @@ This toolkit grows stronger with community input. We especially welcome:
 - [AI Enhanced Engineer](https://aienhancedengineer.substack.com/) - Articles on FM patterns
 - [CLAUDE.md](CLAUDE.md) - Development guidelines for this project
 
+## References
+
+### Academic Foundations
+
+<a id="ref1"></a><sup>1</sup> SEI/Carnegie Mellon (2024). ["The Challenges of Testing in a Non-Deterministic World"](https://www.sei.cmu.edu/blog/the-challenges-of-testing-in-a-non-deterministic-world/). Analysis showing why non-deterministic systems make bugs "rare, intermittent, and hard to reproduce."
+
+<a id="ref2"></a><sup>2</sup> Google (2024). ["MLOps: Continuous delivery and automation pipelines in machine learning"](https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning). Google Cloud Architecture Center. *"The real challenge isn't building an ML model, the challenge is building an integrated ML system and to continuously operate it in production."*
+
+<a id="ref3"></a><sup>3</sup> Faubel, L., Schmid, K. & Eichelberger, H. (2023). ["MLOps Challenges in Industry 4.0"](https://doi.org/10.1007/s42979-023-01934-7). SN Computer Science. Comprehensive analysis of MLOps challenges across different industrial contexts.
+
+<a id="ref4"></a><sup>4</sup> Shankar, S., et al. (2024). ["We Have No Idea How Models will Behave in Production until Production: How Engineers Operationalize Machine Learning"](https://arxiv.org/abs/2403.16795). Study highlighting the experimental nature of ML systems and the challenges of moving from notebooks to production-ready code.
+
+<a id="ref5"></a><sup>5</sup> Sculley, D., et al. (2015). ["Hidden Technical Debt in Machine Learning Systems"](https://papers.nips.cc/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html). NeurIPS 2015. The seminal paper that introduced the concept of technical debt in ML systems, highlighting how ML systems can incur massive ongoing maintenance costs through boundary erosion, entanglement, and hidden feedback loops.
+
+### Industry Perspectives
+
+- Huyen, Chip (2023). ["Building LLM applications for production"](https://huyenchip.com/2023/04/11/llm-engineering.html). Practical insights on why "it's easy to make something cool with LLMs, but very hard to make something production-ready with them."
+- MLOps Community (2024). [MLOps World Conference Proceedings](https://mlops.community/). Latest practices and challenges in deploying ML systems at scale.
+
 ## License
 
 Apache License 2.0 - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Ready to build production AI applications?** Start with `make environment-create` and have your first deterministic agent test running in minutes.
+🚀 **Ready to ship production AI?** Start with `make environment-create` and have your first deterministic agent test running in minutes.
 
 *From nearly a decade of production AI deployments. For developers shipping real systems.*
