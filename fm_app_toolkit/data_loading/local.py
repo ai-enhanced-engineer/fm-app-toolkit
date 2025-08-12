@@ -3,6 +3,7 @@
 from typing import Optional
 
 from llama_index.core import Document, SimpleDirectoryReader
+from pydantic import validate_call
 
 from fm_app_toolkit.logging import get_logger
 
@@ -35,19 +36,20 @@ class LocalDocumentRepository(DocumentRepository):
             required_exts=required_exts,
         )
 
-    def load_documents(self) -> list[Document]:
-        """Load documents using SimpleDirectoryReader."""
+    @validate_call
+    def load_documents(self, location: str) -> list[Document]:
+        """Load documents from local filesystem path."""
         try:
             reader = SimpleDirectoryReader(
-                input_dir=self.input_dir,
+                input_dir=location,
                 recursive=self.recursive,
                 required_exts=self.required_exts,
                 exclude_hidden=self.exclude_hidden,
                 num_files_limit=self.num_files_limit,
             )
             documents = reader.load_data()
-            logger.info(f"Successfully loaded {len(documents)} documents from {self.input_dir}")
+            logger.info(f"Successfully loaded {len(documents)} documents from {location}")
             return documents
         except Exception as e:
-            logger.error(f"Failed to load documents from {self.input_dir}: {e}")
+            logger.error(f"Failed to load documents from {location}: {e}")
             raise

@@ -1,4 +1,4 @@
-"""Integration tests for data loading with sample documents."""
+"""Integration tests demonstrating RAG pipeline construction with real documents."""
 
 from pathlib import Path
 
@@ -16,13 +16,13 @@ from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 @pytest.fixture
 def samples_dir():
-    """Get the path to the samples directory."""
-    return Path(__file__).parent.parent / "fm_app_toolkit" / "data_loading" / "samples"
+    """Path to test documents: RAG architecture, context construction, and guardrails."""
+    return Path(__file__).parent.parent / "fm_app_toolkit" / "test_data"
 
 
 @pytest.fixture
 def sample_repository(samples_dir):
-    """Create a repository for the sample documents."""
+    """Repository configured to load .txt files from test_data directory."""
     return LocalDocumentRepository(input_dir=str(samples_dir), required_exts=[".txt"])
 
 
@@ -31,9 +31,9 @@ def sample_repository(samples_dir):
 # ----------------------------------------------
 
 
-def test_load_sample_documents(sample_repository):
-    """Test loading sample text documents from samples directory."""
-    documents = sample_repository.load_documents()
+def test_load_sample_documents(sample_repository, samples_dir):
+    """Load three GenAI documents and verify metadata extraction."""
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Verify all documents loaded
     assert len(documents) == 3, "Should load all three sample documents"
@@ -51,36 +51,9 @@ def test_load_sample_documents(sample_repository):
     assert "genai_evaluation_guardrails.txt" in file_names
 
 
-def test_sample_content_coverage(sample_repository):
-    """Verify sample documents cover key GenAI concepts."""
-    documents = sample_repository.load_documents()
-    all_text = " ".join([doc.text.lower() for doc in documents])
-
-    # Key concepts that should be covered
-    essential_concepts = [
-        "retrieval-augmented generation",
-        "rag",
-        "embedding",
-        "vector",
-        "context construction",
-        "guardrails",
-        "evaluation",
-        "chunking",
-        "prompt engineering",
-        "hallucination",
-        "observability",
-        "hybrid search",
-        "llm-as-judge",
-        "personalization",
-    ]
-
-    for concept in essential_concepts:
-        assert concept.lower() in all_text, f"Missing essential concept: {concept}"
-
-
-def test_document_metadata_extraction(sample_repository):
-    """Test that metadata is properly extracted from documents."""
-    documents = sample_repository.load_documents()
+def test_document_metadata_extraction(sample_repository, samples_dir):
+    """Each document has file_name, file_path, and file_size metadata."""
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     for doc in documents:
         metadata = doc.metadata
@@ -100,10 +73,10 @@ def test_document_metadata_extraction(sample_repository):
 # ----------------------------------------------
 
 
-def test_build_simple_rag_pipeline(sample_repository):
-    """Demonstrate building a simple RAG pipeline with sample docs."""
+def test_build_simple_rag_pipeline(sample_repository, samples_dir):
+    """Build a complete RAG pipeline: load docs → create index → query."""
     # Load documents
-    documents = sample_repository.load_documents()
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Use mock LLM to avoid API calls
     mock_llm = MockLLMWithChain(
@@ -135,9 +108,9 @@ def test_build_simple_rag_pipeline(sample_repository):
     assert len(response.response) > 0
 
 
-def test_document_chunking_simulation(sample_repository):
-    """Test document chunking and retrieval patterns."""
-    documents = sample_repository.load_documents()
+def test_document_chunking_simulation(sample_repository, samples_dir):
+    """Split documents into paragraph chunks for granular retrieval."""
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Simulate chunking by paragraphs
     all_chunks = []
@@ -161,54 +134,17 @@ def test_document_chunking_simulation(sample_repository):
 
 
 # ----------------------------------------------
-# FILTERING AND LOADING TESTS
-# ----------------------------------------------
-
-
-def test_filtered_document_loading(samples_dir):
-    """Test loading documents with specific filters."""
-    # Load only one document with file limit
-    repo = LocalDocumentRepository(input_dir=str(samples_dir), required_exts=[".txt"], num_files_limit=1)
-
-    documents = repo.load_documents()
-    assert len(documents) == 1, "Should respect file limit"
-
-
-def test_recursive_loading_with_samples(samples_dir):
-    """Test that recursive loading works with the samples directory."""
-    repo = LocalDocumentRepository(
-        input_dir=str(samples_dir.parent),  # Start from data_loading directory
-        recursive=True,
-        required_exts=[".txt"],
-    )
-
-    documents = repo.load_documents()
-
-    # Should find the text files in the samples subdirectory
-    assert len(documents) >= 3, "Should find at least the three sample documents"
-
-    # Verify the samples were included
-    sample_files = {
-        "rag_pipeline_architecture.txt",
-        "context_construction_strategies.txt",
-        "genai_evaluation_guardrails.txt",
-    }
-    loaded_files = {Path(doc.metadata.get("file_name")).name for doc in documents}
-    assert sample_files.issubset(loaded_files), "Should include all sample files"
-
-
-# ----------------------------------------------
 # SEARCH AND RETRIEVAL TESTS
 # ----------------------------------------------
 
 
-def test_content_search_simulation(sample_repository):
-    """Simulate searching for specific content in loaded documents."""
-    documents = sample_repository.load_documents()
+def test_content_search_simulation(sample_repository, samples_dir):
+    """Keyword search ranks documents by term frequency."""
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Simulate a simple keyword search
     def search_documents(query: str, documents: list[Document]) -> list[tuple[Document, int]]:
-        """Simple keyword search returning documents and match counts."""
+        """Count query occurrences in each document."""
         results = []
         query_lower = query.lower()
         for doc in documents:

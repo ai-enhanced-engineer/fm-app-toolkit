@@ -9,6 +9,6 @@ class DocumentRepository(ABC):
     """Abstract interface for document loading from various sources."""
 
     @abstractmethod
-    def load_documents(self) -> list[Document]:
-        """Load all documents from the repository."""
+    def load_documents(self, location: str) -> list[Document]:
+        """Load documents from the specified location."""
         raise NotImplementedError
