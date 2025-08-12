@@ -1,11 +1,9 @@
 """Integration tests demonstrating the full document indexing pipeline."""
 
-import pytest
 
 from fm_app_toolkit.data_loading import LocalDocumentRepository
 from fm_app_toolkit.indexing import PropertyGraphIndexer, VectorStoreIndexer
 from fm_app_toolkit.testing.mocks import MockLLMWithChain
-
 
 # All fixtures (test_data_dir, sample_documents, mock_embed) come from conftest.py
 
