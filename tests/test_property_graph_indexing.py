@@ -9,6 +9,7 @@ from llama_index.core.indices.property_graph.transformations import (
     ImplicitPathExtractor,
     SimpleLLMPathExtractor,
 )
+from pydantic import ValidationError
 
 from fm_app_toolkit.indexing import PropertyGraphIndexer
 from fm_app_toolkit.testing.mocks import MockLLMWithChain
@@ -141,3 +142,45 @@ def test_property_graph_error_handling():
         with pytest.raises(Exception) as exc_info:
             indexer.create_index(documents)
         assert "Graph creation failed" in str(exc_info.value)
+
+
+def test_property_graph_indexer_validates_input_types():
+    """Demonstrate that Pydantic validates input types for PropertyGraphIndexer.
+    
+    The @validate_call decorator provides consistent validation across all
+    indexer implementations, ensuring type safety and clear error messages.
+    """
+    indexer = PropertyGraphIndexer(embed_kg_nodes=False)
+    mock_embed = MockEmbedding(embed_dim=256)
+    
+    # Invalid: string instead of list
+    with pytest.raises(ValidationError) as exc_info:
+        indexer.create_index("not a list", embed_model=mock_embed)
+    assert "Input should be a valid list" in str(exc_info.value)
+    
+    # Invalid: None instead of list
+    with pytest.raises(ValidationError) as exc_info:
+        indexer.create_index(None, embed_model=mock_embed)
+    assert "Input should be a valid list" in str(exc_info.value)
+    
+    # Invalid: dict instead of list
+    with pytest.raises(ValidationError) as exc_info:
+        indexer.create_index({"doc": "value"}, embed_model=mock_embed)
+    assert "Input should be a valid list" in str(exc_info.value)
+    
+    # Invalid: integer instead of list
+    with pytest.raises(ValidationError) as exc_info:
+        indexer.create_index(42, embed_model=mock_embed)
+    assert "Input should be a valid list" in str(exc_info.value)
+    
+    # Valid: empty list should work
+    index = indexer.create_index([], embed_model=mock_embed)
+    assert isinstance(index, PropertyGraphIndex)
+    
+    # Valid: list with Documents should work
+    docs = [Document(text="Knowledge graph test", doc_id="kg1")]
+    index = indexer.create_index(docs, embed_model=mock_embed)
+    assert isinstance(index, PropertyGraphIndex)
+    
+    # Note: Pydantic's @validate_call automatically converts tuples to lists,
+    # which is acceptable behavior for our use case

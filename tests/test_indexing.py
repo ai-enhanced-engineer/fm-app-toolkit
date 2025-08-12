@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from llama_index.core import Document, VectorStoreIndex
 from llama_index.core.embeddings.mock_embed_model import MockEmbedding
+from pydantic import ValidationError
 
 from fm_app_toolkit.indexing import BaseIndexer, VectorStoreIndexer
 
@@ -94,3 +95,42 @@ def test_base_indexer_is_abstract():
     """
     with pytest.raises(TypeError):
         BaseIndexer()
+
+
+def test_vector_store_indexer_validates_input_types():
+    """Demonstrate that Pydantic validates input types automatically.
+    
+    The @validate_call decorator ensures type safety without manual checks,
+    providing clear error messages for invalid inputs.
+    """
+    indexer = VectorStoreIndexer()
+    mock_embed = MockEmbedding(embed_dim=256)
+    
+    # Invalid: string instead of list
+    with pytest.raises(ValidationError) as exc_info:
+        indexer.create_index("not a list", embed_model=mock_embed)
+    assert "Input should be a valid list" in str(exc_info.value)
+    
+    # Invalid: None instead of list  
+    with pytest.raises(ValidationError) as exc_info:
+        indexer.create_index(None, embed_model=mock_embed)
+    assert "Input should be a valid list" in str(exc_info.value)
+    
+    # Invalid: dict instead of list
+    with pytest.raises(ValidationError) as exc_info:
+        indexer.create_index({"doc": "value"}, embed_model=mock_embed)
+    assert "Input should be a valid list" in str(exc_info.value)
+    
+    # Invalid: integer instead of list
+    with pytest.raises(ValidationError) as exc_info:
+        indexer.create_index(42, embed_model=mock_embed)
+    assert "Input should be a valid list" in str(exc_info.value)
+    
+    # Valid: empty list should work
+    index = indexer.create_index([], embed_model=mock_embed)
+    assert isinstance(index, VectorStoreIndex)
+    
+    # Valid: list with Documents should work
+    docs = [Document(text="Test", doc_id="1")]
+    index = indexer.create_index(docs, embed_model=mock_embed)
+    assert isinstance(index, VectorStoreIndex)
