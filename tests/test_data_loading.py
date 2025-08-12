@@ -15,7 +15,7 @@ from fm_app_toolkit.data_loading import (
 
 
 def test_local_document_repository_loads_documents():
-    """Test LocalDocumentRepository loads documents from directory."""
+    """Basic document loading from filesystem."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test files
         test_file = Path(temp_dir) / "test.txt"
@@ -30,7 +30,7 @@ def test_local_document_repository_loads_documents():
 
 
 def test_local_document_repository_filters_extensions():
-    """Test LocalDocumentRepository filters by file extension."""
+    """Filter documents by file extension (.txt, .md, etc)."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test files with different extensions
         (Path(temp_dir) / "test.txt").write_text("Text file")
@@ -45,7 +45,7 @@ def test_local_document_repository_filters_extensions():
 
 
 def test_local_document_repository_recursive():
-    """Test LocalDocumentRepository loads documents recursively."""
+    """Recursive vs non-recursive directory traversal."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create nested directory structure
         root = Path(temp_dir)
@@ -66,7 +66,7 @@ def test_local_document_repository_recursive():
 
 
 def test_local_document_repository_excludes_hidden():
-    """Test LocalDocumentRepository excludes hidden files."""
+    """Hidden files (starting with .) are excluded."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create regular and hidden files
         (Path(temp_dir) / "visible.txt").write_text("Visible")
@@ -80,7 +80,7 @@ def test_local_document_repository_excludes_hidden():
 
 
 def test_local_document_repository_file_limit():
-    """Test LocalDocumentRepository respects file limit."""
+    """Limit number of documents loaded."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create multiple files
         for i in range(5):
@@ -93,16 +93,16 @@ def test_local_document_repository_file_limit():
 
 
 def test_local_document_repository_handles_missing_directory():
-    """Test LocalDocumentRepository handles missing directory gracefully."""
+    """Missing directories raise clear errors."""
     repo = LocalDocumentRepository(input_dir="/nonexistent/directory")
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="does not exist"):
         repo.load_documents(location="/nonexistent/directory")
 
 
 @patch("fm_app_toolkit.data_loading.gcp.GCSReader")
 def test_gcp_document_repository_with_key(mock_gcs_reader):
-    """Test GCPDocumentRepository loads single document by key."""
+    """Load single file: gs://bucket/path/to/file.txt"""
     mock_reader_instance = MagicMock()
     mock_reader_instance.load_data.return_value = [Document(text="GCS content", metadata={"source": "gcs"})]
     mock_gcs_reader.return_value = mock_reader_instance
@@ -117,7 +117,7 @@ def test_gcp_document_repository_with_key(mock_gcs_reader):
 
 @patch("fm_app_toolkit.data_loading.gcp.GCSReader")
 def test_gcp_document_repository_with_prefix(mock_gcs_reader):
-    """Test GCPDocumentRepository loads multiple documents by prefix."""
+    """Load directory: gs://bucket/documents/"""
     mock_reader_instance = MagicMock()
     mock_reader_instance.load_data.return_value = [
         Document(text="Doc 1", metadata={"source": "gcs"}),
@@ -134,7 +134,7 @@ def test_gcp_document_repository_with_prefix(mock_gcs_reader):
 
 @patch("fm_app_toolkit.data_loading.gcp.GCSReader")
 def test_gcp_document_repository_with_service_account(mock_gcs_reader):
-    """Test GCPDocumentRepository uses service account key."""
+    """Authenticate with service account credentials."""
     mock_reader_instance = MagicMock()
     mock_reader_instance.load_data.return_value = [Document(text="Authenticated content", metadata={})]
     mock_gcs_reader.return_value = mock_reader_instance
@@ -151,7 +151,7 @@ def test_gcp_document_repository_with_service_account(mock_gcs_reader):
 
 
 def test_gcp_document_repository_validates_gs_uri():
-    """Test GCPDocumentRepository validates GCS URI format."""
+    """Only gs:// URIs are accepted, not s3:// or paths."""
     repo = GCPDocumentRepository()
     
     # Invalid: not a gs:// URI
@@ -165,7 +165,7 @@ def test_gcp_document_repository_validates_gs_uri():
 
 @patch("fm_app_toolkit.data_loading.gcp.GCSReader")
 def test_gcp_document_repository_handles_load_error(mock_gcs_reader):
-    """Test GCPDocumentRepository handles loading errors gracefully."""
+    """GCS errors are logged and re-raised."""
     mock_reader_instance = MagicMock()
     mock_reader_instance.load_data.side_effect = Exception("GCS error")
     mock_gcs_reader.return_value = mock_reader_instance
@@ -177,7 +177,7 @@ def test_gcp_document_repository_handles_load_error(mock_gcs_reader):
 
 
 def test_local_repository_validates_location_type():
-    """Verify @validate_call rejects invalid location types."""
+    """Pydantic validates location must be a string."""
     repo = LocalDocumentRepository(input_dir=".", recursive=True)
     
     # Invalid: None instead of string
@@ -194,7 +194,7 @@ def test_local_repository_validates_location_type():
 
 
 def test_gcp_repository_validates_location_type():
-    """Verify GCP repository validates location parameter type."""
+    """Pydantic validates location must be a string."
     repo = GCPDocumentRepository()
     
     # Invalid: None instead of string

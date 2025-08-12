@@ -19,7 +19,7 @@ def test_full_indexing_pipeline(test_data_dir, mock_embed):
         input_dir=str(test_data_dir),
         required_exts=[".txt"]
     )
-    documents = repo.load_documents()
+    documents = repo.load_documents(location=str(test_data_dir))
     assert len(documents) == 3, "Should load all test documents"
     
     # Verify metadata is preserved from loading

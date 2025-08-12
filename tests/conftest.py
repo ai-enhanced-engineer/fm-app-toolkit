@@ -63,7 +63,7 @@ def sample_documents(test_data_dir: Path) -> list[Document]:
         input_dir=str(test_data_dir),
         required_exts=[".txt"]
     )
-    return repo.load_documents()
+    return repo.load_documents(location=str(test_data_dir))
 
 
 @pytest.fixture

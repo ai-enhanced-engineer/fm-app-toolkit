@@ -1,4 +1,4 @@
-"""Integration tests for data loading with sample documents."""
+"""Integration tests demonstrating RAG pipeline construction with real documents."""
 
 from pathlib import Path
 
@@ -16,13 +16,13 @@ from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 @pytest.fixture
 def samples_dir():
-    """Get the path to the test data directory."""
+    """Path to test documents: RAG architecture, context construction, and guardrails."""
     return Path(__file__).parent.parent / "fm_app_toolkit" / "test_data"
 
 
 @pytest.fixture
 def sample_repository(samples_dir):
-    """Create a repository for the sample documents."""
+    """Repository configured to load .txt files from test_data directory."""
     return LocalDocumentRepository(input_dir=str(samples_dir), required_exts=[".txt"])
 
 
@@ -32,7 +32,11 @@ def sample_repository(samples_dir):
 
 
 def test_load_sample_documents(sample_repository, samples_dir):
+<<<<<<< HEAD
     """Test loading sample text documents from samples directory."""
+=======
+    """Load three GenAI documents and verify metadata extraction."""
+>>>>>>> f23be58 (refactor: Simplify data loading interface and improve test pedagogy)
     documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Verify all documents loaded
@@ -51,6 +55,7 @@ def test_load_sample_documents(sample_repository, samples_dir):
     assert "genai_evaluation_guardrails.txt" in file_names
 
 
+<<<<<<< HEAD
 def test_sample_content_coverage(sample_repository, samples_dir):
     """Verify sample documents cover key GenAI concepts."""
     documents = sample_repository.load_documents(location=str(samples_dir))
@@ -80,6 +85,10 @@ def test_sample_content_coverage(sample_repository, samples_dir):
 
 def test_document_metadata_extraction(sample_repository, samples_dir):
     """Test that metadata is properly extracted from documents."""
+=======
+def test_document_metadata_extraction(sample_repository, samples_dir):
+    """Each document has file_name, file_path, and file_size metadata."""
+>>>>>>> f23be58 (refactor: Simplify data loading interface and improve test pedagogy)
     documents = sample_repository.load_documents(location=str(samples_dir))
 
     for doc in documents:
@@ -101,7 +110,11 @@ def test_document_metadata_extraction(sample_repository, samples_dir):
 
 
 def test_build_simple_rag_pipeline(sample_repository, samples_dir):
+<<<<<<< HEAD
     """Demonstrate building a simple RAG pipeline with sample docs."""
+=======
+    """Build a complete RAG pipeline: load docs → create index → query."""
+>>>>>>> f23be58 (refactor: Simplify data loading interface and improve test pedagogy)
     # Load documents
     documents = sample_repository.load_documents(location=str(samples_dir))
 
@@ -136,7 +149,11 @@ def test_build_simple_rag_pipeline(sample_repository, samples_dir):
 
 
 def test_document_chunking_simulation(sample_repository, samples_dir):
+<<<<<<< HEAD
     """Test document chunking and retrieval patterns."""
+=======
+    """Split documents into paragraph chunks for granular retrieval."""
+>>>>>>> f23be58 (refactor: Simplify data loading interface and improve test pedagogy)
     documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Simulate chunking by paragraphs
@@ -161,6 +178,7 @@ def test_document_chunking_simulation(sample_repository, samples_dir):
 
 
 # ----------------------------------------------
+<<<<<<< HEAD
 # FILTERING AND LOADING TESTS
 # ----------------------------------------------
 
@@ -198,17 +216,23 @@ def test_recursive_loading_with_samples(samples_dir):
 
 
 # ----------------------------------------------
+=======
+>>>>>>> f23be58 (refactor: Simplify data loading interface and improve test pedagogy)
 # SEARCH AND RETRIEVAL TESTS
 # ----------------------------------------------
 
 
 def test_content_search_simulation(sample_repository, samples_dir):
+<<<<<<< HEAD
     """Simulate searching for specific content in loaded documents."""
+=======
+    """Keyword search ranks documents by term frequency."""
+>>>>>>> f23be58 (refactor: Simplify data loading interface and improve test pedagogy)
     documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Simulate a simple keyword search
     def search_documents(query: str, documents: list[Document]) -> list[tuple[Document, int]]:
-        """Simple keyword search returning documents and match counts."""
+        """Count query occurrences in each document."""
         results = []
         query_lower = query.lower()
         for doc in documents:
