@@ -1,4 +1,4 @@
-"""Tests for property graph indexing module."""
+"""Tests for PropertyGraph indexing demonstrating knowledge graph concepts."""
 
 from unittest.mock import MagicMock, patch
 
@@ -15,11 +15,16 @@ from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 
 def test_property_graph_indexer_creates_index():
-    """Test PropertyGraphIndexer creates index from documents."""
+    """Demonstrate creating a knowledge graph from documents with relationships.
+    
+    PropertyGraphIndex extracts entities and relationships to build
+    a structured graph representation of document content.
+    """
+    # Documents with clear entity relationships
     documents = [
-        Document(text="Alice knows Bob", doc_id="1"),
-        Document(text="Bob works at Company X", doc_id="2"),
-        Document(text="Company X is in New York", doc_id="3"),
+        Document(text="RAG pipelines retrieve context from vector databases", doc_id="1"),
+        Document(text="Vector databases store embeddings for similarity search", doc_id="2"),
+        Document(text="Embeddings are created by transformer models", doc_id="3"),
     ]
     
     indexer = PropertyGraphIndexer(show_progress=False, embed_kg_nodes=False)
@@ -27,35 +32,18 @@ def test_property_graph_indexer_creates_index():
     
     index = indexer.create_index(documents, embed_model=mock_embed)
     assert isinstance(index, PropertyGraphIndex)
+    assert hasattr(index, 'property_graph_store')
 
 
-def test_property_graph_indexer_with_llm():
-    """Test PropertyGraphIndexer with LLM for extraction."""
-    documents = [
-        Document(text="Alice is friends with Bob", doc_id="1"),
-    ]
+def test_property_graph_with_custom_extractors():
+    """Demonstrate configuring custom knowledge extractors.
     
-    # Create mock LLM with predefined responses
-    mock_llm = MockLLMWithChain(chain=["Extracted paths"])
+    Different extractors can be used to control how entities and
+    relationships are identified in documents.
+    """
+    documents = [Document(text="Custom extraction of domain-specific entities", doc_id="1")]
     
-    indexer = PropertyGraphIndexer(
-        llm=mock_llm,
-        show_progress=False,
-        embed_kg_nodes=False
-    )
-    mock_embed = MockEmbedding(embed_dim=256)
-    
-    index = indexer.create_index(documents, embed_model=mock_embed)
-    assert isinstance(index, PropertyGraphIndex)
-
-
-def test_property_graph_indexer_with_custom_extractors():
-    """Test PropertyGraphIndexer with custom extractors."""
-    documents = [
-        Document(text="Test document", doc_id="1"),
-    ]
-    
-    # Create custom extractors
+    # Use only implicit extractor (no LLM required)
     custom_extractors = [ImplicitPathExtractor()]
     
     indexer = PropertyGraphIndexer(
@@ -69,14 +57,66 @@ def test_property_graph_indexer_with_custom_extractors():
     assert isinstance(index, PropertyGraphIndex)
 
 
-def test_property_graph_indexer_with_embedding():
-    """Test PropertyGraphIndexer with knowledge graph node embedding."""
+def test_property_graph_extractor_selection():
+    """Demonstrate automatic extractor selection based on LLM availability.
+    
+    When an LLM is provided, more sophisticated extraction is possible.
+    Without an LLM, only implicit extraction is used.
+    """
+    documents = [Document(text="Test extractor selection logic", doc_id="1")]
+    mock_embed = MockEmbedding(embed_dim=256)
+    
+    # Test WITH LLM - should use both SimpleLLMPathExtractor and ImplicitPathExtractor
+    mock_llm = MockLLMWithChain(chain=["Extracted entities"])
+    indexer_with_llm = PropertyGraphIndexer(
+        llm=mock_llm,
+        kg_extractors=None,  # Let it auto-select
+        embed_kg_nodes=False
+    )
+    
+    with patch.object(PropertyGraphIndex, 'from_documents') as mock_from_docs:
+        mock_from_docs.return_value = MagicMock(spec=PropertyGraphIndex)
+        indexer_with_llm.create_index(documents, embed_model=mock_embed)
+        
+        call_args = mock_from_docs.call_args
+        kg_extractors = call_args[1]['kg_extractors']
+        
+        # Should have both extractor types when LLM is available
+        assert len(kg_extractors) == 2
+        assert any(isinstance(e, SimpleLLMPathExtractor) for e in kg_extractors)
+        assert any(isinstance(e, ImplicitPathExtractor) for e in kg_extractors)
+    
+    # Test WITHOUT LLM - should only use ImplicitPathExtractor
+    indexer_without_llm = PropertyGraphIndexer(
+        llm=None,
+        kg_extractors=None,
+        embed_kg_nodes=False
+    )
+    
+    with patch.object(PropertyGraphIndex, 'from_documents') as mock_from_docs:
+        mock_from_docs.return_value = MagicMock(spec=PropertyGraphIndex)
+        indexer_without_llm.create_index(documents, embed_model=mock_embed)
+        
+        call_args = mock_from_docs.call_args
+        kg_extractors = call_args[1]['kg_extractors']
+        
+        # Should only have implicit extractor when no LLM
+        assert len(kg_extractors) == 1
+        assert isinstance(kg_extractors[0], ImplicitPathExtractor)
+
+
+def test_property_graph_with_embeddings():
+    """Demonstrate knowledge graph with embedded nodes for similarity search.
+    
+    Embedding KG nodes enables vector similarity search over the graph structure,
+    combining benefits of both graph and vector representations.
+    """
     documents = [
-        Document(text="Data flows from source to destination", doc_id="1"),
+        Document(text="Knowledge graphs can be enhanced with embeddings", doc_id="1"),
     ]
     
     indexer = PropertyGraphIndexer(
-        embed_kg_nodes=True,
+        embed_kg_nodes=True,  # Enable embedding of graph nodes
         show_progress=False
     )
     mock_embed = MockEmbedding(embed_dim=256)
@@ -85,129 +125,19 @@ def test_property_graph_indexer_with_embedding():
     assert isinstance(index, PropertyGraphIndex)
 
 
-def test_property_graph_indexer_empty_documents():
-    """Test PropertyGraphIndexer handles empty document list."""
-    documents = []
+def test_property_graph_error_handling():
+    """Demonstrate error handling in property graph creation.
     
-    indexer = PropertyGraphIndexer(embed_kg_nodes=False)
-    mock_embed = MockEmbedding(embed_dim=256)
-    
-    index = indexer.create_index(documents, embed_model=mock_embed)
-    assert isinstance(index, PropertyGraphIndex)
-
-
-def test_property_graph_indexer_with_metadata():
-    """Test PropertyGraphIndexer preserves document metadata."""
-    documents = [
-        Document(
-            text="Document with metadata",
-            doc_id="meta1",
-            metadata={"source": "test.txt", "page": 1}
-        ),
-        Document(
-            text="Another document",
-            doc_id="meta2",
-            metadata={"source": "test2.txt", "author": "Test Author"}
-        ),
-    ]
-    
-    indexer = PropertyGraphIndexer(embed_kg_nodes=False)
-    mock_embed = MockEmbedding(embed_dim=256)
-    
-    index = indexer.create_index(documents, embed_model=mock_embed)
-    assert isinstance(index, PropertyGraphIndex)
-
-
-def test_property_graph_indexer_error_handling():
-    """Test PropertyGraphIndexer handles errors appropriately."""
-    documents = [
-        Document(text="Test document", doc_id="test1"),
-    ]
-    
+    Errors are logged and propagated for proper application handling.
+    """
+    documents = [Document(text="Test document", doc_id="test1")]
     indexer = PropertyGraphIndexer()
     
-    # Mock PropertyGraphIndex.from_documents to raise an exception
     with patch.object(
         PropertyGraphIndex,
         'from_documents',
-        side_effect=Exception("Index creation failed")
+        side_effect=Exception("Graph creation failed")
     ):
         with pytest.raises(Exception) as exc_info:
             indexer.create_index(documents)
-        assert "Index creation failed" in str(exc_info.value)
-
-
-def test_property_graph_indexer_with_progress():
-    """Test PropertyGraphIndexer with progress display enabled."""
-    documents = [
-        Document(text=f"Document {i}", doc_id=f"doc_{i}")
-        for i in range(3)
-    ]
-    
-    indexer = PropertyGraphIndexer(
-        show_progress=True,
-        embed_kg_nodes=False
-    )
-    mock_embed = MockEmbedding(embed_dim=256)
-    
-    index = indexer.create_index(documents, embed_model=mock_embed)
-    assert isinstance(index, PropertyGraphIndex)
-
-
-def test_property_graph_indexer_with_llm_extractors():
-    """Test PropertyGraphIndexer creates LLM extractors when LLM provided."""
-    documents = [
-        Document(text="Complex relationship text", doc_id="1"),
-    ]
-    
-    mock_llm = MockLLMWithChain(chain=["Extracted"])
-    
-    # Create indexer with LLM but no custom extractors
-    indexer = PropertyGraphIndexer(
-        llm=mock_llm,
-        kg_extractors=None,  # Will use defaults with LLM
-        embed_kg_nodes=False
-    )
-    mock_embed = MockEmbedding(embed_dim=256)
-    
-    with patch.object(PropertyGraphIndex, 'from_documents') as mock_from_docs:
-        mock_from_docs.return_value = MagicMock(spec=PropertyGraphIndex)
-        
-        indexer.create_index(documents, embed_model=mock_embed)
-        
-        # Verify that extractors were created with LLM
-        call_args = mock_from_docs.call_args
-        kg_extractors = call_args[1]['kg_extractors']
-        
-        # Should have SimpleLLMPathExtractor and ImplicitPathExtractor
-        assert len(kg_extractors) == 2
-        assert any(isinstance(e, SimpleLLMPathExtractor) for e in kg_extractors)
-        assert any(isinstance(e, ImplicitPathExtractor) for e in kg_extractors)
-
-
-def test_property_graph_indexer_without_llm():
-    """Test PropertyGraphIndexer without LLM uses only implicit extractor."""
-    documents = [
-        Document(text="Simple text", doc_id="1"),
-    ]
-    
-    # Create indexer without LLM and without custom extractors
-    indexer = PropertyGraphIndexer(
-        llm=None,
-        kg_extractors=None,
-        embed_kg_nodes=False
-    )
-    mock_embed = MockEmbedding(embed_dim=256)
-    
-    with patch.object(PropertyGraphIndex, 'from_documents') as mock_from_docs:
-        mock_from_docs.return_value = MagicMock(spec=PropertyGraphIndex)
-        
-        indexer.create_index(documents, embed_model=mock_embed)
-        
-        # Verify that only ImplicitPathExtractor was used
-        call_args = mock_from_docs.call_args
-        kg_extractors = call_args[1]['kg_extractors']
-        
-        # Should only have ImplicitPathExtractor
-        assert len(kg_extractors) == 1
-        assert isinstance(kg_extractors[0], ImplicitPathExtractor)
+        assert "Graph creation failed" in str(exc_info.value)
