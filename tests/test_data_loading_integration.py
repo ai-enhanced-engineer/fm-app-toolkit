@@ -31,9 +31,9 @@ def sample_repository(samples_dir):
 # ----------------------------------------------
 
 
-def test_load_sample_documents(sample_repository):
+def test_load_sample_documents(sample_repository, samples_dir):
     """Test loading sample text documents from samples directory."""
-    documents = sample_repository.load_documents()
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Verify all documents loaded
     assert len(documents) == 3, "Should load all three sample documents"
@@ -51,9 +51,9 @@ def test_load_sample_documents(sample_repository):
     assert "genai_evaluation_guardrails.txt" in file_names
 
 
-def test_sample_content_coverage(sample_repository):
+def test_sample_content_coverage(sample_repository, samples_dir):
     """Verify sample documents cover key GenAI concepts."""
-    documents = sample_repository.load_documents()
+    documents = sample_repository.load_documents(location=str(samples_dir))
     all_text = " ".join([doc.text.lower() for doc in documents])
 
     # Key concepts that should be covered
@@ -78,9 +78,9 @@ def test_sample_content_coverage(sample_repository):
         assert concept.lower() in all_text, f"Missing essential concept: {concept}"
 
 
-def test_document_metadata_extraction(sample_repository):
+def test_document_metadata_extraction(sample_repository, samples_dir):
     """Test that metadata is properly extracted from documents."""
-    documents = sample_repository.load_documents()
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     for doc in documents:
         metadata = doc.metadata
@@ -100,10 +100,10 @@ def test_document_metadata_extraction(sample_repository):
 # ----------------------------------------------
 
 
-def test_build_simple_rag_pipeline(sample_repository):
+def test_build_simple_rag_pipeline(sample_repository, samples_dir):
     """Demonstrate building a simple RAG pipeline with sample docs."""
     # Load documents
-    documents = sample_repository.load_documents()
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Use mock LLM to avoid API calls
     mock_llm = MockLLMWithChain(
@@ -135,9 +135,9 @@ def test_build_simple_rag_pipeline(sample_repository):
     assert len(response.response) > 0
 
 
-def test_document_chunking_simulation(sample_repository):
+def test_document_chunking_simulation(sample_repository, samples_dir):
     """Test document chunking and retrieval patterns."""
-    documents = sample_repository.load_documents()
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Simulate chunking by paragraphs
     all_chunks = []
@@ -170,7 +170,7 @@ def test_filtered_document_loading(samples_dir):
     # Load only one document with file limit
     repo = LocalDocumentRepository(input_dir=str(samples_dir), required_exts=[".txt"], num_files_limit=1)
 
-    documents = repo.load_documents()
+    documents = repo.load_documents(location=str(samples_dir))
     assert len(documents) == 1, "Should respect file limit"
 
 
@@ -182,7 +182,7 @@ def test_recursive_loading_with_samples(samples_dir):
         required_exts=[".txt"],
     )
 
-    documents = repo.load_documents()
+    documents = repo.load_documents(location=str(samples_dir))
 
     # Should find the text files in the test_data directory
     assert len(documents) == 3, "Should find exactly three test documents"
@@ -202,9 +202,9 @@ def test_recursive_loading_with_samples(samples_dir):
 # ----------------------------------------------
 
 
-def test_content_search_simulation(sample_repository):
+def test_content_search_simulation(sample_repository, samples_dir):
     """Simulate searching for specific content in loaded documents."""
-    documents = sample_repository.load_documents()
+    documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Simulate a simple keyword search
     def search_documents(query: str, documents: list[Document]) -> list[tuple[Document, int]]:
