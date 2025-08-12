@@ -16,8 +16,8 @@ from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 @pytest.fixture
 def samples_dir():
-    """Get the path to the samples directory."""
-    return Path(__file__).parent.parent / "fm_app_toolkit" / "data_loading" / "samples"
+    """Get the path to the test data directory."""
+    return Path(__file__).parent.parent / "fm_app_toolkit" / "test_data"
 
 
 @pytest.fixture
@@ -175,17 +175,17 @@ def test_filtered_document_loading(samples_dir):
 
 
 def test_recursive_loading_with_samples(samples_dir):
-    """Test that recursive loading works with the samples directory."""
+    """Test that recursive loading works with the test_data directory."""
     repo = LocalDocumentRepository(
-        input_dir=str(samples_dir.parent),  # Start from data_loading directory
+        input_dir=str(samples_dir),  # Start from test_data directory
         recursive=True,
         required_exts=[".txt"],
     )
 
     documents = repo.load_documents()
 
-    # Should find the text files in the samples subdirectory
-    assert len(documents) >= 3, "Should find at least the three sample documents"
+    # Should find the text files in the test_data directory
+    assert len(documents) == 3, "Should find exactly three test documents"
 
     # Verify the samples were included
     sample_files = {
