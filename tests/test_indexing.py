@@ -1,4 +1,4 @@
-"""Tests for VectorStore indexing demonstrating core indexing concepts."""
+"""Tests for document indexing implementations."""
 
 from unittest.mock import patch
 
@@ -7,15 +7,13 @@ from llama_index.core import Document, VectorStoreIndex
 from llama_index.core.embeddings.mock_embed_model import MockEmbedding
 from pydantic import ValidationError
 
-from fm_app_toolkit.indexing import BaseIndexer, VectorStoreIndexer
+from fm_app_toolkit.indexing import DocumentIndexer, PropertyGraphIndexer, VectorStoreIndexer
+from fm_app_toolkit.indexing.property_graph import _select_extractors
+from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 
 def test_vector_store_indexer_creates_index():
-    """Demonstrate basic index creation from documents.
-    
-    This test shows the fundamental operation of creating a searchable
-    vector index from text documents using embeddings.
-    """
+    """Create vector index from three documents."""
     documents = [
         Document(text="First document about RAG pipelines", doc_id="1"),
         Document(text="Second document about embeddings", doc_id="2"),
@@ -33,11 +31,7 @@ def test_vector_store_indexer_creates_index():
 
 
 def test_vector_store_indexer_custom_batch_size():
-    """Demonstrate configuration of indexing parameters.
-    
-    Batch size affects memory usage and performance when indexing
-    large document collections.
-    """
+    """Custom batch size controls memory usage during indexing."""
     documents = [
         Document(text=f"Document {i}", doc_id=f"doc_{i}")
         for i in range(10)
@@ -53,10 +47,7 @@ def test_vector_store_indexer_custom_batch_size():
 
 
 def test_vector_store_indexer_empty_documents():
-    """Demonstrate edge case handling with empty document list.
-    
-    Indexers should handle edge cases gracefully without errors.
-    """
+    """Empty document list creates valid empty index."""
     documents = []
     
     indexer = VectorStoreIndexer()
@@ -68,11 +59,7 @@ def test_vector_store_indexer_empty_documents():
 
 
 def test_vector_store_indexer_error_handling():
-    """Demonstrate proper error propagation in indexing pipeline.
-    
-    Errors during index creation should be logged and re-raised
-    for proper handling by the application.
-    """
+    """Indexing errors are logged and re-raised."""
     documents = [Document(text="Test document", doc_id="test1")]
     indexer = VectorStoreIndexer()
     
@@ -87,22 +74,14 @@ def test_vector_store_indexer_error_handling():
         assert "Index creation failed" in str(exc_info.value)
 
 
-def test_base_indexer_is_abstract():
-    """Demonstrate that BaseIndexer enforces implementation of interface.
-    
-    Abstract base classes ensure consistent interface across different
-    indexer implementations.
-    """
+def test_document_indexer_is_abstract():
+    """DocumentIndexer cannot be instantiated directly."""
     with pytest.raises(TypeError):
-        BaseIndexer()
+        DocumentIndexer()
 
 
 def test_vector_store_indexer_validates_input_types():
-    """Demonstrate that Pydantic validates input types automatically.
-    
-    The @validate_call decorator ensures type safety without manual checks,
-    providing clear error messages for invalid inputs.
-    """
+    """Pydantic validates documents must be a list."""
     indexer = VectorStoreIndexer()
     mock_embed = MockEmbedding(embed_dim=256)
     
@@ -134,3 +113,93 @@ def test_vector_store_indexer_validates_input_types():
     docs = [Document(text="Test", doc_id="1")]
     index = indexer.create_index(docs, embed_model=mock_embed)
     assert isinstance(index, VectorStoreIndex)
+
+
+# ----------------------------------------------
+# PROPERTY GRAPH INDEXER TESTS
+# ----------------------------------------------
+
+
+def test_property_graph_indexer_creates_index():
+    """Create property graph index from documents."""
+    documents = [
+        Document(text="Alice knows Bob", doc_id="1"),
+        Document(text="Bob works at TechCorp", doc_id="2"),
+        Document(text="TechCorp is in Silicon Valley", doc_id="3"),
+    ]
+    
+    indexer = PropertyGraphIndexer(
+        show_progress=False,
+        embed_kg_nodes=False
+    )
+    mock_embed = MockEmbedding(embed_dim=256)
+    
+    index = indexer.create_index(documents, embed_model=mock_embed)
+    
+    from llama_index.core import PropertyGraphIndex
+    assert isinstance(index, PropertyGraphIndex)
+    assert hasattr(index, 'property_graph_store')
+
+
+def test_property_graph_indexer_with_llm():
+    """LLM enables entity extraction for richer graphs."""
+    documents = [
+        Document(text="Apple Inc. was founded by Steve Jobs", doc_id="1"),
+        Document(text="Microsoft was founded by Bill Gates", doc_id="2"),
+    ]
+    
+    mock_llm = MockLLMWithChain(
+        chain=["Entities: Apple Inc., Steve Jobs, founder relationship"]
+    )
+    
+    indexer = PropertyGraphIndexer(
+        llm=mock_llm,
+        show_progress=False,
+        embed_kg_nodes=False
+    )
+    mock_embed = MockEmbedding(embed_dim=256)
+    
+    index = indexer.create_index(documents, embed_model=mock_embed)
+    
+    from llama_index.core import PropertyGraphIndex
+    assert isinstance(index, PropertyGraphIndex)
+
+
+def test_property_graph_indexer_validates_input_types():
+    """Pydantic validates documents must be a list."""
+    indexer = PropertyGraphIndexer(show_progress=False)
+    mock_embed = MockEmbedding(embed_dim=256)
+    
+    # Invalid: string instead of list
+    with pytest.raises(ValidationError):
+        indexer.create_index("not a list", embed_model=mock_embed)
+    
+    # Valid: empty list
+    index = indexer.create_index([], embed_model=mock_embed)
+    from llama_index.core import PropertyGraphIndex
+    assert isinstance(index, PropertyGraphIndex)
+
+
+def test_select_extractors_helper():
+    """Helper selects appropriate extractors based on configuration."""
+    from llama_index.core.indices.property_graph.transformations import (
+        ImplicitPathExtractor,
+        SimpleLLMPathExtractor,
+    )
+    
+    # No LLM: only implicit extractor
+    extractors = _select_extractors(None, None)
+    assert len(extractors) == 1
+    assert isinstance(extractors[0], ImplicitPathExtractor)
+    
+    # With LLM: both extractors
+    mock_llm = MockLLMWithChain(chain=["test"])
+    extractors = _select_extractors(None, mock_llm)
+    assert len(extractors) == 2
+    assert isinstance(extractors[0], SimpleLLMPathExtractor)
+    assert isinstance(extractors[1], ImplicitPathExtractor)
+    
+    # Custom extractors: use as-is
+    custom = [ImplicitPathExtractor()]
+    extractors = _select_extractors(custom, mock_llm)
+    assert extractors == custom

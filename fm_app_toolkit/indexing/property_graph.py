@@ -14,20 +14,30 @@ from pydantic import validate_call
 
 from fm_app_toolkit.logging import get_logger
 
-from .base import BaseIndexer
+from .base import DocumentIndexer
 
 logger = get_logger(__name__)
 
 
-class PropertyGraphIndexer(BaseIndexer):
-    """Create property graph indexes from documents using LlamaIndex.
+def _select_extractors(
+    kg_extractors: Optional[list[TransformComponent]],
+    llm: Optional[LLM]
+) -> list[TransformComponent]:
+    """Choose extractors: LLM-based if available, otherwise implicit only."""
+    if kg_extractors is not None:
+        return kg_extractors
     
-    Automatically selects appropriate extractors based on LLM availability:
-    - With LLM: Uses SimpleLLMPathExtractor for entity extraction plus ImplicitPathExtractor
-    - Without LLM: Uses only ImplicitPathExtractor for basic relationship extraction
+    if llm is not None:
+        return [
+            SimpleLLMPathExtractor(llm=llm),
+            ImplicitPathExtractor(),
+        ]
     
-    Empty document lists create valid but empty property graphs.
-    """
+    return [ImplicitPathExtractor()]
+
+
+class PropertyGraphIndexer(DocumentIndexer):
+    """Index documents as knowledge graphs for relationship queries."""
 
     def __init__(
         self,
@@ -54,24 +64,12 @@ class PropertyGraphIndexer(BaseIndexer):
         documents: list[Document],
         embed_model: Optional[BaseEmbedding] = None,
     ) -> PropertyGraphIndex:
-        """Create a property graph index from documents.
-        
-        Pydantic automatically validates that documents is a list.
-        """
+        """Build knowledge graph index from documents."""
         try:
             logger.info(f"Creating property graph index from {len(documents)} documents")
             
-            # If no extractors provided, use defaults
-            kg_extractors = self.kg_extractors
-            if kg_extractors is None and self.llm is not None:
-                # Use LLM-based extractors if LLM is provided
-                kg_extractors = [
-                    SimpleLLMPathExtractor(llm=self.llm),
-                    ImplicitPathExtractor(),
-                ]
-            elif kg_extractors is None:
-                # Use only implicit extractor if no LLM
-                kg_extractors = [ImplicitPathExtractor()]
+            # Select appropriate extractors
+            kg_extractors = _select_extractors(self.kg_extractors, self.llm)
             
             # Log which extractors are being used for debugging
             logger.debug(

@@ -13,6 +13,34 @@ from .base import DocumentRepository
 logger = get_logger(__name__)
 
 
+def _parse_gcs_uri(uri: str) -> dict[str, str]:
+    """Parse GCS URI into bucket and path components.
+    
+    Examples:
+        gs://bucket -> {"bucket": "bucket"}
+        gs://bucket/file.txt -> {"bucket": "bucket", "key": "file.txt"}
+        gs://bucket/dir/ -> {"bucket": "bucket", "prefix": "dir/"}
+    """
+    if not uri.startswith("gs://"):
+        raise ValueError("GCS location must start with gs://")
+    
+    # Remove gs:// prefix and split into bucket and path
+    path_without_prefix = uri[5:]
+    parts = path_without_prefix.split("/", 1)
+    
+    result = {"bucket": parts[0]}
+    
+    # If there's a path after the bucket
+    if len(parts) > 1 and parts[1]:
+        object_path = parts[1]
+        if object_path.endswith("/"):
+            result["prefix"] = object_path
+        else:
+            result["key"] = object_path
+    
+    return result
+
+
 class GCPDocumentRepository(DocumentRepository):
     """Load documents from Google Cloud Storage using LlamaIndex GCSReader."""
 
@@ -30,24 +58,10 @@ class GCPDocumentRepository(DocumentRepository):
         Format: gs://bucket/path or gs://bucket/prefix/
         """
         try:
-            if not location.startswith("gs://"):
-                raise ValueError(f"GCS location must start with gs://")
+            # Parse the GCS URI
+            reader_kwargs = _parse_gcs_uri(location)
             
-            # Simple parsing: gs://bucket/rest_of_path
-            path = location[5:]  # Remove gs://
-            parts = path.split("/", 1)
-            bucket = parts[0]
-            
-            reader_kwargs: dict[str, Any] = {"bucket": bucket}
-            
-            # If there's a path after bucket
-            if len(parts) > 1:
-                path = parts[1]
-                if path.endswith("/"):
-                    reader_kwargs["prefix"] = path
-                else:
-                    reader_kwargs["key"] = path
-            
+            # Add service account key if provided
             if self.service_account_key:
                 reader_kwargs["service_account_key"] = self.service_account_key
                 

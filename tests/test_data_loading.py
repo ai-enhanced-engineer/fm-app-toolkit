@@ -12,6 +12,7 @@ from fm_app_toolkit.data_loading import (
     GCPDocumentRepository,
     LocalDocumentRepository,
 )
+from fm_app_toolkit.data_loading.gcp import _parse_gcs_uri
 
 
 def test_local_document_repository_loads_documents():
@@ -194,7 +195,7 @@ def test_local_repository_validates_location_type():
 
 
 def test_gcp_repository_validates_location_type():
-    """Pydantic validates location must be a string."
+    """Pydantic validates location must be a string."""
     repo = GCPDocumentRepository()
     
     # Invalid: None instead of string
@@ -204,3 +205,65 @@ def test_gcp_repository_validates_location_type():
     # Invalid: dict instead of string  
     with pytest.raises(ValidationError):
         repo.load_documents(location={"bucket": "test"})
+
+
+# ----------------------------------------------
+# GCS URI PARSER TESTS
+# ----------------------------------------------
+
+
+def test_parse_gcs_uri_bucket_only():
+    """Parse URI with only bucket name."""
+    result = _parse_gcs_uri("gs://my-bucket")
+    assert result == {"bucket": "my-bucket"}
+
+
+def test_parse_gcs_uri_with_file():
+    """Parse URI pointing to a specific file."""
+    result = _parse_gcs_uri("gs://my-bucket/path/to/file.txt")
+    assert result == {"bucket": "my-bucket", "key": "path/to/file.txt"}
+
+
+def test_parse_gcs_uri_with_prefix():
+    """Parse URI with directory prefix (trailing slash)."""
+    result = _parse_gcs_uri("gs://my-bucket/path/to/dir/")
+    assert result == {"bucket": "my-bucket", "prefix": "path/to/dir/"}
+
+
+def test_parse_gcs_uri_single_file_no_path():
+    """Parse URI with file at bucket root."""
+    result = _parse_gcs_uri("gs://my-bucket/file.txt")
+    assert result == {"bucket": "my-bucket", "key": "file.txt"}
+
+
+def test_parse_gcs_uri_single_dir():
+    """Parse URI with single directory."""
+    result = _parse_gcs_uri("gs://my-bucket/dir/")
+    assert result == {"bucket": "my-bucket", "prefix": "dir/"}
+
+
+def test_parse_gcs_uri_invalid_format():
+    """Invalid URI format raises ValueError."""
+    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+        _parse_gcs_uri("s3://bucket/file.txt")
+    
+    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+        _parse_gcs_uri("http://bucket/file.txt")
+    
+    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+        _parse_gcs_uri("/local/path/file.txt")
+
+
+def test_parse_gcs_uri_edge_cases():
+    """Handle edge cases in URI parsing."""
+    # Bucket with hyphen and numbers
+    result = _parse_gcs_uri("gs://my-bucket-123")
+    assert result == {"bucket": "my-bucket-123"}
+    
+    # Deep nesting
+    result = _parse_gcs_uri("gs://bucket/a/b/c/d/e/f.txt")
+    assert result == {"bucket": "bucket", "key": "a/b/c/d/e/f.txt"}
+    
+    # Multiple trailing slashes (treated as prefix)
+    result = _parse_gcs_uri("gs://bucket/path//")
+    assert result == {"bucket": "bucket", "prefix": "path//"}

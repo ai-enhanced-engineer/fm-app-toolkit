@@ -8,20 +8,13 @@ from pydantic import validate_call
 
 from fm_app_toolkit.logging import get_logger
 
-from .base import BaseIndexer
+from .base import DocumentIndexer
 
 logger = get_logger(__name__)
 
 
-class VectorStoreIndexer(BaseIndexer):
-    """Create vector store indexes from documents using LlamaIndex.
-    
-    Note: insert_batch_size affects memory usage during indexing. The default
-    of 2048 works well for most document sets. Larger batches use more memory
-    but may be faster for large corpuses.
-    
-    Empty document lists create valid but empty indexes that can still be queried.
-    """
+class VectorStoreIndexer(DocumentIndexer):
+    """Index documents for similarity search using embeddings."""
 
     def __init__(
         self,
@@ -43,10 +36,7 @@ class VectorStoreIndexer(BaseIndexer):
         documents: list[Document],
         embed_model: Optional[BaseEmbedding] = None,
     ) -> VectorStoreIndex:
-        """Create a vector store index from documents.
-        
-        Pydantic automatically validates that documents is a list.
-        """
+        """Build searchable index from documents."""
         try:
             logger.info(f"Creating index from {len(documents)} documents")
             

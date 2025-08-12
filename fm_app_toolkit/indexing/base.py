@@ -7,7 +7,7 @@ from llama_index.core import Document, PropertyGraphIndex, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 
 
-class BaseIndexer(ABC):
+class DocumentIndexer(ABC):
     """Abstract interface for creating indexes from documents."""
 
     @abstractmethod
@@ -16,5 +16,5 @@ class BaseIndexer(ABC):
         documents: list[Document],
         embed_model: Optional[BaseEmbedding] = None,
     ) -> Union[VectorStoreIndex, PropertyGraphIndex]:
-        """Create an index from a list of documents."""
+        """Create searchable index from documents."""
         raise NotImplementedError
