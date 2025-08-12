@@ -10,6 +10,7 @@ from llama_index.core.indices.property_graph.transformations import (
 )
 from llama_index.core.llms import LLM
 from llama_index.core.schema import TransformComponent
+from pydantic import validate_call
 
 from fm_app_toolkit.logging import get_logger
 
@@ -19,7 +20,14 @@ logger = get_logger(__name__)
 
 
 class PropertyGraphIndexer(BaseIndexer):
-    """Create property graph indexes from documents using LlamaIndex."""
+    """Create property graph indexes from documents using LlamaIndex.
+    
+    Automatically selects appropriate extractors based on LLM availability:
+    - With LLM: Uses SimpleLLMPathExtractor for entity extraction plus ImplicitPathExtractor
+    - Without LLM: Uses only ImplicitPathExtractor for basic relationship extraction
+    
+    Empty document lists create valid but empty property graphs.
+    """
 
     def __init__(
         self,
@@ -40,12 +48,16 @@ class PropertyGraphIndexer(BaseIndexer):
             has_custom_extractors=kg_extractors is not None,
         )
 
+    @validate_call
     def create_index(
         self,
         documents: list[Document],
         embed_model: Optional[BaseEmbedding] = None,
     ) -> PropertyGraphIndex:
-        """Create a property graph index from documents."""
+        """Create a property graph index from documents.
+        
+        Pydantic automatically validates that documents is a list.
+        """
         try:
             logger.info(f"Creating property graph index from {len(documents)} documents")
             
@@ -60,6 +72,11 @@ class PropertyGraphIndexer(BaseIndexer):
             elif kg_extractors is None:
                 # Use only implicit extractor if no LLM
                 kg_extractors = [ImplicitPathExtractor()]
+            
+            # Log which extractors are being used for debugging
+            logger.debug(
+                f"Using extractors: {[type(e).__name__ for e in kg_extractors]}"
+            )
             
             # Create index with optional embedding model
             index = PropertyGraphIndex.from_documents(

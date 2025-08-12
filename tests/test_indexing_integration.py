@@ -1,35 +1,13 @@
 """Integration tests demonstrating the full document indexing pipeline."""
 
-from pathlib import Path
-
 import pytest
-from llama_index.core.embeddings.mock_embed_model import MockEmbedding
 
 from fm_app_toolkit.data_loading import LocalDocumentRepository
 from fm_app_toolkit.indexing import PropertyGraphIndexer, VectorStoreIndexer
 from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 
-@pytest.fixture
-def test_data_dir():
-    """Path to test data directory with real technical documents."""
-    return Path(__file__).parent.parent / "fm_app_toolkit" / "test_data"
-
-
-@pytest.fixture
-def sample_documents(test_data_dir):
-    """Load real technical documents for integration testing."""
-    repo = LocalDocumentRepository(
-        input_dir=str(test_data_dir),
-        required_exts=[".txt"]
-    )
-    return repo.load_documents()
-
-
-@pytest.fixture
-def mock_embed():
-    """Mock embedding model for testing."""
-    return MockEmbedding(embed_dim=256)
+# All fixtures (test_data_dir, sample_documents, mock_embed) come from conftest.py
 
 
 def test_full_indexing_pipeline(test_data_dir, mock_embed):
