@@ -13,7 +13,7 @@ from .base import DocumentRepository
 logger = get_logger(__name__)
 
 
-def _parse_gcs_uri(uri: str) -> dict[str, str]:
+def _parse_gcs_uri(uri: str) -> dict[str, Any]:
     """Parse GCS URI into bucket and path components.
     
     Examples:
@@ -28,7 +28,7 @@ def _parse_gcs_uri(uri: str) -> dict[str, str]:
     path_without_prefix = uri[5:]
     parts = path_without_prefix.split("/", 1)
     
-    result = {"bucket": parts[0]}
+    result: dict[str, Any] = {"bucket": parts[0]}
     
     # If there's a path after the bucket
     if len(parts) > 1 and parts[1]:
