@@ -127,5 +127,17 @@ all-test-validate-branch: ## Validate branch and run all tests
 	$(MAKE) clean-project
 
 # ----------------------------
+# Examples
+# ----------------------------
+
+DATA_PATH ?= fm_app_toolkit/test_data
+
+load-chunk: ## Load documents and demonstrate text chunking (use DATA_PATH=/path to override)
+	@echo "🚀 Running load and chunk demonstration..."
+	@echo "📁 Data path: $(DATA_PATH)"
+	uv run python -m fm_app_toolkit.data_loading.example --data-path $(DATA_PATH)
+	$(GREEN_LINE)
+
+# ----------------------------
 # Local Development
 # ----------------------------
