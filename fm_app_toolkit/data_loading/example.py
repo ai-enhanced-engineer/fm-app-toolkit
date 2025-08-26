@@ -12,12 +12,8 @@ from .local import LocalDocumentRepository
 logger = get_logger(__name__)
 
 
-def demonstrate_document_loading_and_chunking(data_path: str) -> None:
-    """Minimalistic example showing LocalDocumentRepository functionality with chunking.
-    
-    Args:
-        data_path: Path to data directory (required).
-    """
+def process_documents(data_path: str) -> None:
+    """Load documents from directory and demonstrate chunking with structured logging."""
     test_data_path = Path(data_path)
     
     # Opening print statement
@@ -94,7 +90,7 @@ def demonstrate_document_loading_and_chunking(data_path: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Demonstrate LocalDocumentRepository functionality")
+    parser = argparse.ArgumentParser(description="Process documents with loading and chunking demonstration")
     parser.add_argument(
         "--data-path",
         type=str,
@@ -103,4 +99,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     
-    demonstrate_document_loading_and_chunking(data_path=args.data_path)
+    process_documents(data_path=args.data_path)

@@ -10,13 +10,7 @@ from .base import DocumentRepository
 
 
 def _parse_gcs_uri(uri: str) -> dict[str, Any]:
-    """Parse GCS URI into bucket and path components.
-    
-    Examples:
-        gs://bucket -> {"bucket": "bucket"}
-        gs://bucket/file.txt -> {"bucket": "bucket", "key": "file.txt"}
-        gs://bucket/dir/ -> {"bucket": "bucket", "prefix": "dir/"}
-    """
+    """Parse GCS URI into bucket and path components for GCSReader."""
     if not uri.startswith("gs://"):
         raise ValueError("GCS location must start with gs://")
     
@@ -38,16 +32,13 @@ def _parse_gcs_uri(uri: str) -> dict[str, Any]:
 
 
 class GCPDocumentRepository(DocumentRepository):
-    """Load documents from Google Cloud Storage using LlamaIndex GCSReader."""
+    """Load documents from Google Cloud Storage using GCSReader."""
     
     service_account_key: Optional[dict[str, Any]] = None
 
     @validate_call
     def load_documents(self, location: str) -> list[Document]:
-        """Load documents from GCS path.
-        
-        Format: gs://bucket/path or gs://bucket/prefix/
-        """
+        """Load documents from GCS bucket using gs:// URI format."""
         try:
             # Parse the GCS URI
             reader_kwargs = _parse_gcs_uri(location)

@@ -101,6 +101,9 @@ make environment-create
 
 # Run tests to verify setup
 make unit-test
+
+# See document loading and chunking in action
+make process-documents
 ```
 
 ## Basic Usage
@@ -108,16 +111,17 @@ make unit-test
 ### Document Loading
 
 ```python
-from fm_app_toolkit.data_loading import LocalDocumentRepository, GCPDocumentRepository
+from fm_app_toolkit.data_loading import LocalDocumentRepository
 
-# Development: Load from local files
-dev_repo = LocalDocumentRepository(input_dir="./data")
-documents = dev_repo.load_documents(location="./data")
-
-# Production: Load from cloud storage  
-prod_repo = GCPDocumentRepository()
-documents = prod_repo.load_documents(location="gs://my-bucket/docs/")
+# Load documents from any directory
+repo = LocalDocumentRepository(
+    input_dir="./docs", 
+    required_exts=[".txt", ".md"]
+)
+documents = repo.load_documents(location="./docs")
 ```
+
+The key insight: **write your code once, switch data sources with configuration**. The same `load_documents()` call works whether your data is local, in GCS, or anywhere else. See it working: `make process-documents`
 
 ### Document Indexing
 
@@ -220,6 +224,9 @@ make type-check         # Type checking
 # Testing
 make unit-test          # Run all tests
 make validate-branch    # Pre-commit validation
+
+# Examples
+make process-documents  # See document loading and chunking in action
 ```
 
 ## Getting Started with Real Code

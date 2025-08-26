@@ -132,8 +132,8 @@ all-test-validate-branch: ## Validate branch and run all tests
 
 DATA_PATH ?= fm_app_toolkit/test_data
 
-load-chunk: ## Load documents and demonstrate text chunking (use DATA_PATH=/path to override)
-	@echo "🚀 Running load and chunk demonstration..."
+process-documents: ## Process documents with loading and chunking demonstration (use DATA_PATH=/path to override)
+	@echo "🚀 Running document processing demonstration..."
 	@echo "📁 Data path: $(DATA_PATH)"
 	uv run python -m fm_app_toolkit.data_loading.example --data-path $(DATA_PATH)
 	$(GREEN_LINE)

@@ -13,7 +13,7 @@ class LocalRepository(BaseRepository):
     """Load CSV data from local filesystem."""
 
     def load_data(self, path: str) -> pd.DataFrame:
-        """Load CSV data from the specified file path."""
+        """Load CSV data from file."""
         try:
             df = pd.read_csv(path)
             return df
@@ -21,7 +21,7 @@ class LocalRepository(BaseRepository):
             raise
 
 class LocalDocumentRepository(DocumentRepository):
-    """Load documents from local filesystem using LlamaIndex SimpleDirectoryReader."""
+    """Load documents from local filesystem using SimpleDirectoryReader."""
     
     input_dir: str
     recursive: bool = True
@@ -31,7 +31,7 @@ class LocalDocumentRepository(DocumentRepository):
 
     @validate_call
     def load_documents(self, location: str) -> list[Document]:
-        """Load documents from local filesystem path."""
+        """Load documents from filesystem directory."""
         try:
             reader = SimpleDirectoryReader(
                 input_dir=location,
