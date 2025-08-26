@@ -19,6 +19,21 @@ The Repository pattern provides several key benefits:
 As described in [Cosmic Python Chapter 2](https://www.cosmicpython.com/book/chapter_02_repository.html#_what_is_the_repository_pattern):
 > "The Repository pattern is a simplifying abstraction over data storage, allowing us to decouple our model layer from the data layer."
 
+## 🚀 Quick Start
+
+Want to see the Repository pattern in action immediately?
+
+```bash
+# See document loading and chunking working
+make process-documents
+```
+
+This runs our `process_documents()` function which demonstrates:
+- Loading documents from local filesystem using `LocalDocumentRepository`
+- Chunking text with LlamaIndex's `SentenceSplitter`  
+- Structured logging throughout the process
+- Clean separation between CLI output and processing logs
+
 ## Testing Without External Services
 
 One of the most valuable aspects of this pattern is enabling **offline development and testing**. Instead of requiring:
@@ -40,12 +55,9 @@ Example of swapping repositories for testing:
 from fm_app_toolkit.data_loading import GCPDocumentRepository
 
 def create_production_repository():
-    return GCPDocumentRepository(
-        bucket="production-docs",
-        prefix="documents/"
-    )
+    return GCPDocumentRepository()
 
-# In tests
+# In tests  
 from fm_app_toolkit.data_loading import LocalDocumentRepository
 
 def create_test_repository():
@@ -54,12 +66,42 @@ def create_test_repository():
     )
 
 # Your application code doesn't change
-def process_documents(repository: DocumentRepository):
-    documents = repository.load_documents()
+def process_documents(repository: DocumentRepository, location: str):
+    documents = repository.load_documents(location=location)
     # Process documents...
+
+# Usage
+prod_repo = create_production_repository()
+process_documents(prod_repo, "gs://production-docs/documents/")
+
+test_repo = create_test_repository()  
+process_documents(test_repo, "./tests/fixtures/documents")
 ```
 
 ## Available Repositories
+
+### BaseRepository (Abstract Base)
+
+The abstract base class for generic data loading (CSV files, structured data):
+
+```python
+from abc import ABC, abstractmethod
+import pandas as pd
+
+class BaseRepository(ABC):
+    @abstractmethod
+    def load_data(self, path: str) -> pd.DataFrame:
+        """Load data from CSV file."""
+        raise NotImplementedError
+```
+
+**LocalRepository** - Concrete implementation for loading CSV data:
+```python
+from fm_app_toolkit.data_loading.local import LocalRepository
+
+repo = LocalRepository()
+df = repo.load_data("./data/customers.csv")
+```
 
 ### DocumentRepository (Abstract Base)
 
@@ -100,7 +142,7 @@ repo = LocalDocumentRepository(
     num_files_limit=100           # Limit number of files
 )
 
-documents = repo.load_documents()
+documents = repo.load_documents(location="./data")
 ```
 
 **Use Cases:**
@@ -123,20 +165,13 @@ Loads documents from Google Cloud Storage using LlamaIndex's `GCSReader`.
 ```python
 from fm_app_toolkit.data_loading import GCPDocumentRepository
 
-# Load single file
+# Load from GCS with optional service account key
 repo = GCPDocumentRepository(
-    bucket="my-bucket",
-    key="path/to/document.pdf"
-)
-
-# Load multiple files with prefix
-repo = GCPDocumentRepository(
-    bucket="my-bucket",
-    prefix="documents/",
     service_account_key={...}  # Optional: explicit credentials
 )
 
-documents = repo.load_documents()
+# Load documents using gs:// URI format
+documents = repo.load_documents(location="gs://my-bucket/documents/")
 ```
 
 **Use Cases:**
@@ -157,9 +192,9 @@ from fm_app_toolkit.data_loading import (
 )
 
 # The beauty of the pattern - your function doesn't care about the source
-def build_index(repository: DocumentRepository):
+def build_index(repository: DocumentRepository, location: str):
     """Build a search index from documents."""
-    documents = repository.load_documents()
+    documents = repository.load_documents(location=location)
     
     # Process documents with LlamaIndex
     from llama_index.core import VectorStoreIndex
@@ -168,11 +203,11 @@ def build_index(repository: DocumentRepository):
 
 # In development/testing
 local_repo = LocalDocumentRepository(input_dir="./test_data")
-dev_index = build_index(local_repo)
+dev_index = build_index(local_repo, "./test_data")
 
 # In production
-gcp_repo = GCPDocumentRepository(bucket="prod-docs", prefix="knowledge/")
-prod_index = build_index(gcp_repo)
+gcp_repo = GCPDocumentRepository()
+prod_index = build_index(gcp_repo, "gs://prod-docs/knowledge/")
 ```
 
 ### Dependency Injection
@@ -184,8 +219,8 @@ class DocumentService:
     def __init__(self, repository: DocumentRepository):
         self.repository = repository
     
-    def process_documents(self):
-        documents = self.repository.load_documents()
+    def process_documents(self, location: str):
+        documents = self.repository.load_documents(location=location)
         # Business logic here
         return processed_results
 
@@ -194,18 +229,23 @@ import os
 
 def create_repository() -> DocumentRepository:
     if os.getenv("ENVIRONMENT") == "production":
-        return GCPDocumentRepository(
-            bucket=os.getenv("GCS_BUCKET"),
-            prefix=os.getenv("GCS_PREFIX")
-        )
+        return GCPDocumentRepository()
     else:
         return LocalDocumentRepository(
             input_dir=os.getenv("LOCAL_DATA_DIR", "./data")
         )
 
+def get_data_location() -> str:
+    if os.getenv("ENVIRONMENT") == "production":
+        return f"gs://{os.getenv('GCS_BUCKET')}/{os.getenv('GCS_PREFIX', '')}"
+    else:
+        return os.getenv("LOCAL_DATA_DIR", "./data")
+
 # Application bootstrap
 repository = create_repository()
 service = DocumentService(repository)
+location = get_data_location()
+results = service.process_documents(location)
 ```
 
 ## Testing Strategies
@@ -226,7 +266,7 @@ def test_document_processing():
         
         # Use local repository for testing
         repo = LocalDocumentRepository(input_dir=temp_dir)
-        documents = repo.load_documents()
+        documents = repo.load_documents(location=temp_dir)
         
         assert len(documents) == 1
         assert "Test content" in documents[0].text
@@ -247,8 +287,8 @@ def test_gcp_document_loading(mock_gcs_reader):
     mock_gcs_reader.return_value = mock_reader
     
     # Test with mocked GCP repository
-    repo = GCPDocumentRepository(bucket="test", key="test.txt")
-    documents = repo.load_documents()
+    repo = GCPDocumentRepository()
+    documents = repo.load_documents(location="gs://test/test.txt")
     
     assert documents[0].text == "Mocked content"
 ```
