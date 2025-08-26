@@ -6,11 +6,7 @@ from llama_index.core import Document
 from llama_index.readers.gcs import GCSReader
 from pydantic import validate_call
 
-from fm_app_toolkit.logging import get_logger
-
 from .base import DocumentRepository
-
-logger = get_logger(__name__)
 
 
 def _parse_gcs_uri(uri: str) -> dict[str, Any]:
@@ -43,13 +39,8 @@ def _parse_gcs_uri(uri: str) -> dict[str, Any]:
 
 class GCPDocumentRepository(DocumentRepository):
     """Load documents from Google Cloud Storage using LlamaIndex GCSReader."""
-
-    def __init__(
-        self,
-        service_account_key: Optional[dict[str, Any]] = None,
-    ):
-        self.service_account_key = service_account_key
-        logger.info("Initializing GCPDocumentRepository")
+    
+    service_account_key: Optional[dict[str, Any]] = None
 
     @validate_call
     def load_documents(self, location: str) -> list[Document]:
@@ -68,8 +59,6 @@ class GCPDocumentRepository(DocumentRepository):
             reader = GCSReader(**reader_kwargs)
             documents: list[Document] = reader.load_data()
             
-            logger.info(f"Successfully loaded {len(documents)} documents from {location}")
             return documents
-        except Exception as e:
-            logger.error(f"Failed to load documents from {location}: {e}")
+        except Exception:
             raise

@@ -2,39 +2,32 @@
 
 from typing import Optional
 
+import pandas as pd
 from llama_index.core import Document, SimpleDirectoryReader
 from pydantic import validate_call
 
-from fm_app_toolkit.logging import get_logger
+from .base import BaseRepository, DocumentRepository
 
-from .base import DocumentRepository
 
-logger = get_logger(__name__)
+class LocalRepository(BaseRepository):
+    """Load CSV data from local filesystem."""
 
+    def load_data(self, path: str) -> pd.DataFrame:
+        """Load CSV data from the specified file path."""
+        try:
+            df = pd.read_csv(path)
+            return df
+        except Exception:
+            raise
 
 class LocalDocumentRepository(DocumentRepository):
     """Load documents from local filesystem using LlamaIndex SimpleDirectoryReader."""
-
-    def __init__(
-        self,
-        input_dir: str,
-        recursive: bool = True,
-        required_exts: Optional[list[str]] = None,
-        exclude_hidden: bool = True,
-        num_files_limit: Optional[int] = None,
-    ):
-        self.input_dir = input_dir
-        self.recursive = recursive
-        self.required_exts = required_exts
-        self.exclude_hidden = exclude_hidden
-        self.num_files_limit = num_files_limit
-
-        logger.info(
-            "Initializing LocalDocumentRepository",
-            input_dir=input_dir,
-            recursive=recursive,
-            required_exts=required_exts,
-        )
+    
+    input_dir: str
+    recursive: bool = True
+    required_exts: Optional[list[str]] = None
+    exclude_hidden: bool = True
+    num_files_limit: Optional[int] = None
 
     @validate_call
     def load_documents(self, location: str) -> list[Document]:
@@ -48,8 +41,6 @@ class LocalDocumentRepository(DocumentRepository):
                 num_files_limit=self.num_files_limit,
             )
             documents = reader.load_data()
-            logger.info(f"Successfully loaded {len(documents)} documents from {location}")
             return documents
-        except Exception as e:
-            logger.error(f"Failed to load documents from {location}: {e}")
+        except Exception:
             raise
