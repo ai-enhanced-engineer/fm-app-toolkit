@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 from llama_index.core import Document
 from llama_index.readers.gcs import GCSReader
+from pydantic import validate_call
 
 from fm_app_toolkit.logging import get_logger
 
@@ -12,54 +13,63 @@ from .base import DocumentRepository
 logger = get_logger(__name__)
 
 
+def _parse_gcs_uri(uri: str) -> dict[str, Any]:
+    """Parse GCS URI into bucket and path components.
+    
+    Examples:
+        gs://bucket -> {"bucket": "bucket"}
+        gs://bucket/file.txt -> {"bucket": "bucket", "key": "file.txt"}
+        gs://bucket/dir/ -> {"bucket": "bucket", "prefix": "dir/"}
+    """
+    if not uri.startswith("gs://"):
+        raise ValueError("GCS location must start with gs://")
+    
+    # Remove gs:// prefix and split into bucket and path
+    path_without_prefix = uri[5:]
+    parts = path_without_prefix.split("/", 1)
+    
+    result: dict[str, Any] = {"bucket": parts[0]}
+    
+    # If there's a path after the bucket
+    if len(parts) > 1 and parts[1]:
+        object_path = parts[1]
+        if object_path.endswith("/"):
+            result["prefix"] = object_path
+        else:
+            result["key"] = object_path
+    
+    return result
+
+
 class GCPDocumentRepository(DocumentRepository):
     """Load documents from Google Cloud Storage using LlamaIndex GCSReader."""
 
     def __init__(
         self,
-        bucket: str,
-        key: Optional[str] = None,
-        prefix: Optional[str] = None,
         service_account_key: Optional[dict[str, Any]] = None,
     ):
-        if not key and not prefix:
-            raise ValueError("Either 'key' or 'prefix' must be provided")
-
-        self.bucket = bucket
-        self.key = key
-        self.prefix = prefix
         self.service_account_key = service_account_key
+        logger.info("Initializing GCPDocumentRepository")
 
-        logger.info(
-            "Initializing GCPDocumentRepository",
-            bucket=bucket,
-            key=key,
-            prefix=prefix,
-        )
-
-    def load_documents(self) -> list[Document]:
-        """Load documents from GCS using GCSReader."""
+    @validate_call
+    def load_documents(self, location: str) -> list[Document]:
+        """Load documents from GCS path.
+        
+        Format: gs://bucket/path or gs://bucket/prefix/
+        """
         try:
-            reader_kwargs: dict[str, Any] = {"bucket": self.bucket}
-
-            if self.key:
-                reader_kwargs["key"] = self.key
-            elif self.prefix:
-                reader_kwargs["prefix"] = self.prefix
-
+            # Parse the GCS URI
+            reader_kwargs = _parse_gcs_uri(location)
+            
+            # Add service account key if provided
             if self.service_account_key:
                 reader_kwargs["service_account_key"] = self.service_account_key
-
+                
             reader = GCSReader(**reader_kwargs)
             documents: list[Document] = reader.load_data()
-
-            logger.info(
-                f"Successfully loaded {len(documents)} documents from GCS",
-                bucket=self.bucket,
-                key=self.key,
-                prefix=self.prefix,
-            )
+            
+            logger.info(f"Successfully loaded {len(documents)} documents from {location}")
             return documents
         except Exception as e:
-            logger.error(f"Failed to load documents from GCS bucket {self.bucket}: {e}")
+            logger.error(f"Failed to load documents from {location}: {e}")
             raise
