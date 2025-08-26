@@ -32,6 +32,15 @@ The [Repository pattern](https://www.cosmicpython.com/book/chapter_02_repository
 
 *📚 Full article on this pattern coming next week at [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)*
 
+### Document Indexing
+**Creating Searchable Indexes from Documents**
+
+Once you've loaded your documents, you need to make them searchable. The indexing module provides two fundamental approaches: Vector Store indexes for semantic similarity search and Property Graph indexes for relationship queries.
+
+Our `DocumentIndexer` abstraction allows you to switch between indexing strategies based on your needs. Use `VectorStoreIndexer` when you need to find semantically similar content—perfect for RAG pipelines. Choose `PropertyGraphIndexer` when you need to traverse relationships between entities—ideal for knowledge graphs. Both work seamlessly with our mock framework for deterministic testing.
+
+*See [indexing/README.md](fm_app_toolkit/indexing/README.md) for implementation details*
+
 ### Mock LLM Framework
 **Simulating the Model Layer for Testing**
 
@@ -92,6 +101,9 @@ make environment-create
 
 # Run tests to verify setup
 make unit-test
+
+# See document loading and chunking in action
+make process-documents
 ```
 
 ## Basic Usage
@@ -99,15 +111,31 @@ make unit-test
 ### Document Loading
 
 ```python
-from fm_app_toolkit.data_loading import LocalDocumentRepository, GCPDocumentRepository
+from fm_app_toolkit.data_loading import LocalDocumentRepository
 
-# Development: Load from local files
-dev_repo = LocalDocumentRepository(input_dir="./data")
-documents = dev_repo.load_documents()
+# Load documents from any directory
+repo = LocalDocumentRepository(
+    input_dir="./docs", 
+    required_exts=[".txt", ".md"]
+)
+documents = repo.load_documents(location="./docs")
+```
 
-# Production: Load from cloud storage  
-prod_repo = GCPDocumentRepository(bucket="my-bucket", prefix="docs/")
-documents = prod_repo.load_documents()
+The key insight: **write your code once, switch data sources with configuration**. The same `load_documents()` call works whether your data is local, in GCS, or anywhere else. See it working: `make process-documents`
+
+### Document Indexing
+
+```python
+from fm_app_toolkit.indexing import VectorStoreIndexer, PropertyGraphIndexer
+from llama_index.core.embeddings import MockEmbedding
+
+# Vector index for semantic search
+vector_indexer = VectorStoreIndexer()
+vector_index = vector_indexer.create_index(documents, embed_model=MockEmbedding(embed_dim=256))
+
+# Property graph for relationship queries
+graph_indexer = PropertyGraphIndexer()
+graph_index = graph_indexer.create_index(documents)
 ```
 
 ### Agent with Mock LLM
@@ -169,6 +197,7 @@ fm-app-toolkit/
 ├── fm_app_toolkit/          # Main package
 │   ├── agents/              # Agent implementations
 │   ├── data_loading/        # Document loading patterns
+│   ├── indexing/            # Document indexing strategies
 │   ├── testing/             # Mock LLM framework
 │   └── tools.py            # Core tool implementations
 ├── tests/                   # 125+ tests demonstrating patterns
@@ -195,6 +224,9 @@ make type-check         # Type checking
 # Testing
 make unit-test          # Run all tests
 make validate-branch    # Pre-commit validation
+
+# Examples
+make process-documents  # See document loading and chunking in action
 ```
 
 ## Getting Started with Real Code
@@ -204,6 +236,7 @@ The best way to understand these patterns is to see them in action. Explore our 
 - [testing/README.md](fm_app_toolkit/testing/README.md) - Deep dive into mock LLM patterns
 - [agents/README.md](fm_app_toolkit/agents/README.md) - Agent implementation details
 - [data_loading/README.md](fm_app_toolkit/data_loading/README.md) - Repository pattern guide
+- [indexing/README.md](fm_app_toolkit/indexing/README.md) - Vector and graph indexing strategies
 
 ## 🤝 Contributing
 

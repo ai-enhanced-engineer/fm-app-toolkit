@@ -6,21 +6,11 @@ from llama_index.core import Document
 from llama_index.readers.gcs import GCSReader
 from pydantic import validate_call
 
-from fm_app_toolkit.logging import get_logger
-
 from .base import DocumentRepository
-
-logger = get_logger(__name__)
 
 
 def _parse_gcs_uri(uri: str) -> dict[str, Any]:
-    """Parse GCS URI into bucket and path components.
-    
-    Examples:
-        gs://bucket -> {"bucket": "bucket"}
-        gs://bucket/file.txt -> {"bucket": "bucket", "key": "file.txt"}
-        gs://bucket/dir/ -> {"bucket": "bucket", "prefix": "dir/"}
-    """
+    """Parse GCS URI into bucket and path components for GCSReader."""
     if not uri.startswith("gs://"):
         raise ValueError("GCS location must start with gs://")
     
@@ -42,21 +32,13 @@ def _parse_gcs_uri(uri: str) -> dict[str, Any]:
 
 
 class GCPDocumentRepository(DocumentRepository):
-    """Load documents from Google Cloud Storage using LlamaIndex GCSReader."""
-
-    def __init__(
-        self,
-        service_account_key: Optional[dict[str, Any]] = None,
-    ):
-        self.service_account_key = service_account_key
-        logger.info("Initializing GCPDocumentRepository")
+    """Load documents from Google Cloud Storage using GCSReader."""
+    
+    service_account_key: Optional[dict[str, Any]] = None
 
     @validate_call
     def load_documents(self, location: str) -> list[Document]:
-        """Load documents from GCS path.
-        
-        Format: gs://bucket/path or gs://bucket/prefix/
-        """
+        """Load documents from GCS bucket using gs:// URI format."""
         try:
             # Parse the GCS URI
             reader_kwargs = _parse_gcs_uri(location)
@@ -68,8 +50,6 @@ class GCPDocumentRepository(DocumentRepository):
             reader = GCSReader(**reader_kwargs)
             documents: list[Document] = reader.load_data()
             
-            logger.info(f"Successfully loaded {len(documents)} documents from {location}")
             return documents
-        except Exception as e:
-            logger.error(f"Failed to load documents from {location}: {e}")
+        except Exception:
             raise

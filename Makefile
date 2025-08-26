@@ -17,41 +17,41 @@ help: ## Display this help message
 # Environment Management
 # ----------------------------
 
+
+init:
+	@echo "🔧 Installing uv if missing..."
+	@if ! command -v uv >/dev/null 2>&1; then \
+		echo "📦 Installing uv..."; \
+		python3 -m pip install --user --upgrade uv; \
+	else \
+		echo "✅ uv is already installed"; \
+	fi
+	@echo "🐍 Setting up Python $(PYTHON_VERSION) environment..."
+	uv python install $(PYTHON_VERSION)
+	uv venv --python $(PYTHON_VERSION) .venv
+	@echo "📦 Installing project dependencies..."
+	uv sync --extra dev
+	@echo "🔨 Setting up pre-commit hooks..."
+	@if [ -f .pre-commit-config.yaml ]; then \
+		uv run pre-commit install; \
+		echo "✅ Pre-commit hooks installed"; \
+	else \
+		echo "⚠️  No .pre-commit-config.yaml found, skipping pre-commit setup"; \
+	fi
+	@echo "🎉 Environment setup complete!"
+
+
 clean-project: ## Clean Python caches and tooling artifacts
 	@echo "Cleaning project caches..."
 	find . -type d \( -name '.pytest_cache' -o -name '.ruff_cache' -o -name '.mypy_cache' -o -name '__pycache__' \) -exec rm -rf {} +
 	$(GREEN_LINE)
 
-environment-create: ## Set up Python version, venv, and install dependencies
-	@echo "Installing uv and pre-commit if missing..."
-	@if ! command -v uv >/dev/null 2>&1; then \
-		python3 -m pip install --user --upgrade uv; \
-	fi
-	@echo "Setting up Python $(PYTHON_VERSION) environment..."
-	uv python install $(PYTHON_VERSION)
-	uv venv --python $(PYTHON_VERSION)
-	. .venv/bin/activate && uv sync --extra dev
-	. .venv/bin/activate && uv pip install -e '.[dev]'
-	. .venv/bin/activate && uv pip install pre-commit
-	. .venv/bin/activate && uv run pre-commit install
-	$(GREEN_LINE)
-
-environment-sync: ## Re-sync project dependencies using uv
-	@echo "Syncing up environment..."
-	. .venv/bin/activate && uv sync --extra dev
-	. .venv/bin/activate && uv pip install -e '.[dev]'
-	$(GREEN_LINE)
-
-sync-env: environment-sync ## Alias for environment-sync
 
 environment-delete: ## Remove the virtual environment folder
 	@echo "Deleting virtual environment..."
 	rm -rf .venv
 	$(GREEN_LINE)
 
-environment-list: ## List installed packages
-	@echo "Listing packages in environment..."
-	. .venv/bin/activate && uv pip list
 
 # ----------------------------
 # Code Quality
@@ -125,6 +125,18 @@ all-test-validate-branch: ## Validate branch and run all tests
 	$(MAKE) validate-branch
 	$(MAKE) all-test
 	$(MAKE) clean-project
+
+# ----------------------------
+# Examples
+# ----------------------------
+
+DATA_PATH ?= fm_app_toolkit/test_data
+
+process-documents: ## Process documents with loading and chunking demonstration (use DATA_PATH=/path to override)
+	@echo "🚀 Running document processing demonstration..."
+	@echo "📁 Data path: $(DATA_PATH)"
+	uv run python -m fm_app_toolkit.data_loading.example --data-path $(DATA_PATH)
+	$(GREEN_LINE)
 
 # ----------------------------
 # Local Development

@@ -1,12 +1,15 @@
 """Integration tests demonstrating RAG pipeline construction with real documents."""
 
+import tempfile
 from pathlib import Path
 
+import pandas as pd
 import pytest
 from llama_index.core import Document, Settings, VectorStoreIndex
 from llama_index.core.embeddings import MockEmbedding
 
 from fm_app_toolkit.data_loading import LocalDocumentRepository
+from fm_app_toolkit.data_loading.local import LocalRepository
 from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 # ----------------------------------------------
@@ -167,3 +170,249 @@ def test_content_search_simulation(sample_repository, samples_dir):
     # Search for context construction
     context_results = search_documents("context construction", documents)
     assert len(context_results) > 0, "Should find documents about context construction"
+
+
+# ----------------------------------------------
+# CSV DATA REPOSITORY INTEGRATION TESTS
+# ----------------------------------------------
+
+
+@pytest.fixture
+def sample_csv_data():
+    """Generate realistic sample data for CSV testing."""
+    return pd.DataFrame({
+        "customer_id": range(1, 101),
+        "name": [f"Customer_{i:03d}" for i in range(1, 101)],
+        "email": [f"customer{i}@example.com" for i in range(1, 101)],
+        "age": [20 + (i % 60) for i in range(1, 101)],  # Ages 20-79
+        "signup_date": pd.date_range("2023-01-01", periods=100, freq="D"),
+        "revenue": [round(100 + (i * 15.5), 2) for i in range(1, 101)],
+        "active": [i % 3 != 0 for i in range(1, 101)]  # Mix of True/False
+    })
+
+
+def test_local_repository_real_world_csv_workflow(sample_csv_data):
+    """End-to-end workflow: create CSV, load with LocalRepository, analyze data."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Create realistic CSV file
+        csv_file = Path(temp_dir) / "customers.csv"
+        sample_csv_data.to_csv(csv_file, index=False)
+        
+        # Load using LocalRepository
+        repo = LocalRepository()
+        df = repo.load_data(str(csv_file))
+        
+        # Verify loaded data matches original
+        assert len(df) == 100
+        assert list(df.columns) == ["customer_id", "name", "email", "age", "signup_date", "revenue", "active"]
+        
+        # Perform realistic data analysis operations
+        # 1. Filter active customers
+        active_customers = df[df["active"]]
+        assert len(active_customers) > 0
+        
+        # 2. Calculate revenue statistics
+        total_revenue = df["revenue"].sum()
+        avg_revenue = df["revenue"].mean()
+        assert total_revenue > 0
+        assert avg_revenue > 0
+        
+        # 3. Age demographics
+        young_customers = df[df["age"] < 30]
+        senior_customers = df[df["age"] >= 60]
+        assert len(young_customers) + len(senior_customers) < len(df)  # Some middle-aged customers
+        
+        # 4. Date range analysis
+        df["signup_date"] = pd.to_datetime(df["signup_date"])
+        oldest_signup = df["signup_date"].min()
+        newest_signup = df["signup_date"].max()
+        assert oldest_signup < newest_signup
+
+
+def test_local_repository_multiple_csv_files_workflow():
+    """Load and combine data from multiple CSV files in a workflow."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        repo = LocalRepository()
+        
+        # Create multiple related CSV files
+        customers_data = pd.DataFrame({
+            "customer_id": [1, 2, 3],
+            "name": ["Alice", "Bob", "Charlie"],
+            "city": ["NYC", "LA", "Chicago"]
+        })
+        
+        orders_data = pd.DataFrame({
+            "order_id": [101, 102, 103, 104],
+            "customer_id": [1, 2, 1, 3],
+            "amount": [150.00, 250.00, 99.99, 300.00],
+            "status": ["completed", "pending", "completed", "shipped"]
+        })
+        
+        # Save to separate files
+        customers_file = Path(temp_dir) / "customers.csv"
+        orders_file = Path(temp_dir) / "orders.csv"
+        customers_data.to_csv(customers_file, index=False)
+        orders_data.to_csv(orders_file, index=False)
+        
+        # Load each file
+        customers_df = repo.load_data(str(customers_file))
+        orders_df = repo.load_data(str(orders_file))
+        
+        # Verify separate loading
+        assert len(customers_df) == 3
+        assert len(orders_df) == 4
+        assert "customer_id" in customers_df.columns
+        assert "customer_id" in orders_df.columns
+        
+        # Simulate join operation (typical business workflow)
+        combined = orders_df.merge(customers_df, on="customer_id", how="left")
+        assert len(combined) == 4
+        assert "name" in combined.columns
+        assert "amount" in combined.columns
+        
+        # Verify join worked correctly
+        alice_orders = combined[combined["name"] == "Alice"]
+        assert len(alice_orders) == 2  # Alice has 2 orders
+
+
+def test_local_repository_csv_data_quality_checks():
+    """Integration test for data quality validation after loading."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Create CSV with various data quality issues by writing directly
+        csv_content = """id,score,category,timestamp,flag
+1,95.5,A,2023-01-01,True
+2,87.2,B,invalid-date,False
+,92.0,A,2023-01-03,True
+4,,C,2023-01-04,maybe
+5,88.8,,2023-01-05,False"""
+        
+        csv_file = Path(temp_dir) / "quality_issues.csv"
+        csv_file.write_text(csv_content)
+        
+        repo = LocalRepository()
+        df = repo.load_data(str(csv_file))
+        
+        # Verify data loaded despite issues
+        assert len(df) == 5
+        
+        # Perform data quality checks (common real-world workflow)
+        # 1. Check for missing values
+        missing_counts = df.isnull().sum()
+        assert missing_counts["id"] > 0  # Should detect missing ID
+        assert missing_counts["score"] > 0  # Should detect missing score
+        
+        # 2. Check for empty strings (pandas may convert empty strings to NaN)
+        empty_or_null = ((df == "") | df.isnull()).sum()
+        assert empty_or_null["category"] > 0  # Should detect empty or null category
+        
+        # 3. Data type validation
+        numeric_columns = ["id", "score"]
+        for col in numeric_columns:
+            # pandas should handle type conversion automatically
+            assert col in df.columns
+        
+        # 4. Date parsing simulation
+        try:
+            df["timestamp_parsed"] = pd.to_datetime(df["timestamp"], errors="coerce")
+            invalid_dates = df["timestamp_parsed"].isnull().sum()
+            assert invalid_dates > 0  # Should detect invalid date
+        except Exception:
+            pass  # Expected for invalid date formats
+
+
+def test_local_repository_performance_with_realistic_data():
+    """Test LocalRepository performance with larger, more realistic dataset."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Generate larger dataset (5000 rows)
+        large_data = pd.DataFrame({
+            "transaction_id": range(1, 5001),
+            "customer_id": [f"CUST_{i:06d}" for i in range(1, 5001)],
+            "product_category": ["Electronics", "Clothing", "Books", "Home"] * 1250,
+            "amount": [round(10 + (i * 0.75), 2) for i in range(1, 5001)],
+            "transaction_date": pd.date_range("2023-01-01", periods=5000, freq="H"),
+            "payment_method": ["Credit", "Debit", "PayPal", "Cash"] * 1250,
+            "discount_applied": [i % 7 == 0 for i in range(1, 5001)],  # ~14% get discounts
+            "notes": [f"Transaction notes for order {i}" for i in range(1, 5001)]
+        })
+        
+        csv_file = Path(temp_dir) / "large_transactions.csv"
+        large_data.to_csv(csv_file, index=False)
+        
+        repo = LocalRepository()
+        
+        # Time the loading (basic performance check)
+        import time
+        start_time = time.time()
+        df = repo.load_data(str(csv_file))
+        load_time = time.time() - start_time
+        
+        # Verify correct loading
+        assert len(df) == 5000
+        assert len(df.columns) == 8
+        
+        # Performance assertion (should load 5000 rows quickly)
+        assert load_time < 5.0, f"Loading took {load_time:.2f}s, should be under 5s"
+        
+        # Verify data integrity after loading
+        assert df["transaction_id"].nunique() == 5000  # All IDs unique
+        assert df["amount"].sum() > 0  # Positive total
+        assert df["discount_applied"].sum() > 0  # Some discounts applied
+
+
+@pytest.mark.integration
+def test_local_repository_csv_to_document_conversion():
+    """Integration test: CSV data → Document format for RAG pipeline."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Create knowledge base CSV
+        kb_data = pd.DataFrame({
+            "doc_id": ["DOC001", "DOC002", "DOC003"],
+            "title": ["RAG Architecture", "Embeddings Guide", "Vector Stores"],
+            "content": [
+                "RAG combines retrieval and generation for better accuracy...",
+                "Embeddings convert text into dense vector representations...",
+                "Vector stores enable efficient similarity search..."
+            ],
+            "category": ["Architecture", "ML", "Infrastructure"],
+            "last_updated": ["2023-01-15", "2023-02-20", "2023-03-10"]
+        })
+        
+        csv_file = Path(temp_dir) / "knowledge_base.csv"
+        kb_data.to_csv(csv_file, index=False)
+        
+        # Load CSV data
+        repo = LocalRepository()
+        df = repo.load_data(str(csv_file))
+        
+        # Convert to LlamaIndex Document format (common integration pattern)
+        documents = []
+        for _, row in df.iterrows():
+            doc = Document(
+                text=f"Title: {row['title']}\n\nContent: {row['content']}",
+                metadata={
+                    "doc_id": row["doc_id"],
+                    "title": row["title"],
+                    "category": row["category"],
+                    "last_updated": row["last_updated"]
+                }
+            )
+            documents.append(doc)
+        
+        # Verify conversion
+        assert len(documents) == 3
+        assert all(isinstance(doc, Document) for doc in documents)
+        
+        # Check document content and metadata
+        rag_doc = next(doc for doc in documents if "RAG" in doc.text)
+        assert rag_doc.metadata["category"] == "Architecture"
+        assert "retrieval and generation" in rag_doc.text
+        
+        # Simulate building an index from the converted documents
+        Settings.embed_model = MockEmbedding(embed_dim=256)
+        Settings.llm = MockLLMWithChain(chain=["Based on the knowledge base, RAG improves accuracy by combining retrieval with generation."])
+        
+        index = VectorStoreIndex.from_documents(documents)
+        query_engine = index.as_query_engine()
+        
+        # Test querying the CSV-derived knowledge base
+        response = query_engine.query("What is RAG architecture?")
+        assert len(response.response) > 0

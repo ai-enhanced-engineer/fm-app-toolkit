@@ -39,9 +39,7 @@ jobs:
         run: uv python install 3.12
       
       - name: Install dependencies
-        run: |
-          uv venv --python 3.12
-          make environment-sync
+        run: make init
       
       - name: Run linters
         run: make lint
@@ -64,9 +62,7 @@ jobs:
         run: uv python install 3.12
       
       - name: Install dependencies
-        run: |
-          uv venv --python 3.12
-          make environment-sync
+        run: make init
       
       - name: Run type checks
         run: make type-check
@@ -89,9 +85,7 @@ jobs:
         run: uv python install 3.12
       
       - name: Install dependencies
-        run: |
-          uv venv --python 3.12
-          make environment-sync
+        run: make init
       
       - name: Run tests
         run: make unit-test
@@ -117,9 +111,7 @@ jobs:
         run: uv python install 3.12
       
       - name: Install dependencies
-        run: |
-          uv venv --python 3.12
-          make environment-sync
+        run: make init
       
       - name: Run tests
         run: make unit-test
@@ -148,9 +140,7 @@ jobs:
         run: uv python install 3.12
       
       - name: Install dependencies
-        run: |
-          uv venv --python 3.12
-          make environment-sync
+        run: make init
           uv pip install python-semantic-release
       
       - name: Configure Git
