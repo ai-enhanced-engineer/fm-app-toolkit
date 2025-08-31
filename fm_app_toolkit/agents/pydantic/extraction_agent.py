@@ -30,12 +30,12 @@ class DataExtraction(BaseModel):
 
 def create_extraction_agent(model: str) -> Agent[None, DataExtraction]:
     """Create an agent that extracts structured data from unstructured text.
-    
+
     This demonstrates Pydantic validation of complex nested structures.
-    
+
     Args:
         model: Model string specification (e.g., 'openai:gpt-4o').
-        
+
     Returns:
         Agent configured for data extraction.
     """
@@ -50,10 +50,10 @@ def create_extraction_agent(model: str) -> Agent[None, DataExtraction]:
 
 async def example_usage(agent: Agent[None, DataExtraction], text1: str, text2: str) -> None:
     """Demonstrate extraction agent with various text types."""
-    
+
     # Example 1: Business text with entities and numbers
     result1 = await agent.run(text1)
-    
+
     print("=== Data Extraction Example 1 ===")
     print(f"Input: {text1}")
     print(f"Entities: {result1.output.entities}")
@@ -61,49 +61,42 @@ async def example_usage(agent: Agent[None, DataExtraction], text1: str, text2: s
     print(f"Key phrases: {result1.output.key_phrases}")
     print(f"Summary: {result1.output.summary}")
     print(f"Word count: {result1.output.word_count}")
-    
-    print("\n" + "="*50 + "\n")
-    
+
+    print("\n" + "=" * 50 + "\n")
+
     # Example 2: Technical text
     result2 = await agent.run(text2)
-    
+
     print("=== Data Extraction Example 2 ===")
     print(f"Input: {text2}")
     print(f"Numbers found: {result2.output.numbers}")
     print(f"Key technical terms: {result2.output.key_phrases}")
     print(f"Summary: {result2.output.summary}")
-    
-    return result1.output, result2.output
 
 
 if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Run PydanticAI extraction agent")
-    parser.add_argument(
-        "--model",
-        type=str,
-        required=True,
-        help="Model specification (e.g., 'openai:gpt-4o')"
-    )
+    parser.add_argument("--model", type=str, required=True, help="Model specification (e.g., 'openai:gpt-4o')")
     parser.add_argument(
         "--text1",
         type=str,
         default="Apple reported $394.3 billion in revenue for 2022, with iPhone sales leading growth.",
-        help="First text to analyze (default: business text)"
+        help="First text to analyze (default: business text)",
     )
     parser.add_argument(
         "--text2",
         type=str,
         default="The new processor runs at 3.5GHz with 8 cores and 16 threads, consuming only 65 watts.",
-        help="Second text to analyze (default: technical text)"
+        help="Second text to analyze (default: technical text)",
     )
-    
+
     args = parser.parse_args()
-    
+
     print(f"Creating extraction agent with model: {args.model}")
-    
+
     # Create agent with specified model
     agent = create_extraction_agent(args.model)
-    
+
     # Run example with specified texts
     asyncio.run(example_usage(agent, args.text1, args.text2))

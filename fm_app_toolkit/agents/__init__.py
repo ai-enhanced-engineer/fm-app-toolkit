@@ -1,5 +1,6 @@
-"""Simple ReAct agent implementation for educational purposes."""
+"""Agents package for fm-app-toolkit.
 
-from .simple_react import SimpleReActAgent, Tool
-
-__all__ = ["SimpleReActAgent", "Tool"]
+This package contains agent implementations using different frameworks:
+- llamaindex: LlamaIndex-based agents (SimpleReActAgent, tools)
+- pydantic: PydanticAI-based agents (analysis, extraction)
+"""

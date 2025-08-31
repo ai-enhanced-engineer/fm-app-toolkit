@@ -141,7 +141,7 @@ graph_index = graph_indexer.create_index(documents)
 ### Agent with Mock LLM
 
 ```python
-from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 from fm_app_toolkit.testing import MockLLMWithChain
 
 # Mock LLM for deterministic testing

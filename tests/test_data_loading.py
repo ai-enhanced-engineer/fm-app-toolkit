@@ -157,11 +157,11 @@ def test_gcp_document_repository_with_service_account(mock_gcs_reader):
 def test_gcp_document_repository_validates_gs_uri():
     """Only gs:// URIs are accepted, not s3:// or paths."""
     repo = GCPDocumentRepository()
-    
+
     # Invalid: not a gs:// URI
     with pytest.raises(ValueError, match="GCS location must start with gs://"):
         repo.load_documents(location="s3://bucket/file.txt")
-    
+
     # Invalid: missing gs:// prefix
     with pytest.raises(ValueError, match="GCS location must start with gs://"):
         repo.load_documents(location="bucket/file.txt")
@@ -183,15 +183,15 @@ def test_gcp_document_repository_handles_load_error(mock_gcs_reader):
 def test_local_repository_validates_location_type():
     """Pydantic validates location must be a string."""
     repo = LocalDocumentRepository(input_dir=".", recursive=True)
-    
+
     # Invalid: None instead of string
     with pytest.raises(ValidationError):
         repo.load_documents(location=None)
-    
+
     # Invalid: integer instead of string
     with pytest.raises(ValidationError):
         repo.load_documents(location=123)
-    
+
     # Invalid: list instead of string
     with pytest.raises(ValidationError):
         repo.load_documents(location=["/path/to/dir"])
@@ -200,12 +200,12 @@ def test_local_repository_validates_location_type():
 def test_gcp_repository_validates_location_type():
     """Pydantic validates location must be a string."""
     repo = GCPDocumentRepository()
-    
+
     # Invalid: None instead of string
     with pytest.raises(ValidationError):
         repo.load_documents(location=None)
-    
-    # Invalid: dict instead of string  
+
+    # Invalid: dict instead of string
     with pytest.raises(ValidationError):
         repo.load_documents(location={"bucket": "test"})
 
@@ -215,30 +215,25 @@ def test_local_repository_constructor_validates_meaningful_params():
     # Invalid: input_dir must be string, not None
     with pytest.raises(ValidationError):
         LocalDocumentRepository(input_dir=None)
-    
+
     # Invalid: input_dir must be string, not integer
     with pytest.raises(ValidationError):
         LocalDocumentRepository(input_dir=123)
-    
+
     # Invalid: required_exts must be list[str], not string
     with pytest.raises(ValidationError):
         LocalDocumentRepository(input_dir=".", required_exts=".txt")
-    
+
     # Invalid: num_files_limit must be int, not dict
     with pytest.raises(ValidationError):
         LocalDocumentRepository(input_dir=".", num_files_limit={"count": 5})
-    
+
     # Invalid: recursive must be bool, not list
     with pytest.raises(ValidationError):
         LocalDocumentRepository(input_dir=".", recursive=[True, False])
-    
+
     # Valid: proper types should work
-    repo = LocalDocumentRepository(
-        input_dir="/tmp", 
-        recursive=False,
-        required_exts=[".txt", ".md"],
-        num_files_limit=10
-    )
+    repo = LocalDocumentRepository(input_dir="/tmp", recursive=False, required_exts=[".txt", ".md"], num_files_limit=10)
     assert repo.input_dir == "/tmp"
     assert repo.recursive is False
     assert repo.required_exts == [".txt", ".md"]
@@ -250,19 +245,19 @@ def test_gcp_repository_constructor_validates_service_account():
     # Invalid: service_account_key must be dict, not string
     with pytest.raises(ValidationError):
         GCPDocumentRepository(service_account_key="invalid-string")
-    
+
     # Invalid: service_account_key must be dict, not list
     with pytest.raises(ValidationError):
         GCPDocumentRepository(service_account_key=["key1", "key2"])
-    
+
     # Invalid: service_account_key must be dict, not integer
     with pytest.raises(ValidationError):
         GCPDocumentRepository(service_account_key=123)
-    
+
     # Valid: None is acceptable (default)
     repo1 = GCPDocumentRepository()
     assert repo1.service_account_key is None
-    
+
     # Valid: proper dict should work
     valid_key = {"type": "service_account", "project_id": "test"}
     repo2 = GCPDocumentRepository(service_account_key=valid_key)
@@ -308,10 +303,10 @@ def test_parse_gcs_uri_invalid_format():
     """Invalid URI format raises ValueError."""
     with pytest.raises(ValueError, match="GCS location must start with gs://"):
         _parse_gcs_uri("s3://bucket/file.txt")
-    
+
     with pytest.raises(ValueError, match="GCS location must start with gs://"):
         _parse_gcs_uri("http://bucket/file.txt")
-    
+
     with pytest.raises(ValueError, match="GCS location must start with gs://"):
         _parse_gcs_uri("/local/path/file.txt")
 
@@ -321,11 +316,11 @@ def test_parse_gcs_uri_edge_cases():
     # Bucket with hyphen and numbers
     result = _parse_gcs_uri("gs://my-bucket-123")
     assert result == {"bucket": "my-bucket-123"}
-    
+
     # Deep nesting
     result = _parse_gcs_uri("gs://bucket/a/b/c/d/e/f.txt")
     assert result == {"bucket": "bucket", "key": "a/b/c/d/e/f.txt"}
-    
+
     # Multiple trailing slashes (treated as prefix)
     result = _parse_gcs_uri("gs://bucket/path//")
     assert result == {"bucket": "bucket", "prefix": "path//"}
@@ -344,19 +339,21 @@ def test_base_repository_is_abstract():
 
 def test_base_repository_requires_load_data_implementation():
     """Concrete implementations must implement load_data method."""
+
     class IncompleteRepository(BaseRepository):
         pass
-    
+
     with pytest.raises(TypeError, match="Can't instantiate abstract class IncompleteRepository"):
         IncompleteRepository()
 
 
 def test_base_repository_abstract_method_signature():
     """load_data method must have correct signature."""
+
     class ConcreteRepository(BaseRepository):
         def load_data(self, path: str) -> pd.DataFrame:
             return pd.DataFrame({"test": [1, 2, 3]})
-    
+
     # Should instantiate without error
     repo = ConcreteRepository()
     result = repo.load_data("dummy_path")
@@ -374,16 +371,14 @@ def test_local_repository_loads_basic_csv():
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test CSV
         csv_file = Path(temp_dir) / "test.csv"
-        test_data = pd.DataFrame({
-            "name": ["Alice", "Bob", "Charlie"],
-            "age": [25, 30, 35],
-            "city": ["New York", "London", "Tokyo"]
-        })
+        test_data = pd.DataFrame(
+            {"name": ["Alice", "Bob", "Charlie"], "age": [25, 30, 35], "city": ["New York", "London", "Tokyo"]}
+        )
         test_data.to_csv(csv_file, index=False)
-        
+
         repo = LocalRepository()
         df = repo.load_data(str(csv_file))
-        
+
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 3
         assert list(df.columns) == ["name", "age", "city"]
@@ -398,10 +393,10 @@ def test_local_repository_loads_empty_csv():
         # Create CSV with headers but no data
         empty_data = pd.DataFrame({"col1": [], "col2": []})
         empty_data.to_csv(csv_file, index=False)
-        
+
         repo = LocalRepository()
         df = repo.load_data(str(csv_file))
-        
+
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 0
         assert list(df.columns) == ["col1", "col2"]
@@ -412,9 +407,9 @@ def test_local_repository_handles_completely_empty_file():
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "completely_empty.csv"
         csv_file.write_text("")  # Completely empty file
-        
+
         repo = LocalRepository()
-        
+
         with pytest.raises(Exception):  # pandas.errors.EmptyDataError will be wrapped
             repo.load_data(str(csv_file))
 
@@ -423,17 +418,19 @@ def test_local_repository_loads_csv_with_mixed_types():
     """Load CSV with various data types (string, int, float, bool)."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "mixed.csv"
-        test_data = pd.DataFrame({
-            "text": ["hello", "world", "test"],
-            "integer": [1, 2, 3],
-            "float": [1.5, 2.7, 3.9],
-            "boolean": [True, False, True]
-        })
+        test_data = pd.DataFrame(
+            {
+                "text": ["hello", "world", "test"],
+                "integer": [1, 2, 3],
+                "float": [1.5, 2.7, 3.9],
+                "boolean": [True, False, True],
+            }
+        )
         test_data.to_csv(csv_file, index=False)
-        
+
         repo = LocalRepository()
         df = repo.load_data(str(csv_file))
-        
+
         assert len(df) == 3
         assert list(df.columns) == ["text", "integer", "float", "boolean"]
         assert df.loc[0, "text"] == "hello"
@@ -445,15 +442,12 @@ def test_local_repository_loads_csv_with_special_characters():
     """Handle CSV with special characters and Unicode."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "special.csv"
-        test_data = pd.DataFrame({
-            "text": ["café", "naïve", "résumé", "🚀"],
-            "numbers": [1, 2, 3, 4]
-        })
+        test_data = pd.DataFrame({"text": ["café", "naïve", "résumé", "🚀"], "numbers": [1, 2, 3, 4]})
         test_data.to_csv(csv_file, index=False, encoding="utf-8")
-        
+
         repo = LocalRepository()
         df = repo.load_data(str(csv_file))
-        
+
         assert len(df) == 4
         assert df.loc[0, "text"] == "café"
         assert df.loc[3, "text"] == "🚀"
@@ -463,18 +457,16 @@ def test_local_repository_loads_large_csv():
     """Handle larger CSV files efficiently."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "large.csv"
-        
+
         # Create a DataFrame with 1000 rows
-        large_data = pd.DataFrame({
-            "id": range(1000),
-            "value": [f"value_{i}" for i in range(1000)],
-            "score": [i * 0.1 for i in range(1000)]
-        })
+        large_data = pd.DataFrame(
+            {"id": range(1000), "value": [f"value_{i}" for i in range(1000)], "score": [i * 0.1 for i in range(1000)]}
+        )
         large_data.to_csv(csv_file, index=False)
-        
+
         repo = LocalRepository()
         df = repo.load_data(str(csv_file))
-        
+
         assert len(df) == 1000
         assert list(df.columns) == ["id", "value", "score"]
         assert df.loc[0, "id"] == 0
@@ -484,7 +476,7 @@ def test_local_repository_loads_large_csv():
 def test_local_repository_handles_missing_file():
     """Missing CSV file raises appropriate error."""
     repo = LocalRepository()
-    
+
     with pytest.raises(Exception):  # FileNotFoundError will be wrapped
         repo.load_data("/nonexistent/file.csv")
 
@@ -494,9 +486,9 @@ def test_local_repository_handles_invalid_csv():
     with tempfile.TemporaryDirectory() as temp_dir:
         bad_csv = Path(temp_dir) / "bad.csv"
         bad_csv.write_text("This is not,a proper\nCSV file,with,inconsistent\ncolumns")
-        
+
         repo = LocalRepository()
-        
+
         # Should raise an exception, but pandas is quite forgiving
         # This test ensures we don't crash completely
         df = repo.load_data(str(bad_csv))
@@ -509,12 +501,12 @@ def test_local_repository_handles_permission_denied():
         csv_file = Path(temp_dir) / "restricted.csv"
         test_data = pd.DataFrame({"col": [1, 2, 3]})
         test_data.to_csv(csv_file, index=False)
-        
+
         # Change permissions to remove read access
         csv_file.chmod(0o000)
-        
+
         repo = LocalRepository()
-        
+
         try:
             with pytest.raises(Exception):  # PermissionError will be wrapped
                 repo.load_data(str(csv_file))
@@ -527,16 +519,14 @@ def test_local_repository_loads_csv_with_null_values():
     """Handle CSV files containing null/NaN values."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "nulls.csv"
-        test_data = pd.DataFrame({
-            "name": ["Alice", None, "Charlie"],
-            "age": [25, pd.NA, 35],
-            "score": [1.5, 2.0, None]
-        })
+        test_data = pd.DataFrame(
+            {"name": ["Alice", None, "Charlie"], "age": [25, pd.NA, 35], "score": [1.5, 2.0, None]}
+        )
         test_data.to_csv(csv_file, index=False)
-        
+
         repo = LocalRepository()
         df = repo.load_data(str(csv_file))
-        
+
         assert len(df) == 3
         assert pd.isna(df.loc[1, "name"])
         assert pd.isna(df.loc[2, "score"])
@@ -546,7 +536,7 @@ def test_local_repository_inheritance():
     """LocalRepository properly inherits from BaseRepository."""
     repo = LocalRepository()
     assert isinstance(repo, BaseRepository)
-    
+
     # Should have the abstract method implemented
     assert hasattr(repo, "load_data")
     assert callable(repo.load_data)

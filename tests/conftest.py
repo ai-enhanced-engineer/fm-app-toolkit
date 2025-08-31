@@ -11,7 +11,7 @@ import pytest
 from llama_index.core import Document
 from llama_index.core.embeddings.mock_embed_model import MockEmbedding
 
-from fm_app_toolkit.agents.simple_react import SimpleReActAgent, Tool
+from fm_app_toolkit.agents.llamaindex.simple_react import SimpleReActAgent, Tool
 from fm_app_toolkit.data_loading import LocalDocumentRepository
 from fm_app_toolkit.testing.mocks import MockLLMEchoStream, MockLLMWithChain
 
@@ -40,8 +40,10 @@ def mock_embed() -> MockEmbedding:
 @pytest.fixture
 def mock_llm_factory() -> Callable[[list[str]], MockLLMWithChain]:
     """Factory for creating MockLLMWithChain instances with custom chains."""
+
     def _create(chain: list[str]) -> MockLLMWithChain:
         return MockLLMWithChain(chain=chain)
+
     return _create
 
 
@@ -59,10 +61,7 @@ def mock_llm_echo() -> MockLLMEchoStream:
 @pytest.fixture
 def sample_documents(test_data_dir: Path) -> list[Document]:
     """Load real technical documents from test data directory."""
-    repo = LocalDocumentRepository(
-        input_dir=str(test_data_dir),
-        required_exts=[".txt"]
-    )
+    repo = LocalDocumentRepository(input_dir=str(test_data_dir), required_exts=[".txt"])
     return repo.load_documents(location=str(test_data_dir))
 
 
@@ -84,11 +83,9 @@ def simple_documents() -> list[Document]:
 @pytest.fixture
 def create_simple_agent() -> Callable:
     """Factory for creating SimpleReActAgent with custom configuration."""
+
     def _create(
-        chain: list[str],
-        tools: list[Tool] | None = None,
-        max_reasoning: int = 10,
-        verbose: bool = False
+        chain: list[str], tools: list[Tool] | None = None, max_reasoning: int = 10, verbose: bool = False
     ) -> SimpleReActAgent:
         mock_llm = MockLLMWithChain(chain=chain)
         return SimpleReActAgent(
@@ -98,6 +95,7 @@ def create_simple_agent() -> Callable:
             max_reasoning=max_reasoning,
             verbose=verbose,
         )
+
     return _create
 
 
@@ -110,7 +108,7 @@ def create_simple_agent() -> Callable:
 def sample_tools() -> list[Tool]:
     """Common test tools for agent testing."""
     from fm_app_toolkit.tools import add, multiply
-    
+
     return [
         Tool(name="add", fn=add, description="Add two numbers"),
         Tool(name="multiply", fn=multiply, description="Multiply two numbers"),

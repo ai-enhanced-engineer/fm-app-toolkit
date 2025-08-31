@@ -56,7 +56,7 @@ Our implementation extends `BaseWorkflowAgent` from LlamaIndex, providing:
 ### 1. Agent Initialization
 
 ```python
-from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 from fm_app_toolkit.tools import create_calculator_tool
 
 agent = SimpleReActAgent(
@@ -105,7 +105,7 @@ print(result["chat_history"]) # Conversation history
 ### Basic Math Agent
 
 ```python
-from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 from fm_app_toolkit.tools import create_multiply_tool, create_add_tool
 
 # Create tools
@@ -134,7 +134,7 @@ print(f"Answer: {result['response']}")
 
 ```python
 from fm_app_toolkit.testing import MockLLMWithChain
-from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 
 # Define deterministic agent behavior
 mock_llm = MockLLMWithChain(chain=[
@@ -160,7 +160,7 @@ assert result["sources"] == [60, 90]  # Tool outputs
 ### Information Retrieval Agent
 
 ```python
-from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 from llama_index.core.tools import FunctionTool
 
 def search_database(query: str) -> str:
@@ -193,7 +193,7 @@ result = await agent.get_results_from_handler(handler)
 
 ```python
 import pytest
-from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 from fm_app_toolkit.testing import MockLLMWithChain
 
 @pytest.mark.asyncio
@@ -275,7 +275,7 @@ async def test_agent_reasoning_steps():
 
 ```python
 import os
-from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 
 def create_agent(environment: str = None):
     """Create agent based on environment."""
@@ -305,7 +305,7 @@ def create_agent(environment: str = None):
 ### Monitoring and Observability
 
 ```python
-from fm_app_toolkit.agents import SimpleReActAgent
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 import structlog
 
 logger = structlog.get_logger()

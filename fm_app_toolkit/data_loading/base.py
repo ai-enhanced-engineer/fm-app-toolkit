@@ -15,6 +15,7 @@ class BaseRepository(ABC):
         """Load data from CSV file."""
         raise NotImplementedError
 
+
 class DocumentRepository(BaseModel):
     """Abstract interface for document loading from various sources."""
 
@@ -22,4 +23,3 @@ class DocumentRepository(BaseModel):
     def load_documents(self, location: str) -> list[Document]:
         """Load documents from filesystem or cloud storage."""
         raise NotImplementedError
-

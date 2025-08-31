@@ -20,9 +20,10 @@ class LocalRepository(BaseRepository):
         except Exception:
             raise
 
+
 class LocalDocumentRepository(DocumentRepository):
     """Load documents from local filesystem using SimpleDirectoryReader."""
-    
+
     input_dir: str
     recursive: bool = True
     required_exts: Optional[list[str]] = None
