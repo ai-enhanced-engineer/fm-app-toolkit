@@ -138,6 +138,16 @@ process-documents: ## Process documents with loading and chunking demonstration 
 	uv run python -m fm_app_toolkit.data_loading.example --data-path $(DATA_PATH)
 	$(GREEN_LINE)
 
+pydantic-analysis: ## Run PydanticAI analysis agent with OpenAI GPT-4o
+	@echo "🧠 Running analysis agent with OpenAI GPT-4o..."
+	uv run python -m fm_app_toolkit.agents.pydantic.analysis_agent --model "openai:gpt-4o"
+	$(GREEN_LINE)
+
+pydantic-extraction: ## Run PydanticAI extraction agent with OpenAI GPT-4o
+	@echo "🔍 Running extraction agent with OpenAI GPT-4o..."
+	uv run python -m fm_app_toolkit.agents.pydantic.extraction_agent --model "openai:gpt-4o"
+	$(GREEN_LINE)
+
 # ----------------------------
 # Local Development
 # ----------------------------
