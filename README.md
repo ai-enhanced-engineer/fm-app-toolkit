@@ -53,39 +53,70 @@ The framework extends LlamaIndex's base LLM class for drop-in compatibility. Use
 ### Agent Implementations
 **Application-Layer Orchestration**
 
-Everyone talks about agents, but what does that actually look like in code? Where do they live in your application architecture? This toolkit answers those questions with concrete, working implementations.
+What is an agent? At its core, an agent is an orchestration layer that receives requests, reasons about next steps, acts by calling tools, observes results, and iterates until complete. This toolkit provides two complementary approaches:
 
-Our `SimpleReActAgent` provides a clear, pedagogical implementation of the ReAct pattern using LlamaIndex's BaseWorkflowAgent—showing exactly how agents reason through problems step by step. The toolkit demonstrates how to integrate tools seamlessly with your business logic, maintain observability throughout the reasoning process, and handle errors gracefully. These aren't theoretical patterns; they're production-tested approaches that give you the transparency and control necessary for real-world systems.
+**LlamaIndex ReAct Agents** - Transparent step-by-step reasoning with full observability of the thought process. Perfect when you need to debug decision-making or handle complex multi-step workflows.
 
-*See [agents/README.md](fm_app_toolkit/agents/README.md) for implementation details*
+**PydanticAI Agents** - Structured output with built-in validation and observability. Ideal when you need guaranteed data formats and type safety.
+
+Both approaches integrate seamlessly with your business logic through tools, handle errors gracefully, and support deterministic testing with our mock framework.
+
+#### Choosing Your Agent Approach
+
+```python
+# LlamaIndex ReAct: Step-by-step reasoning
+from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
+from fm_app_toolkit.testing import MockLLMWithChain
+
+mock_llm = MockLLMWithChain(chain=[
+    "Thought: I need to calculate this.\nAction: multiply\nAction Input: {'a': 15, 'b': 7}",
+    "Thought: Now add 23.\nAction: add\nAction Input: {'a': 105, 'b': 23}", 
+    "Thought: Done.\nAnswer: 15 × 7 + 23 = 128"
+])
+agent = SimpleReActAgent(llm=mock_llm, tools=[multiply_tool, add_tool])
+result = await agent.run("What is 15 times 7 plus 23?")
+# Returns: full reasoning steps + final answer
+
+# PydanticAI: Structured output with validation  
+from fm_app_toolkit.agents.pydantic import create_analysis_agent
+from pydantic_ai.models.test import TestModel
+
+test_model = TestModel(custom_output_args={
+    "sentiment": "positive", 
+    "confidence": 0.95,
+    "key_insights": ["High satisfaction", "Quality product"]
+})
+agent = create_analysis_agent(model=test_model)
+result = await agent.run("This product is amazing!")  
+# Returns: structured AnalysisResult with validated fields
+```
+
+*See [agents/llamaindex/README.md](fm_app_toolkit/agents/llamaindex/README.md) for ReAct implementation details and [agents/pydantic/analysis_agent.py](fm_app_toolkit/agents/pydantic/analysis_agent.py) for structured agent examples*
 
 ## 🎯 Testing Philosophy
 
-**Write Once, Test Everywhere**
+**Deterministic Testing for Non-Deterministic Systems**
 
-Our testing approach is inspired by the principles in [Architecture Patterns with Python](https://www.cosmicpython.com/book/), particularly the rule: **"don't mock what you don't own."** Instead of mocking external LLM APIs directly, **we own the abstraction**—our mock LLMs extend LlamaIndex's base class, creating a **clean boundary** between our code and external services.
+Following the principle **"don't mock what you don't own"** from [Architecture Patterns with Python](https://www.cosmicpython.com/book/), we own the abstraction. Our mock LLMs extend framework base classes, creating clean boundaries between business logic and external services.
 
-This pattern avoids **"Mock Hell"** where tests become brittle and hard to maintain. By owning the interface, we can test our **business logic in isolation** with deterministic mocks, while the adapter pattern ensures our core application code **remains unchanged** even if we switch LLM providers.
-
-The foundation of reliable AI applications is **deterministic testing**. Our approach lets you define expected agent behavior with **perfect control**, then swap in real LLMs for production **without changing your application code**.
+This approach enables deterministic testing without brittle mocks. Define expected behavior with perfect control, then swap in real LLMs for production—same application code.
 
 ```python
 def test_business_workflow():
-    # Define deterministic test scenario
     mock_llm = MockLLMWithChain(chain=[
-        "Thought: Check inventory.\nAction: check_stock",
-        "Thought: Calculate price.\nAction: calculate_price",
-        "Thought: Place order.\nAnswer: Order #123 confirmed"
+        "Thought: Check stock.\nAction: check_stock",
+        "Thought: Calculate total.\nAction: calculate_price", 
+        "Thought: Done.\nAnswer: Order #123 confirmed"
     ])
     
     agent = SimpleReActAgent(llm=mock_llm, tools=business_tools)
     result = await agent.run("Order 10 widgets")
     
     assert "Order #123" in result["response"]
-    assert len(result["sources"]) == 2  # Two tools used
+    assert len(result["sources"]) == 2
 ```
 
-*See [tests/](tests/) for comprehensive examples with 125+ test cases.*
+*See [tests/](tests/) for 149+ test cases demonstrating these patterns.*
 
 ## ⚡ Quick Start
 
@@ -138,56 +169,56 @@ graph_indexer = PropertyGraphIndexer()
 graph_index = graph_indexer.create_index(documents)
 ```
 
-### Agent with Mock LLM
+### Agents with Deterministic Testing
 
 ```python
+# LlamaIndex ReAct: Full reasoning visibility
 from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
 from fm_app_toolkit.testing import MockLLMWithChain
 
-# Mock LLM for deterministic testing
 mock_llm = MockLLMWithChain(chain=[
-    "Thought: Calculate the price.\nAction: calculate_price\nAction Input: {'quantity': 5, 'unit_price': 10}",
-    "Thought: Done.\nAnswer: Total is $45 with 10% discount"
+    "Thought: Calculate total.\nAction: calculate_price\nAction Input: {'quantity': 5, 'unit_price': 10}",
+    "Thought: Apply discount.\nAnswer: Total is $45 with 10% discount"
 ])
-
-# Create and run agent
 agent = SimpleReActAgent(llm=mock_llm, tools=[calculate_price_tool])
-result = await agent.run("What's the price for 5 items at $10 each?")
+result = await agent.run("Price for 5 items at $10 each?")
+
+# PydanticAI: Structured output
+from fm_app_toolkit.agents.pydantic import create_analysis_agent
+from pydantic_ai.models.test import TestModel
+
+test_model = TestModel(custom_output_args={
+    "sentiment": "positive", "confidence": 0.9, "word_count": 8
+})
+agent = create_analysis_agent(model=test_model)
+result = await agent.run("Great service and fast delivery!")
+# result.output.sentiment == "positive", result.output.confidence == 0.9
 ```
 
 ## 🏭 Production Patterns
 
 ### Environment-Based Configuration
 
-The key to moving from development to production is clean environment-based configuration. Develop with mocks, test with mocks, deploy with real models—all using the same codebase:
+Develop with mocks, test with mocks, deploy with real models—same codebase:
 
 ```python
 def create_agent(environment="development"):
     if environment == "development":
-        # Use mocks for testing
         from fm_app_toolkit.testing import MockLLMWithChain
         llm = MockLLMWithChain(chain=[...])
     else:
-        # Use real LLM in production
         from llama_index.llms.openai import OpenAI
         llm = OpenAI(model="gpt-4")
-    
     return SimpleReActAgent(llm=llm, tools=[...])
-```
 
-### Rule-Based Testing
-
-```python
-from fm_app_toolkit.testing import RuleBasedMockLLM
-
-# Dynamic responses based on query content
-mock_llm = RuleBasedMockLLM(
-    rules={
-        "price": "Action: calculate_price",
-        "stock": "Action: check_inventory",
-    },
-    default_behavior="direct_answer"
-)
+# For structured agents  
+def create_structured_agent(environment="development"):
+    if environment == "development":
+        from pydantic_ai.models.test import TestModel
+        model = TestModel(custom_output_args={...})
+    else:
+        model = "openai:gpt-4o"  # Production model string
+    return create_analysis_agent(model=model)
 ```
 
 ## Project Structure
@@ -196,11 +227,13 @@ mock_llm = RuleBasedMockLLM(
 fm-app-toolkit/
 ├── fm_app_toolkit/          # Main package
 │   ├── agents/              # Agent implementations
+│   │   ├── llamaindex/     # ReAct pattern with LlamaIndex
+│   │   └── pydantic/       # Structured agents with PydanticAI
 │   ├── data_loading/        # Document loading patterns
 │   ├── indexing/            # Document indexing strategies
 │   ├── testing/             # Mock LLM framework
 │   └── tools.py            # Core tool implementations
-├── tests/                   # 125+ tests demonstrating patterns
+├── tests/                   # 149+ tests demonstrating patterns
 ├── Makefile                # Development commands
 └── CLAUDE.md              # Development guide
 ```
@@ -231,10 +264,11 @@ make process-documents  # See document loading and chunking in action
 
 ## Getting Started with Real Code
 
-The best way to understand these patterns is to see them in action. Explore our [tests/](tests/) directory for 125+ examples of real-world scenarios, or dive into the module-specific documentation:
+The best way to understand these patterns is to see them in action. Explore our [tests/](tests/) directory for 149+ examples of real-world scenarios, or dive into the module-specific documentation:
 
-- [testing/README.md](fm_app_toolkit/testing/README.md) - Deep dive into mock LLM patterns
-- [agents/README.md](fm_app_toolkit/agents/README.md) - Agent implementation details
+- [testing/README.md](fm_app_toolkit/testing/README.md) - Mock LLM patterns and deterministic testing
+- [agents/llamaindex/README.md](fm_app_toolkit/agents/llamaindex/README.md) - ReAct agents with step-by-step reasoning  
+- [agents/pydantic/analysis_agent.py](fm_app_toolkit/agents/pydantic/analysis_agent.py) - Structured agents with validation and Logfire observability
 - [data_loading/README.md](fm_app_toolkit/data_loading/README.md) - Repository pattern guide
 - [indexing/README.md](fm_app_toolkit/indexing/README.md) - Vector and graph indexing strategies
 
