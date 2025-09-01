@@ -10,12 +10,8 @@ import argparse
 import asyncio
 from typing import List
 
-from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
-
-# Load environment variables (for OpenAI API key, etc.)
-load_dotenv()
 
 
 class DataExtraction(BaseModel):

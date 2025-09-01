@@ -1,21 +1,32 @@
-"""PydanticAI agents package.
+"""PydanticAI agents for structured output with validation.
 
-This package contains modular PydanticAI agent implementations demonstrating:
-- Structured output validation
-- Tool registration and usage
-- Dependency injection
-- Various agent patterns
+This module provides agents that guarantee structured, validated outputs
+using the PydanticAI framework with built-in observability.
 """
 
-# Import all models
-# Import agent creation functions
-from .analysis_agent import create_analysis_agent
-from .extraction_agent import create_extraction_agent
+from dotenv import load_dotenv
 
-# Import standalone agents (following PydanticAI best practices)
+# Load environment variables for API keys
+load_dotenv()
+
+# Configure Logfire observability for all PydanticAI agents
+try:
+    import logfire
+
+    logfire.configure()
+    logfire.instrument_pydantic_ai()
+except Exception:
+    # Logfire not configured or not available
+    pass
+
+# Export main agent factories and types
+from .analysis_agent import AnalysisContext, AnalysisResult, create_analysis_agent  # noqa: E402
+from .extraction_agent import DataExtraction, create_extraction_agent  # noqa: E402
 
 __all__ = [
-    # Agent creators (factory pattern)
-    "create_extraction_agent",
     "create_analysis_agent",
+    "create_extraction_agent",
+    "AnalysisResult",
+    "AnalysisContext",
+    "DataExtraction",
 ]

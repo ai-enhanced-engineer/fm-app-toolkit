@@ -9,23 +9,10 @@ This module demonstrates:
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-import logfire
-from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
 from fm_app_toolkit.tools import word_count
-
-# Load environment variables (for OpenAI API key, etc.)
-load_dotenv()
-
-# Configure Logfire for observability and monitoring (only if authenticated)
-try:
-    logfire.configure()
-    logfire.instrument_pydantic_ai()
-except Exception:
-    # Logfire not configured or authenticated, disable features gracefully
-    pass
 
 
 class AnalysisResult(BaseModel):
