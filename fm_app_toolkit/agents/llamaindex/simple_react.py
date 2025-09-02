@@ -663,7 +663,7 @@ if __name__ == "__main__":
             search_web,
         )
 
-        async def run_custom_query():
+        async def run_custom_query() -> None:
             tools = [
                 Tool(
                     name="get_current_time",
