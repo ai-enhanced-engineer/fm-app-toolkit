@@ -16,5 +16,4 @@ class DocumentIndexer(ABC):
         documents: list[Document],
         embed_model: Optional[BaseEmbedding] = None,
     ) -> Union[VectorStoreIndex, PropertyGraphIndex]:
-        """Create searchable index from documents."""
         raise NotImplementedError

@@ -148,6 +148,11 @@ pydantic-extraction: ## Run PydanticAI extraction agent with OpenAI GPT-4o
 	uv run python -m fm_app_toolkit.agents.pydantic.extraction_agent --model "openai:gpt-4o"
 	$(GREEN_LINE)
 
+llamaindex-react: ## Run LlamaIndex ReAct agent with OpenAI GPT-4
+	@echo "🧠 Running ReAct agent with OpenAI GPT-4..."
+	uv run python -m fm_app_toolkit.agents.llamaindex.simple_react --model "openai:gpt-4"
+	$(GREEN_LINE)
+
 # ----------------------------
 # Local Development
 # ----------------------------
