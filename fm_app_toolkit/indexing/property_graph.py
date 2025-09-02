@@ -20,19 +20,18 @@ logger = get_logger(__name__)
 
 
 def _select_extractors(
-    kg_extractors: Optional[list[TransformComponent]],
-    llm: Optional[LLM]
+    kg_extractors: Optional[list[TransformComponent]], llm: Optional[LLM]
 ) -> list[TransformComponent]:
     """Choose extractors: LLM-based if available, otherwise implicit only."""
     if kg_extractors is not None:
         return kg_extractors
-    
+
     if llm is not None:
         return [
             SimpleLLMPathExtractor(llm=llm),
             ImplicitPathExtractor(),
         ]
-    
+
     return [ImplicitPathExtractor()]
 
 
@@ -67,15 +66,13 @@ class PropertyGraphIndexer(DocumentIndexer):
         """Build knowledge graph index from documents."""
         try:
             logger.info(f"Creating property graph index from {len(documents)} documents")
-            
+
             # Select appropriate extractors
             kg_extractors = _select_extractors(self.kg_extractors, self.llm)
-            
+
             # Log which extractors are being used for debugging
-            logger.debug(
-                f"Using extractors: {[type(e).__name__ for e in kg_extractors]}"
-            )
-            
+            logger.debug(f"Using extractors: {[type(e).__name__ for e in kg_extractors]}")
+
             # Create index with optional embedding model
             index = PropertyGraphIndex.from_documents(
                 documents,
@@ -85,10 +82,10 @@ class PropertyGraphIndexer(DocumentIndexer):
                 embed_kg_nodes=self.embed_kg_nodes,
                 show_progress=self.show_progress,
             )
-            
+
             logger.info(f"Successfully created property graph index with {len(documents)} documents")
             return index
-            
+
         except Exception as e:
             logger.error(f"Failed to create property graph index: {e}")
             raise

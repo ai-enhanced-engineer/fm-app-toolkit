@@ -12,14 +12,12 @@ class BaseRepository(ABC):
 
     @abstractmethod
     def load_data(self, path: str) -> pd.DataFrame:
-        """Load data from CSV file."""
         raise NotImplementedError
+
 
 class DocumentRepository(BaseModel):
     """Abstract interface for document loading from various sources."""
 
     @abstractmethod
     def load_documents(self, location: str) -> list[Document]:
-        """Load documents from filesystem or cloud storage."""
         raise NotImplementedError
-
