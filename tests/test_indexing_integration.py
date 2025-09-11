@@ -7,7 +7,7 @@ from fm_app_toolkit.testing.mocks import MockLLMWithChain
 # All fixtures (test_data_dir, sample_documents, mock_embed) come from conftest.py
 
 
-def test_full_indexing_pipeline(test_data_dir, mock_embed):
+def test__full_indexing__pipeline(test_data_dir, mock_embed):
     """Demonstrate complete pipeline: Load documents → Create indexes.
 
     This integration test shows how documents flow from data loading
@@ -35,7 +35,7 @@ def test_full_indexing_pipeline(test_data_dir, mock_embed):
     assert graph_index is not None
 
 
-def test_technical_content_preservation(sample_documents, mock_embed):
+def test__technical_content__preservation(sample_documents, mock_embed):
     """Verify that technical content and terminology is preserved during indexing.
 
     Real-world documents contain domain-specific terms that must be
@@ -59,7 +59,7 @@ def test_technical_content_preservation(sample_documents, mock_embed):
         assert term.lower() in all_text, f"Technical term '{term}' should be preserved"
 
 
-def test_vector_vs_graph_indexing_comparison(sample_documents, mock_embed):
+def test__vector_vs__graph_indexing_comparison(sample_documents, mock_embed):
     """Compare VectorStore and PropertyGraph indexing approaches.
 
     This test demonstrates that both indexing strategies can process
@@ -86,7 +86,7 @@ def test_vector_vs_graph_indexing_comparison(sample_documents, mock_embed):
     assert hasattr(graph_index, "property_graph_store")
 
 
-def test_property_graph_with_llm_extraction(sample_documents, mock_embed):
+def test__property_graph_with__llm_extraction(sample_documents, mock_embed):
     """Demonstrate enhanced entity extraction when LLM is available.
 
     With an LLM, PropertyGraphIndexer can extract more meaningful

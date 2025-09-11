@@ -12,7 +12,7 @@ from fm_app_toolkit.indexing.property_graph import _select_extractors
 from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 
-def test_vector_store_indexer_creates_index():
+def test__vector_store_indexer__creates_index():
     """Create vector index from three documents."""
     documents = [
         Document(text="First document about RAG pipelines", doc_id="1"),
@@ -30,7 +30,7 @@ def test_vector_store_indexer_creates_index():
     assert index.as_retriever() is not None
 
 
-def test_vector_store_indexer_custom_batch_size():
+def test__vector_store_indexer__custom_batch_size():
     """Custom batch size controls memory usage during indexing."""
     documents = [Document(text=f"Document {i}", doc_id=f"doc_{i}") for i in range(10)]
 
@@ -43,7 +43,7 @@ def test_vector_store_indexer_custom_batch_size():
     assert isinstance(index, VectorStoreIndex)
 
 
-def test_vector_store_indexer_empty_documents():
+def test__vector_store_indexer__empty_documents():
     """Empty document list creates valid empty index."""
     documents = []
 
@@ -55,7 +55,7 @@ def test_vector_store_indexer_empty_documents():
     assert isinstance(index, VectorStoreIndex)
 
 
-def test_vector_store_indexer_error_handling():
+def test__vector_store_indexer__error_handling():
     """Indexing errors are logged and re-raised."""
     documents = [Document(text="Test document", doc_id="test1")]
     indexer = VectorStoreIndexer()
@@ -67,13 +67,13 @@ def test_vector_store_indexer_error_handling():
         assert "Index creation failed" in str(exc_info.value)
 
 
-def test_document_indexer_is_abstract():
+def test__document_indexer__is_abstract():
     """DocumentIndexer cannot be instantiated directly."""
     with pytest.raises(TypeError):
         DocumentIndexer()
 
 
-def test_vector_store_indexer_validates_input_types():
+def test__vector_store_indexer__validates_input_types():
     """Pydantic validates documents must be a list."""
     indexer = VectorStoreIndexer()
     mock_embed = MockEmbedding(embed_dim=256)
@@ -113,7 +113,7 @@ def test_vector_store_indexer_validates_input_types():
 # ----------------------------------------------
 
 
-def test_property_graph_indexer_creates_index():
+def test__property_graph_indexer__creates_index():
     """Create property graph index from documents."""
     documents = [
         Document(text="Alice knows Bob", doc_id="1"),
@@ -132,7 +132,7 @@ def test_property_graph_indexer_creates_index():
     assert hasattr(index, "property_graph_store")
 
 
-def test_property_graph_indexer_with_llm():
+def test__property_graph_indexer__with_llm():
     """LLM enables entity extraction for richer graphs."""
     documents = [
         Document(text="Apple Inc. was founded by Steve Jobs", doc_id="1"),
@@ -151,7 +151,7 @@ def test_property_graph_indexer_with_llm():
     assert isinstance(index, PropertyGraphIndex)
 
 
-def test_property_graph_indexer_validates_input_types():
+def test__property_graph_indexer__validates_input_types():
     """Pydantic validates documents must be a list."""
     indexer = PropertyGraphIndexer(show_progress=False)
     mock_embed = MockEmbedding(embed_dim=256)
@@ -167,7 +167,7 @@ def test_property_graph_indexer_validates_input_types():
     assert isinstance(index, PropertyGraphIndex)
 
 
-def test_select_extractors_helper():
+def test__select_extractors__helper():
     """Helper selects appropriate extractors based on configuration."""
     from llama_index.core.indices.property_graph.transformations import (
         ImplicitPathExtractor,

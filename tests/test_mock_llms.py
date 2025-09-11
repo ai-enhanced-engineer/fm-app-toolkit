@@ -9,7 +9,7 @@ from llama_index.core.base.llms.types import ChatMessage
 # ----------------------------------------------
 
 
-def test_mock_llm_chain_sequential_responses(mock_llm_factory):
+def test__mock_llm_chain__sequential_responses(mock_llm_factory):
     """Demonstrate controlling exact LLM response sequences for deterministic testing.
 
     MockLLMWithChain enables testing complex agent workflows by providing
@@ -33,7 +33,7 @@ def test_mock_llm_chain_sequential_responses(mock_llm_factory):
     assert response4.message.content == ""
 
 
-def test_mock_llm_chain_streaming_preserves_content(mock_llm_factory):
+def test__mock_llm_chain__streaming_preserves_content(mock_llm_factory):
     """Demonstrate that streaming maintains exact message formatting.
 
     Critical for testing ReAct agents where precise formatting of
@@ -58,7 +58,7 @@ def test_mock_llm_chain_streaming_preserves_content(mock_llm_factory):
     assert chunks[-1].message.content == chain[0]  # Final chunk has full content
 
 
-def test_mock_llm_chain_reset_for_test_isolation(mock_llm_factory):
+def test__mock_llm_chain__reset_for_test_isolation(mock_llm_factory):
     """Demonstrate reset capability for test isolation.
 
     Reset allows reusing the same mock instance across multiple
@@ -99,7 +99,7 @@ async def test_mock_llm_chain_async_streaming(mock_llm_factory):
 # ----------------------------------------------
 
 
-def test_mock_llm_echo_basic_echo(mock_llm_echo):
+def test__mock_llm_echo__basic_echo(mock_llm_echo):
     """Demonstrate echo behavior for testing message flow.
 
     MockLLMEchoStream is useful for testing components that process
@@ -117,7 +117,7 @@ def test_mock_llm_echo_basic_echo(mock_llm_echo):
     assert mock_llm_echo.chat([]).message.content == ""
 
 
-def test_mock_llm_echo_streaming_chunks(mock_llm_echo):
+def test__mock_llm_echo__streaming_chunks(mock_llm_echo):
     """Demonstrate chunked streaming for testing streaming handlers.
 
     Messages are split into 7-character chunks to test streaming
@@ -151,7 +151,7 @@ def test_mock_llm_echo_streaming_chunks(mock_llm_echo):
         ("A" * 20, ["A" * 7, "A" * 7, "A" * 6]),  # Multiple chunks
     ],
 )
-def test_mock_llm_echo_various_message_lengths(mock_llm_echo, content, expected_chunks):
+def test__mock_llm_echo__various_message_lengths(mock_llm_echo, content, expected_chunks):
     """Test streaming behavior with various message lengths.
 
     Validates edge cases in streaming: empty, partial, exact, and multiple chunks.
@@ -195,7 +195,7 @@ async def test_mock_llm_echo_async_cumulative_building(mock_llm_echo):
 # ----------------------------------------------
 
 
-def test_mock_llm_metadata_properties(mock_llm_factory, mock_llm_echo):
+def test__mock_llm_metadata__properties(mock_llm_factory, mock_llm_echo):
     """Verify mock LLMs provide expected metadata for compatibility."""
     # MockLLMWithChain metadata
     chain_llm = mock_llm_factory(["test"])

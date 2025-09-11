@@ -222,7 +222,7 @@ async def test_multiple_tools_selection(setup_simple_react_agent: Callable) -> N
     assert result["sources"][0] == 3
 
 
-def test_tool_creation() -> None:
+def test__tool__creation() -> None:
     """Test creating tools."""
     tool = Tool(name="calculator", function=add, description="Adds two numbers")
 
@@ -235,7 +235,7 @@ def test_tool_creation() -> None:
     assert result == 8
 
 
-def test_tool_registry() -> None:
+def test__tool__registry() -> None:
     """Test that tools are properly registered in the agent."""
     tools = [
         Tool(name="add", function=add, description="Add"),

@@ -34,7 +34,7 @@ def sample_repository(samples_dir):
 # ----------------------------------------------
 
 
-def test_load_sample_documents(sample_repository, samples_dir):
+def test__load_sample__documents(sample_repository, samples_dir):
     """Load three GenAI documents and verify metadata extraction."""
     documents = sample_repository.load_documents(location=str(samples_dir))
 
@@ -54,7 +54,7 @@ def test_load_sample_documents(sample_repository, samples_dir):
     assert "genai_evaluation_guardrails.txt" in file_names
 
 
-def test_document_metadata_extraction(sample_repository, samples_dir):
+def test__document_metadata__extraction(sample_repository, samples_dir):
     """Each document has file_name, file_path, and file_size metadata."""
     documents = sample_repository.load_documents(location=str(samples_dir))
 
@@ -76,7 +76,7 @@ def test_document_metadata_extraction(sample_repository, samples_dir):
 # ----------------------------------------------
 
 
-def test_build_simple_rag_pipeline(sample_repository, samples_dir):
+def test__build_simple__rag_pipeline(sample_repository, samples_dir):
     """Build a complete RAG pipeline: load docs → create index → query."""
     # Load documents
     documents = sample_repository.load_documents(location=str(samples_dir))
@@ -111,7 +111,7 @@ def test_build_simple_rag_pipeline(sample_repository, samples_dir):
     assert len(response.response) > 0
 
 
-def test_document_chunking_simulation(sample_repository, samples_dir):
+def test__document_chunking__simulation(sample_repository, samples_dir):
     """Split documents into paragraph chunks for granular retrieval."""
     documents = sample_repository.load_documents(location=str(samples_dir))
 
@@ -141,7 +141,7 @@ def test_document_chunking_simulation(sample_repository, samples_dir):
 # ----------------------------------------------
 
 
-def test_content_search_simulation(sample_repository, samples_dir):
+def test__content_search__simulation(sample_repository, samples_dir):
     """Keyword search ranks documents by term frequency."""
     documents = sample_repository.load_documents(location=str(samples_dir))
 
@@ -193,7 +193,7 @@ def sample_csv_data():
     )
 
 
-def test_local_repository_real_world_csv_workflow(sample_csv_data):
+def test__local_repository__real_world_csv_workflow(sample_csv_data):
     """End-to-end workflow: create CSV, load with LocalRepository, analyze data."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create realistic CSV file
@@ -231,7 +231,7 @@ def test_local_repository_real_world_csv_workflow(sample_csv_data):
         assert oldest_signup < newest_signup
 
 
-def test_local_repository_multiple_csv_files_workflow():
+def test__local_repository__multiple_csv_files_workflow():
     """Load and combine data from multiple CSV files in a workflow."""
     with tempfile.TemporaryDirectory() as temp_dir:
         repo = LocalRepository()
@@ -277,7 +277,7 @@ def test_local_repository_multiple_csv_files_workflow():
         assert len(alice_orders) == 2  # Alice has 2 orders
 
 
-def test_local_repository_csv_data_quality_checks():
+def test__local_repository__csv_data_quality_checks():
     """Integration test for data quality validation after loading."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create CSV with various data quality issues by writing directly
@@ -322,7 +322,7 @@ def test_local_repository_csv_data_quality_checks():
             pass  # Expected for invalid date formats
 
 
-def test_local_repository_performance_with_realistic_data():
+def test__local_repository__performance_with_realistic_data():
     """Test LocalRepository performance with larger, more realistic dataset."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Generate larger dataset (5000 rows)
@@ -365,7 +365,7 @@ def test_local_repository_performance_with_realistic_data():
 
 
 @pytest.mark.integration
-def test_local_repository_csv_to_document_conversion():
+def test__local_repository__csv_to_document_conversion():
     """Integration test: CSV data → Document format for RAG pipeline."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create knowledge base CSV

@@ -18,8 +18,8 @@ from fm_app_toolkit.data_loading.gcp import _parse_gcs_uri
 from fm_app_toolkit.data_loading.local import LocalRepository
 
 
-def test_local_document_repository_loads_documents():
-    """Basic document loading from filesystem."""
+def test__local_document_repository__loads_documents():
+    """Test that LocalDocumentRepository loads documents from filesystem."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test files
         test_file = Path(temp_dir) / "test.txt"
@@ -33,8 +33,8 @@ def test_local_document_repository_loads_documents():
         assert "Test content" in documents[0].text
 
 
-def test_local_document_repository_filters_extensions():
-    """Filter documents by file extension (.txt, .md, etc)."""
+def test__local_document_repository__filters_extensions():
+    """Test that LocalDocumentRepository filters documents by file extension."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test files with different extensions
         (Path(temp_dir) / "test.txt").write_text("Text file")
@@ -48,8 +48,8 @@ def test_local_document_repository_filters_extensions():
         assert all(isinstance(doc, Document) for doc in documents)
 
 
-def test_local_document_repository_recursive():
-    """Recursive vs non-recursive directory traversal."""
+def test__local_document_repository__recursive():
+    """Test that LocalDocumentRepository handles recursive directory traversal."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create nested directory structure
         root = Path(temp_dir)
@@ -69,8 +69,8 @@ def test_local_document_repository_recursive():
         assert len(documents) == 1
 
 
-def test_local_document_repository_excludes_hidden():
-    """Hidden files (starting with .) are excluded."""
+def test__local_document_repository__excludes_hidden():
+    """Test that LocalDocumentRepository excludes hidden files."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create regular and hidden files
         (Path(temp_dir) / "visible.txt").write_text("Visible")
@@ -83,7 +83,7 @@ def test_local_document_repository_excludes_hidden():
         assert "Visible" in documents[0].text
 
 
-def test_local_document_repository_file_limit():
+def test__local_document_repository__file_limit():
     """Limit number of documents loaded."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create multiple files
@@ -96,7 +96,7 @@ def test_local_document_repository_file_limit():
         assert len(documents) == 3
 
 
-def test_local_document_repository_handles_missing_directory():
+def test__local_document_repository__handles_missing_directory():
     """Missing directories raise clear errors."""
     repo = LocalDocumentRepository(input_dir="/nonexistent/directory")
 
@@ -105,7 +105,7 @@ def test_local_document_repository_handles_missing_directory():
 
 
 @patch("fm_app_toolkit.data_loading.gcp.GCSReader")
-def test_gcp_document_repository_with_key(mock_gcs_reader):
+def test__gcp_document_repository__with_key(mock_gcs_reader):
     """Load single file: gs://bucket/path/to/file.txt"""
     mock_reader_instance = MagicMock()
     mock_reader_instance.load_data.return_value = [Document(text="GCS content", metadata={"source": "gcs"})]
@@ -120,7 +120,7 @@ def test_gcp_document_repository_with_key(mock_gcs_reader):
 
 
 @patch("fm_app_toolkit.data_loading.gcp.GCSReader")
-def test_gcp_document_repository_with_prefix(mock_gcs_reader):
+def test__gcp_document_repository__with_prefix(mock_gcs_reader):
     """Load directory: gs://bucket/documents/"""
     mock_reader_instance = MagicMock()
     mock_reader_instance.load_data.return_value = [
@@ -137,7 +137,7 @@ def test_gcp_document_repository_with_prefix(mock_gcs_reader):
 
 
 @patch("fm_app_toolkit.data_loading.gcp.GCSReader")
-def test_gcp_document_repository_with_service_account(mock_gcs_reader):
+def test__gcp_document_repository__with_service_account(mock_gcs_reader):
     """Authenticate with service account credentials."""
     mock_reader_instance = MagicMock()
     mock_reader_instance.load_data.return_value = [Document(text="Authenticated content", metadata={})]
@@ -154,7 +154,7 @@ def test_gcp_document_repository_with_service_account(mock_gcs_reader):
     )
 
 
-def test_gcp_document_repository_validates_gs_uri():
+def test__gcp_document_repository__validates_gs_uri():
     """Only gs:// URIs are accepted, not s3:// or paths."""
     repo = GCPDocumentRepository()
 
@@ -168,7 +168,7 @@ def test_gcp_document_repository_validates_gs_uri():
 
 
 @patch("fm_app_toolkit.data_loading.gcp.GCSReader")
-def test_gcp_document_repository_handles_load_error(mock_gcs_reader):
+def test__gcp_document_repository__handles_load_error(mock_gcs_reader):
     """GCS errors are logged and re-raised."""
     mock_reader_instance = MagicMock()
     mock_reader_instance.load_data.side_effect = Exception("GCS error")
@@ -180,7 +180,7 @@ def test_gcp_document_repository_handles_load_error(mock_gcs_reader):
         repo.load_documents(location="gs://test-bucket/file.txt")
 
 
-def test_local_repository_validates_location_type():
+def test__local_repository__validates_location_type():
     """Pydantic validates location must be a string."""
     repo = LocalDocumentRepository(input_dir=".", recursive=True)
 
@@ -197,7 +197,7 @@ def test_local_repository_validates_location_type():
         repo.load_documents(location=["/path/to/dir"])
 
 
-def test_gcp_repository_validates_location_type():
+def test__gcp_repository__validates_location_type():
     """Pydantic validates location must be a string."""
     repo = GCPDocumentRepository()
 
@@ -210,7 +210,7 @@ def test_gcp_repository_validates_location_type():
         repo.load_documents(location={"bucket": "test"})
 
 
-def test_local_repository_constructor_validates_meaningful_params():
+def test__local_repository__constructor_validates_meaningful_params():
     """Test constructor validation for business-relevant parameter types."""
     # Invalid: input_dir must be string, not None
     with pytest.raises(ValidationError):
@@ -240,7 +240,7 @@ def test_local_repository_constructor_validates_meaningful_params():
     assert repo.num_files_limit == 10
 
 
-def test_gcp_repository_constructor_validates_service_account():
+def test__gcp_repository__constructor_validates_service_account():
     """Test service account key validation for business requirements."""
     # Invalid: service_account_key must be dict, not string
     with pytest.raises(ValidationError):
@@ -269,37 +269,37 @@ def test_gcp_repository_constructor_validates_service_account():
 # ----------------------------------------------
 
 
-def test_parse_gcs_uri_bucket_only():
+def test__parse_gcs__uri_bucket_only():
     """Parse URI with only bucket name."""
     result = _parse_gcs_uri("gs://my-bucket")
     assert result == {"bucket": "my-bucket"}
 
 
-def test_parse_gcs_uri_with_file():
+def test__parse_gcs__uri_with_file():
     """Parse URI pointing to a specific file."""
     result = _parse_gcs_uri("gs://my-bucket/path/to/file.txt")
     assert result == {"bucket": "my-bucket", "key": "path/to/file.txt"}
 
 
-def test_parse_gcs_uri_with_prefix():
+def test__parse_gcs__uri_with_prefix():
     """Parse URI with directory prefix (trailing slash)."""
     result = _parse_gcs_uri("gs://my-bucket/path/to/dir/")
     assert result == {"bucket": "my-bucket", "prefix": "path/to/dir/"}
 
 
-def test_parse_gcs_uri_single_file_no_path():
+def test__parse_gcs__uri_single_file_no_path():
     """Parse URI with file at bucket root."""
     result = _parse_gcs_uri("gs://my-bucket/file.txt")
     assert result == {"bucket": "my-bucket", "key": "file.txt"}
 
 
-def test_parse_gcs_uri_single_dir():
+def test__parse_gcs__uri_single_dir():
     """Parse URI with single directory."""
     result = _parse_gcs_uri("gs://my-bucket/dir/")
     assert result == {"bucket": "my-bucket", "prefix": "dir/"}
 
 
-def test_parse_gcs_uri_invalid_format():
+def test__parse_gcs__uri_invalid_format():
     """Invalid URI format raises ValueError."""
     with pytest.raises(ValueError, match="GCS location must start with gs://"):
         _parse_gcs_uri("s3://bucket/file.txt")
@@ -311,7 +311,7 @@ def test_parse_gcs_uri_invalid_format():
         _parse_gcs_uri("/local/path/file.txt")
 
 
-def test_parse_gcs_uri_edge_cases():
+def test__parse_gcs__uri_edge_cases():
     """Handle edge cases in URI parsing."""
     # Bucket with hyphen and numbers
     result = _parse_gcs_uri("gs://my-bucket-123")
@@ -331,13 +331,13 @@ def test_parse_gcs_uri_edge_cases():
 # ----------------------------------------------
 
 
-def test_base_repository_is_abstract():
+def test__base_repository__is_abstract():
     """BaseRepository cannot be instantiated directly."""
     with pytest.raises(TypeError, match="Can't instantiate abstract class BaseRepository"):
         BaseRepository()
 
 
-def test_base_repository_requires_load_data_implementation():
+def test__base_repository__requires_load_data_implementation():
     """Concrete implementations must implement load_data method."""
 
     class IncompleteRepository(BaseRepository):
@@ -347,7 +347,7 @@ def test_base_repository_requires_load_data_implementation():
         IncompleteRepository()
 
 
-def test_base_repository_abstract_method_signature():
+def test__base_repository__abstract_method_signature():
     """load_data method must have correct signature."""
 
     class ConcreteRepository(BaseRepository):
@@ -366,7 +366,7 @@ def test_base_repository_abstract_method_signature():
 # ----------------------------------------------
 
 
-def test_local_repository_loads_basic_csv():
+def test__local_repository__loads_basic_csv():
     """Load simple CSV file with basic data types."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test CSV
@@ -386,7 +386,7 @@ def test_local_repository_loads_basic_csv():
         assert df.loc[1, "age"] == 30
 
 
-def test_local_repository_loads_empty_csv():
+def test__local_repository__loads_empty_csv():
     """Handle CSV files with headers but no data."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "empty.csv"
@@ -402,7 +402,7 @@ def test_local_repository_loads_empty_csv():
         assert list(df.columns) == ["col1", "col2"]
 
 
-def test_local_repository_handles_completely_empty_file():
+def test__local_repository__handles_completely_empty_file():
     """Completely empty CSV files raise appropriate error."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "completely_empty.csv"
@@ -414,7 +414,7 @@ def test_local_repository_handles_completely_empty_file():
             repo.load_data(str(csv_file))
 
 
-def test_local_repository_loads_csv_with_mixed_types():
+def test__local_repository__loads_csv_with_mixed_types():
     """Load CSV with various data types (string, int, float, bool)."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "mixed.csv"
@@ -438,7 +438,7 @@ def test_local_repository_loads_csv_with_mixed_types():
         assert df.loc[2, "float"] == 3.9
 
 
-def test_local_repository_loads_csv_with_special_characters():
+def test__local_repository__loads_csv_with_special_characters():
     """Handle CSV with special characters and Unicode."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "special.csv"
@@ -453,7 +453,7 @@ def test_local_repository_loads_csv_with_special_characters():
         assert df.loc[3, "text"] == "🚀"
 
 
-def test_local_repository_loads_large_csv():
+def test__local_repository__loads_large_csv():
     """Handle larger CSV files efficiently."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "large.csv"
@@ -473,7 +473,7 @@ def test_local_repository_loads_large_csv():
         assert df.loc[999, "value"] == "value_999"
 
 
-def test_local_repository_handles_missing_file():
+def test__local_repository__handles_missing_file():
     """Missing CSV file raises appropriate error."""
     repo = LocalRepository()
 
@@ -481,7 +481,7 @@ def test_local_repository_handles_missing_file():
         repo.load_data("/nonexistent/file.csv")
 
 
-def test_local_repository_handles_invalid_csv():
+def test__local_repository__handles_invalid_csv():
     """Malformed CSV content raises appropriate error."""
     with tempfile.TemporaryDirectory() as temp_dir:
         bad_csv = Path(temp_dir) / "bad.csv"
@@ -495,7 +495,7 @@ def test_local_repository_handles_invalid_csv():
         assert isinstance(df, pd.DataFrame)  # pandas will still try to parse it
 
 
-def test_local_repository_handles_permission_denied():
+def test__local_repository__handles_permission_denied():
     """File permission errors are properly raised."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "restricted.csv"
@@ -515,7 +515,7 @@ def test_local_repository_handles_permission_denied():
             csv_file.chmod(0o644)
 
 
-def test_local_repository_loads_csv_with_null_values():
+def test__local_repository__loads_csv_with_null_values():
     """Handle CSV files containing null/NaN values."""
     with tempfile.TemporaryDirectory() as temp_dir:
         csv_file = Path(temp_dir) / "nulls.csv"
@@ -532,7 +532,7 @@ def test_local_repository_loads_csv_with_null_values():
         assert pd.isna(df.loc[2, "score"])
 
 
-def test_local_repository_inheritance():
+def test__local_repository__inheritance():
     """LocalRepository properly inherits from BaseRepository."""
     repo = LocalRepository()
     assert isinstance(repo, BaseRepository)

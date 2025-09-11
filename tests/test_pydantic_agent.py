@@ -39,8 +39,8 @@ async def test_extraction_agent_basic():
     assert "Apple" in result.output.summary
 
 
-def test_extraction_agent_sync():
-    """Test synchronous execution of extraction agent."""
+def test__extraction_agent__sync():
+    """Test that extraction agent works correctly in synchronous execution mode."""
     test_model = TestModel(
         custom_output_args={
             "entities": ["Microsoft", "Activision Blizzard"],
@@ -113,7 +113,7 @@ async def test_analysis_agent_debug_context():
     assert result.output.word_count == 3
 
 
-def test_extraction_agent_empty_lists():
+def test__extraction_agent_empty__lists():
     """Test extraction agent with empty lists in output."""
     test_model = TestModel(
         custom_output_args={

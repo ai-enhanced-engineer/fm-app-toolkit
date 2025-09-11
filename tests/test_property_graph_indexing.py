@@ -15,7 +15,7 @@ from fm_app_toolkit.indexing import PropertyGraphIndexer
 from fm_app_toolkit.testing.mocks import MockLLMWithChain
 
 
-def test_property_graph_indexer_creates_index():
+def test__property_graph_indexer__creates_index():
     """Demonstrate creating a knowledge graph from documents with relationships.
 
     PropertyGraphIndex extracts entities and relationships to build
@@ -36,7 +36,7 @@ def test_property_graph_indexer_creates_index():
     assert hasattr(index, "property_graph_store")
 
 
-def test_property_graph_with_custom_extractors():
+def test__property_graph_with__custom_extractors():
     """Demonstrate configuring custom knowledge extractors.
 
     Different extractors can be used to control how entities and
@@ -54,7 +54,7 @@ def test_property_graph_with_custom_extractors():
     assert isinstance(index, PropertyGraphIndex)
 
 
-def test_property_graph_extractor_selection():
+def test__property_graph_extractor__selection():
     """Demonstrate automatic extractor selection based on LLM availability.
 
     When an LLM is provided, more sophisticated extraction is possible.
@@ -98,7 +98,7 @@ def test_property_graph_extractor_selection():
         assert isinstance(kg_extractors[0], ImplicitPathExtractor)
 
 
-def test_property_graph_with_embeddings():
+def test__property_graph_with__embeddings():
     """Demonstrate knowledge graph with embedded nodes for similarity search.
 
     Embedding KG nodes enables vector similarity search over the graph structure,
@@ -118,7 +118,7 @@ def test_property_graph_with_embeddings():
     assert isinstance(index, PropertyGraphIndex)
 
 
-def test_property_graph_error_handling():
+def test__property_graph_error__handling():
     """Demonstrate error handling in property graph creation.
 
     Errors are logged and propagated for proper application handling.
@@ -132,7 +132,7 @@ def test_property_graph_error_handling():
         assert "Graph creation failed" in str(exc_info.value)
 
 
-def test_property_graph_indexer_validates_input_types():
+def test__property_graph_indexer__validates_input_types():
     """Demonstrate that Pydantic validates input types for PropertyGraphIndexer.
 
     The @validate_call decorator provides consistent validation across all
