@@ -20,7 +20,7 @@ from fm_app_toolkit.testing.mocks import MockLLMWithChain
 @pytest.fixture
 def samples_dir():
     """Path to test documents: RAG architecture, context construction, and guardrails."""
-    return Path(__file__).parent.parent / "fm_app_toolkit" / "test_data"
+    return Path(__file__).parent.parent.parent / "fm_app_toolkit" / "test_data"
 
 
 @pytest.fixture

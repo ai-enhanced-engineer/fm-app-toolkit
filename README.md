@@ -4,6 +4,16 @@
 
 📚 **Read more on [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)** - Deep dives into production AI patterns and practices.
 
+### 📖 Article Series: From Prototype to Production
+
+**Part 1:** [Production AI systems: A reality check - Why production thinking beats prototype culture](https://aienhancedengineer.substack.com/p/a-production-first-approach-to-ai)
+
+**Part 2:** [Production AI Systems: The Data Loading Chaos - Data abstraction for testable AI systems](https://aienhancedengineer.substack.com/p/production-ai-systems-solving-the)
+
+**Part 3.0:** [Production AI Systems: The Unit Testing Paradox](https://aienhancedengineer.substack.com/p/production-ai-systems-the-unit-testing)
+
+**Part 3.1:** Deterministically Testing Agentic Systems - Coming next week
+
 ## 🏗️ The Three-Layer AI Stack
 
 In her book [AI Engineering](https://www.oreilly.com/library/view/ai-engineering/9781098166298/), Chip Huyen describes the modern AI stack as a pyramid with **three interconnected layers**. At the foundation lies the **infrastructure layer**—the massive compute resources, GPUs, and cloud platforms that power everything above. In the middle sits the **model layer**, where foundation models like GPT, Claude, and Gemini are trained and fine-tuned. At the top, where most of us work, is the **application layer**—which, as noted in [The AI Engineering Stack](https://newsletter.pragmaticengineer.com/p/the-ai-engineering-stack), has seen **explosive growth** and is where foundation model capabilities meet real-world business needs.
@@ -30,7 +40,7 @@ One of the first challenges in building AI applications is managing multiple dat
 
 The [Repository pattern](https://www.cosmicpython.com/book/chapter_02_repository.html) solves this elegantly. Whether your data lives in cloud storage, databases, or local file systems, you write your application code once against a clean interface. We provide concrete implementations—`DocumentRepository` as the abstract base, `LocalDocumentRepository` for development and testing, and `GCPDocumentRepository` for production cloud deployments. Switch between them with a single configuration change, maintaining the "build once, deploy anywhere" philosophy that makes rapid iteration possible.
 
-*📚 Full article on this pattern coming next week at [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)*
+*📚 See Part 2 of our article series above for the full deep dive into this pattern*
 
 ### Document Indexing
 **Creating Searchable Indexes from Documents**
@@ -47,6 +57,8 @@ Our `DocumentIndexer` abstraction allows you to switch between indexing strategi
 We've all heard it: "You can't unit test LLM code." This toolkit proves that wrong. Our mock LLMs provide deterministic responses for unit tests without ever hitting the internet, making your test suite fast, reliable, and free.
 
 The framework extends LlamaIndex's base LLM class for drop-in compatibility. Use `MockLLMWithChain` for sequential multi-step workflows, `MockLLMEchoStream` for testing streaming behavior, or `RuleBasedMockLLM` for dynamic query-based responses. These mocks create a controllable "model layer" for development, enabling you to test edge cases, error conditions, and complex reasoning chains that would be impossible or prohibitively expensive with real models.
+
+*📚 See Part 3.0 of our article series for the complete testing strategy deep dive*
 
 *See [testing/README.md](fm_app_toolkit/testing/README.md) for detailed documentation*
 
@@ -100,6 +112,8 @@ result = await agent.run("This product is amazing!")
 Following the principle **"don't mock what you don't own"** from [Architecture Patterns with Python](https://www.cosmicpython.com/book/), we own the abstraction. Our mock LLMs extend framework base classes, creating clean boundaries between business logic and external services.
 
 This approach enables deterministic testing without brittle mocks. Define expected behavior with perfect control, then swap in real LLMs for production—same application code.
+
+*📚 Part 3.0 of our article series explores the theoretical foundations of this approach*
 
 ```python
 def test_business_workflow():

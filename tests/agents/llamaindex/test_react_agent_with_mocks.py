@@ -188,9 +188,7 @@ async def test__react_agent_streaming__response_collection() -> None:
     """Test that ReActAgent streaming response collection works correctly."""
     # Create a mock that will stream a response
     mock_llm = MockLLMWithChain(
-        chain=[
-            "Thought: I'll provide information about Python.\nAnswer: Python is a high-level programming language."
-        ]
+        chain=["Thought: I'll provide information about Python.\nAnswer: Python is a high-level programming language."]
     )
 
     # Create agent
