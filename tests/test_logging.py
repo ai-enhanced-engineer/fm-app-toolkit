@@ -118,7 +118,7 @@ def test__multiple_loggers__share_context(caplog: LogCaptureFixture) -> None:
         ("WARNING", "stderr", "warning", "stderr"),
     ],
 )
-def test__logging_configuration__combinations(
+def test_logging_configuration_combinations(
     caplog: LogCaptureFixture,
     monkeypatch: MonkeyPatch,
     level: str,

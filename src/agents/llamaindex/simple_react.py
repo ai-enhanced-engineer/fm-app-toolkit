@@ -414,7 +414,11 @@ class SimpleReActAgent(BaseWorkflowAgent):
 
 
 async def example_usage(llm: LLM) -> None:
-    """Demonstrate the SimpleReActAgent with sample tools."""
+    """Demonstrate the SimpleReActAgent with sample tools.
+
+    Args:
+        llm: The language model to use for the agent
+    """
     from src.agents.llamaindex.sample_tools import (
         calculate,
         get_current_time,

@@ -136,6 +136,7 @@ llamaindex-react: ## Run LlamaIndex ReAct agent with OpenAI GPT-4
 	uv run python -m $(SOURCE_DIR).agents.llamaindex.simple_react --model "openai:gpt-4"
 	$(GREEN_LINE)
 
+
 # ----------------------------
 # Local Development
 # ----------------------------
