@@ -20,15 +20,16 @@ from test_utilities import (
     assert_tool_called,
 )
 
-from fm_app_toolkit.agents.llamaindex.sample_tools import (
+from src.agents.llamaindex.sample_tools import (
     calculate,
     flip_coin,
     get_current_time,
     get_weather,
     roll_dice,
 )
-from fm_app_toolkit.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-from fm_app_toolkit.testing.mocks import MockLLMWithChain, RuleBasedMockLLM
+from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
+from src.testing.mock_chain import MockLLMWithChain
+from src.testing.mock_rule_based import RuleBasedMockLLM
 
 
 @pytest.fixture

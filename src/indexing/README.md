@@ -32,7 +32,7 @@ Extracts entities and relationships from documents to build a knowledge graph. E
 ### Vector Store Indexing
 
 ```python
-from fm_app_toolkit.indexing import VectorStoreIndexer
+from src.indexing import VectorStoreIndexer
 from llama_index.core import Document
 from llama_index.core.embeddings import MockEmbedding
 
@@ -61,8 +61,8 @@ results = retriever.retrieve("What is RAG?")
 ### Property Graph Indexing
 
 ```python
-from fm_app_toolkit.indexing import PropertyGraphIndexer
-from fm_app_toolkit.testing.mocks import MockLLMWithChain
+from src.indexing import PropertyGraphIndexer
+from src.testing.mocks import MockLLMWithChain
 
 # Create documents with relationships
 documents = [
@@ -95,7 +95,7 @@ Both indexers work with mock embeddings and LLMs for testing:
 
 ```python
 from llama_index.core.embeddings import MockEmbedding
-from fm_app_toolkit.testing.mocks import MockLLMWithChain
+from src.testing.mocks import MockLLMWithChain
 
 # Mock embedding for vector indexing
 mock_embed = MockEmbedding(embed_dim=256)

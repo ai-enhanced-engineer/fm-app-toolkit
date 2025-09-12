@@ -1,1 +1,1 @@
-"""Tests for fm_app_toolkit.agents module."""
+"""Tests for src.agents module."""

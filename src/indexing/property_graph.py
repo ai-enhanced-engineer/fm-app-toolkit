@@ -12,7 +12,7 @@ from llama_index.core.llms import LLM
 from llama_index.core.schema import TransformComponent
 from pydantic import validate_call
 
-from fm_app_toolkit.logging import get_logger
+from src.logging import get_logger
 
 from .base import DocumentIndexer
 

@@ -17,17 +17,7 @@ def stop_workflow(
     reasoning: List[BaseReasoningStep],
     chat_history: List[ChatMessage],
 ) -> StopEvent:
-    """Helper function to create a StopEvent with the final result.
-
-    Args:
-        response: The final response text
-        sources: List of sources used (e.g., tool outputs)
-        reasoning: List of reasoning steps taken
-        chat_history: The conversation history
-
-    Returns:
-        A StopEvent with the complete result
-    """
+    """Create a StopEvent with the final workflow result."""
     return StopEvent(
         result={
             "response": response,

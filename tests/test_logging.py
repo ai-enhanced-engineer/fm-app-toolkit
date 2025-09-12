@@ -10,7 +10,7 @@ import sys
 import pytest
 from pytest import LogCaptureFixture, MonkeyPatch
 
-from fm_app_toolkit.logging import (
+from src.logging import (
     LoggingContext,
     bind_contextvars,
     clear_context_fields,

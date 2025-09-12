@@ -1,1 +1,1 @@
-"""Tests for fm_app_toolkit.agents.llamaindex module."""
+"""Tests for src.agents.llamaindex module."""

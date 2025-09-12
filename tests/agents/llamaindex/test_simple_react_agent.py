@@ -13,9 +13,9 @@ from llama_index.core.agent.react.types import (
     ResponseReasoningStep,
 )
 
-from fm_app_toolkit.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-from fm_app_toolkit.testing.mocks import MockLLMWithChain
-from fm_app_toolkit.tools import add, divide, multiply, reverse_string, word_count
+from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
+from src.testing.mock_chain import MockLLMWithChain
+from src.tools import add, divide, multiply, reverse_string, word_count
 
 
 @pytest.fixture
@@ -233,23 +233,6 @@ def test__tool__creation() -> None:
     # Test that the function works
     result = tool.function(5, 3)
     assert result == 8
-
-
-def test__tool__registry() -> None:
-    """Test that tools are properly registered in the agent."""
-    tools = [
-        Tool(name="add", function=add, description="Add"),
-        Tool(name="multiply", function=multiply, description="Multiply"),
-    ]
-
-    mock_llm = MockLLMWithChain(chain=["Answer: Test"])
-    agent = SimpleReActAgent(llm=mock_llm, system_header="You are a helpful assistant.", tools=tools)
-
-    # Check registry
-    assert "add" in agent._tool_registry
-    assert "multiply" in agent._tool_registry
-    assert agent._tool_registry["add"].function == add
-    assert agent._tool_registry["multiply"].function == multiply
 
 
 @pytest.mark.asyncio

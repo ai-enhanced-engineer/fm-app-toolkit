@@ -41,8 +41,8 @@ A mock that returns responses from a predefined sequence, perfect for testing mu
 
 **Example Usage:**
 ```python
-from fm_app_toolkit.testing.mock_chain import MockLLMWithChain
-# Or: from fm_app_toolkit.testing.mocks import MockLLMWithChain
+from src.testing.mock_chain import MockLLMWithChain
+# Or: from src.testing.mocks import MockLLMWithChain
 
 # Define the sequence of LLM responses
 mock_llm = MockLLMWithChain(chain=[
@@ -78,8 +78,8 @@ A mock that echoes the user's input back, useful for testing streaming behavior.
 
 **Example Usage:**
 ```python
-from fm_app_toolkit.testing.mock_echo import MockLLMEchoStream
-# Or: from fm_app_toolkit.testing.mocks import MockLLMEchoStream
+from src.testing.mock_echo import MockLLMEchoStream
+# Or: from src.testing.mocks import MockLLMEchoStream
 
 mock_llm = MockLLMEchoStream()
 
@@ -115,8 +115,8 @@ A mock that dynamically generates responses based on configurable rules, offerin
 
 **Example Usage:**
 ```python
-from fm_app_toolkit.testing.mock_rule_based import RuleBasedMockLLM
-# Or: from fm_app_toolkit.testing.mocks import RuleBasedMockLLM
+from src.testing.mock_rule_based import RuleBasedMockLLM
+# Or: from src.testing.mocks import RuleBasedMockLLM
 
 # Define behavior rules
 rules = {
@@ -399,7 +399,7 @@ All mocks extend `llama_index.core.llms.llm.LLM`, making them drop-in replacemen
 
 ```python
 from llama_index.core.agent import ReActAgent
-from fm_app_toolkit.testing.mocks import MockLLMWithChain
+from src.testing.mocks import MockLLMWithChain
 
 # Works with any LlamaIndex component expecting an LLM
 mock_llm = MockLLMWithChain(chain=[...])

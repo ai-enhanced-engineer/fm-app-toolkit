@@ -8,18 +8,14 @@ Note: Some tools return mock data and are intended for demonstration purposes.
 import random
 from datetime import datetime, timezone
 
-from fm_app_toolkit.logging import get_logger
+from src.logging import get_logger
 
 # Module-level logger
 logger = get_logger(__name__)
 
 
 def get_current_time() -> str:
-    """Get the current date and time.
-
-    Returns:
-        Current UTC timestamp in a readable format
-    """
+    """Get the current date and time in UTC."""
     current_time = datetime.now(timezone.utc)
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S UTC")
     logger.info("Retrieved current time", timestamp=formatted_time)
@@ -27,14 +23,7 @@ def get_current_time() -> str:
 
 
 def calculate(expression: str) -> str:
-    """Perform a simple calculation.
-
-    Args:
-        expression: Mathematical expression (e.g., "2 + 2")
-
-    Returns:
-        The result of the calculation
-    """
+    """Perform a simple calculation with basic math operators."""
     try:
         # Only allow basic math characters for safety
         allowed = set("0123456789+-*/()., ")
@@ -50,14 +39,7 @@ def calculate(expression: str) -> str:
 
 
 def get_weather(location: str) -> str:
-    """Get weather for a location (mock data for demo).
-
-    Args:
-        location: City name
-
-    Returns:
-        Mock weather information
-    """
+    """Get mock weather information for a city."""
     # Simple mock data - in production, this would call a real weather API
     conditions = ["sunny", "cloudy", "rainy", "partly cloudy"]
     condition = random.choice(conditions)
@@ -68,14 +50,7 @@ def get_weather(location: str) -> str:
 
 
 def search_web(query: str) -> str:
-    """Search for information (mock results for demo).
-
-    Args:
-        query: Search query
-
-    Returns:
-        Mock search results
-    """
+    """Search for information with mock results for demo purposes."""
     # Simple mock results - in production, this would use a real search API
     results = [
         f"Found information about {query}",
@@ -88,26 +63,14 @@ def search_web(query: str) -> str:
 
 
 def create_reminder(title: str, time: str) -> str:
-    """Create a reminder (mock for demo).
-
-    Args:
-        title: What to remember
-        time: When to remind
-
-    Returns:
-        Confirmation message
-    """
+    """Create a reminder with mock confirmation for demo purposes."""
     reminder_id = f"REM-{random.randint(100, 999)}"
     logger.info("Created reminder", id=reminder_id, title=title, time=time)
     return f"✓ Reminder created: '{title}' at {time} (ID: {reminder_id})"
 
 
 def get_random_fact() -> str:
-    """Get a random interesting fact.
-
-    Returns:
-        A random fact
-    """
+    """Get a random interesting fact."""
     facts = [
         "Python was named after Monty Python, not the snake.",
         "The first computer bug was an actual moth found in a computer.",
@@ -122,14 +85,7 @@ def get_random_fact() -> str:
 
 
 def roll_dice(sides: int = 6) -> str:
-    """Roll a dice with specified number of sides.
-
-    Args:
-        sides: Number of sides on the dice (default: 6)
-
-    Returns:
-        The dice roll result
-    """
+    """Roll a dice with specified number of sides."""
     if sides < 2:
         return "Error: Dice must have at least 2 sides"
 
@@ -139,22 +95,14 @@ def roll_dice(sides: int = 6) -> str:
 
 
 def flip_coin() -> str:
-    """Flip a coin.
-
-    Returns:
-        Heads or Tails
-    """
+    """Flip a coin and return Heads or Tails."""
     result = random.choice(["Heads", "Tails"])
     logger.info("Flipped coin", result=result)
     return f"Coin flip: {result}"
 
 
 def get_joke() -> str:
-    """Get a programming joke.
-
-    Returns:
-        A programming-related joke
-    """
+    """Get a programming joke."""
     jokes = [
         "Why do programmers prefer dark mode? Because light attracts bugs!",
         "Why do Java developers wear glasses? Because they don't C#!",

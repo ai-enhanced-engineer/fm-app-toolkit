@@ -12,7 +12,7 @@ from typing import Any, Dict, List
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
-from fm_app_toolkit.tools import word_count
+from src.tools import word_count
 
 
 class AnalysisResult(BaseModel):
@@ -37,19 +37,7 @@ class AnalysisContext:
 
 
 def create_analysis_agent(model: str) -> Agent[AnalysisContext, AnalysisResult]:
-    """Create an agent that analyzes text using tools and context.
-
-    This demonstrates:
-    - Tool registration and usage
-    - Dependency injection with context
-    - Complex structured outputs
-
-    Args:
-        model: Model string specification (e.g., 'openai:gpt-4o').
-
-    Returns:
-        Agent configured for text analysis with tools.
-    """
+    """Create an agent that analyzes text using tools and context."""
     agent = Agent(
         model,
         deps_type=AnalysisContext,

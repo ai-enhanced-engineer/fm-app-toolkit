@@ -111,8 +111,8 @@ Answer: Nordic countries lead global renewable adoption with Norway at 85%...
 Let's build something immediately useful - a weather assistant that gives travel advice.
 
 ```python
-from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
-from fm_app_toolkit.testing import MockLLMWithChain
+from src.agents.llamaindex import SimpleReActAgent
+from src.testing import MockLLMWithChain
 
 # For learning: Use deterministic responses
 learning_responses = [
@@ -219,7 +219,7 @@ result.output.word_count    # Always an integer
 Perfect for APIs that need reliable data formats:
 
 ```python
-from fm_app_toolkit.agents.pydantic import create_analysis_agent
+from src.agents.pydantic import create_analysis_agent
 from pydantic_ai.models.test import TestModel
 
 # For learning: Control exact outputs
@@ -246,7 +246,7 @@ print(f"Insights: {result.output.key_insights}")      # List[str]
 ## Production Example: Data Extraction Agent  
 
 ```python
-from fm_app_toolkit.agents.pydantic import create_extraction_agent
+from src.agents.pydantic import create_extraction_agent
 
 # Extract structured data from unstructured text
 agent = create_extraction_agent(model="openai:gpt-4o")
@@ -372,7 +372,7 @@ Agents are **non-deterministic** by nature - the same input might take different
 ### LlamaIndex Testing: Control the Reasoning
 
 ```python
-from fm_app_toolkit.testing import MockLLMWithChain
+from src.testing import MockLLMWithChain
 
 def test_research_agent_handles_missing_data():
     # Test error recovery path
@@ -525,7 +525,7 @@ from pathlib import Path
 
 # Development: Use mocks for fast testing
 if os.getenv("ENVIRONMENT") == "development":
-    from fm_app_toolkit.testing import MockLLMWithChain
+    from src.testing import MockLLMWithChain
     llm = MockLLMWithChain(chain=your_test_responses)
 else:
     # Production: Use real models  

@@ -4,8 +4,9 @@ import pytest
 from llama_index.core.agent.workflow import ReActAgent
 from llama_index.core.tools import FunctionTool
 
-from fm_app_toolkit.testing.mocks import MockLLMEchoStream, MockLLMWithChain
-from fm_app_toolkit.tools import add, divide, multiply, reverse_string, word_count
+from src.testing.mock_chain import MockLLMWithChain
+from src.testing.mock_echo import MockLLMEchoStream
+from src.tools import add, divide, multiply, reverse_string, word_count
 
 
 @pytest.mark.asyncio

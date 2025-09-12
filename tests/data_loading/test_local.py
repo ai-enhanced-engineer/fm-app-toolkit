@@ -1,4 +1,4 @@
-"""Tests for fm_app_toolkit.data_loading.local module."""
+"""Tests for src.data_loading.local module."""
 
 import tempfile
 from pathlib import Path
@@ -8,9 +8,9 @@ import pytest
 from llama_index.core import Document
 from pydantic import ValidationError
 
-from fm_app_toolkit.data_loading import LocalDocumentRepository
-from fm_app_toolkit.data_loading.base import BaseRepository
-from fm_app_toolkit.data_loading.local import LocalRepository
+from src.data_loading import LocalDocumentRepository
+from src.data_loading.base import BaseRepository
+from src.data_loading.local import LocalRepository
 
 
 # LocalDocumentRepository Tests

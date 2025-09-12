@@ -6,8 +6,8 @@ retrieval, and synthesis using mock LLMs for deterministic testing.
 
 from llama_index.core.schema import NodeWithScore, TextNode
 
-from fm_app_toolkit.indexing.vector_store import VectorStoreIndexer
-from fm_app_toolkit.testing.mock_echo import MockLLMEchoStream
+from src.indexing.vector_store import VectorStoreIndexer
+from src.testing.mock_echo import MockLLMEchoStream
 
 
 def test_rag_pipeline_integration(sample_documents, mock_embed):

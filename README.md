@@ -49,7 +49,7 @@ Once you've loaded your documents, you need to make them searchable. The indexin
 
 Our `DocumentIndexer` abstraction allows you to switch between indexing strategies based on your needs. Use `VectorStoreIndexer` when you need to find semantically similar content—perfect for RAG pipelines. Choose `PropertyGraphIndexer` when you need to traverse relationships between entities—ideal for knowledge graphs. Both work seamlessly with our mock framework for deterministic testing.
 
-*See [indexing/README.md](fm_app_toolkit/indexing/README.md) for implementation details*
+*See [indexing/README.md](src/indexing/README.md) for implementation details*
 
 ### Mock LLM Framework
 **Simulating the Model Layer for Testing**
@@ -60,7 +60,7 @@ The framework extends LlamaIndex's base LLM class for drop-in compatibility. Use
 
 *📚 See Part 3.0 of our article series for the complete testing strategy deep dive*
 
-*See [testing/README.md](fm_app_toolkit/testing/README.md) for detailed documentation*
+*See [testing/README.md](src/testing/README.md) for detailed documentation*
 
 ### Agent Implementations
 **Application-Layer Orchestration**
@@ -77,8 +77,8 @@ Both approaches integrate seamlessly with your business logic through tools, han
 
 ```python
 # LlamaIndex ReAct: Step-by-step reasoning
-from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
-from fm_app_toolkit.testing import MockLLMWithChain
+from src.agents.llamaindex import SimpleReActAgent
+from src.testing import MockLLMWithChain
 
 mock_llm = MockLLMWithChain(chain=[
     "Thought: I need to calculate this.\nAction: multiply\nAction Input: {'a': 15, 'b': 7}",
@@ -90,7 +90,7 @@ result = await agent.run("What is 15 times 7 plus 23?")
 # Returns: full reasoning steps + final answer
 
 # PydanticAI: Structured output with validation  
-from fm_app_toolkit.agents.pydantic import create_analysis_agent
+from src.agents.pydantic import create_analysis_agent
 from pydantic_ai.models.test import TestModel
 
 test_model = TestModel(custom_output_args={
@@ -103,7 +103,7 @@ result = await agent.run("This product is amazing!")
 # Returns: structured AnalysisResult with validated fields
 ```
 
-*See [agents/llamaindex/README.md](fm_app_toolkit/agents/llamaindex/README.md) for ReAct implementation details and [agents/pydantic/analysis_agent.py](fm_app_toolkit/agents/pydantic/analysis_agent.py) for structured agent examples*
+*See [agents/llamaindex/README.md](src/agents/llamaindex/README.md) for ReAct implementation details and [agents/pydantic/analysis_agent.py](src/agents/pydantic/analysis_agent.py) for structured agent examples*
 
 ## 🎯 Testing Philosophy
 
@@ -156,7 +156,7 @@ make process-documents
 ### Document Loading
 
 ```python
-from fm_app_toolkit.data_loading import LocalDocumentRepository
+from src.data_loading import LocalDocumentRepository
 
 # Load documents from any directory
 repo = LocalDocumentRepository(
@@ -171,7 +171,7 @@ The key insight: **write your code once, switch data sources with configuration*
 ### Document Indexing
 
 ```python
-from fm_app_toolkit.indexing import VectorStoreIndexer, PropertyGraphIndexer
+from src.indexing import VectorStoreIndexer, PropertyGraphIndexer
 from llama_index.core.embeddings import MockEmbedding
 
 # Vector index for semantic search
@@ -187,8 +187,8 @@ graph_index = graph_indexer.create_index(documents)
 
 ```python
 # LlamaIndex ReAct: Full reasoning visibility
-from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
-from fm_app_toolkit.testing import MockLLMWithChain
+from src.agents.llamaindex import SimpleReActAgent
+from src.testing import MockLLMWithChain
 
 mock_llm = MockLLMWithChain(chain=[
     "Thought: Calculate total.\nAction: calculate_price\nAction Input: {'quantity': 5, 'unit_price': 10}",
@@ -198,7 +198,7 @@ agent = SimpleReActAgent(llm=mock_llm, tools=[calculate_price_tool])
 result = await agent.run("Price for 5 items at $10 each?")
 
 # PydanticAI: Structured output
-from fm_app_toolkit.agents.pydantic import create_analysis_agent
+from src.agents.pydantic import create_analysis_agent
 from pydantic_ai.models.test import TestModel
 
 test_model = TestModel(custom_output_args={
@@ -218,7 +218,7 @@ Develop with mocks, test with mocks, deploy with real models—same codebase:
 ```python
 def create_agent(environment="development"):
     if environment == "development":
-        from fm_app_toolkit.testing import MockLLMWithChain
+        from src.testing import MockLLMWithChain
         llm = MockLLMWithChain(chain=[...])
     else:
         from llama_index.llms.openai import OpenAI
@@ -239,7 +239,7 @@ def create_structured_agent(environment="development"):
 
 ```
 fm-app-toolkit/
-├── fm_app_toolkit/          # Main package
+├── src/          # Main package
 │   ├── agents/              # Agent implementations
 │   │   ├── llamaindex/     # ReAct pattern with LlamaIndex
 │   │   └── pydantic/       # Structured agents with PydanticAI
@@ -280,11 +280,11 @@ make process-documents  # See document loading and chunking in action
 
 The best way to understand these patterns is to see them in action. Explore our [tests/](tests/) directory for 149+ examples of real-world scenarios, or dive into the module-specific documentation:
 
-- [testing/README.md](fm_app_toolkit/testing/README.md) - Mock LLM patterns and deterministic testing
-- [agents/llamaindex/README.md](fm_app_toolkit/agents/llamaindex/README.md) - ReAct agents with step-by-step reasoning  
-- [agents/pydantic/analysis_agent.py](fm_app_toolkit/agents/pydantic/analysis_agent.py) - Structured agents with validation and Logfire observability
-- [data_loading/README.md](fm_app_toolkit/data_loading/README.md) - Repository pattern guide
-- [indexing/README.md](fm_app_toolkit/indexing/README.md) - Vector and graph indexing strategies
+- [testing/README.md](src/testing/README.md) - Mock LLM patterns and deterministic testing
+- [agents/llamaindex/README.md](src/agents/llamaindex/README.md) - ReAct agents with step-by-step reasoning  
+- [agents/pydantic/analysis_agent.py](src/agents/pydantic/analysis_agent.py) - Structured agents with validation and Logfire observability
+- [data_loading/README.md](src/data_loading/README.md) - Repository pattern guide
+- [indexing/README.md](src/indexing/README.md) - Vector and graph indexing strategies
 
 ## 🤝 Contributing
 

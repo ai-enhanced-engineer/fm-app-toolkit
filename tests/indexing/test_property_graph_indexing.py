@@ -11,8 +11,8 @@ from llama_index.core.indices.property_graph.transformations import (
 )
 from pydantic import ValidationError
 
-from fm_app_toolkit.indexing import PropertyGraphIndexer
-from fm_app_toolkit.testing.mocks import MockLLMWithChain
+from src.indexing import PropertyGraphIndexer
+from src.testing.mock_chain import MockLLMWithChain
 
 
 def test__property_graph_indexer__creates_index():

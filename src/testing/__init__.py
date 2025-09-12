@@ -10,11 +10,12 @@ Available Mocks:
 """
 
 from .mock_chain import MockLLMWithChain
-from .mock_echo import MockLLMEchoStream
+from .mock_echo import CHUNK_SIZE, MockLLMEchoStream
 from .mock_rule_based import RuleBasedMockLLM
 
 __all__ = [
     "MockLLMWithChain",
     "MockLLMEchoStream",
     "RuleBasedMockLLM",
+    "CHUNK_SIZE",
 ]

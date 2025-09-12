@@ -6,7 +6,7 @@ from llama_index.core import Document, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from pydantic import validate_call
 
-from fm_app_toolkit.logging import get_logger
+from src.logging import get_logger
 
 from .base import DocumentIndexer
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from llama_index.core.node_parser import SentenceSplitter
 
-from fm_app_toolkit.logging import get_logger
+from src.logging import get_logger
 
 from .local import LocalDocumentRepository
 

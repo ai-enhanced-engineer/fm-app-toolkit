@@ -1,1 +1,1 @@
-"""Tests for fm_app_toolkit.data_loading module."""
+"""Tests for src.data_loading module."""

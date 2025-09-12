@@ -25,16 +25,7 @@ class DataExtraction(BaseModel):
 
 
 def create_extraction_agent(model: str) -> Agent[None, DataExtraction]:
-    """Create an agent that extracts structured data from unstructured text.
-
-    This demonstrates Pydantic validation of complex nested structures.
-
-    Args:
-        model: Model string specification (e.g., 'openai:gpt-4o').
-
-    Returns:
-        Agent configured for data extraction.
-    """
+    """Create an agent that extracts structured data from unstructured text."""
     return Agent(
         model,
         output_type=DataExtraction,

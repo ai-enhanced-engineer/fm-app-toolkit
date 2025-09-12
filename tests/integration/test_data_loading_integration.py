@@ -8,9 +8,9 @@ import pytest
 from llama_index.core import Document, Settings, VectorStoreIndex
 from llama_index.core.embeddings import MockEmbedding
 
-from fm_app_toolkit.data_loading import LocalDocumentRepository
-from fm_app_toolkit.data_loading.local import LocalRepository
-from fm_app_toolkit.testing.mocks import MockLLMWithChain
+from src.data_loading import LocalDocumentRepository
+from src.data_loading.local import LocalRepository
+from src.testing.mock_chain import MockLLMWithChain
 
 # ----------------------------------------------
 # FIXTURES
@@ -20,7 +20,7 @@ from fm_app_toolkit.testing.mocks import MockLLMWithChain
 @pytest.fixture
 def samples_dir():
     """Path to test documents: RAG architecture, context construction, and guardrails."""
-    return Path(__file__).parent.parent.parent / "fm_app_toolkit" / "test_data"
+    return Path(__file__).parent.parent.parent / "src" / "test_data"
 
 
 @pytest.fixture

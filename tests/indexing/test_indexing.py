@@ -7,9 +7,9 @@ from llama_index.core import Document, VectorStoreIndex
 from llama_index.core.embeddings.mock_embed_model import MockEmbedding
 from pydantic import ValidationError
 
-from fm_app_toolkit.indexing import DocumentIndexer, PropertyGraphIndexer, VectorStoreIndexer
-from fm_app_toolkit.indexing.property_graph import _select_extractors
-from fm_app_toolkit.testing.mocks import MockLLMWithChain
+from src.indexing import DocumentIndexer, PropertyGraphIndexer, VectorStoreIndexer
+from src.indexing.property_graph import _select_extractors
+from src.testing.mock_chain import MockLLMWithChain
 
 
 def test__vector_store_indexer__creates_index():

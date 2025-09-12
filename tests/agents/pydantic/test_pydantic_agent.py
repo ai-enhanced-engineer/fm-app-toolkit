@@ -10,9 +10,9 @@ This module shows how to test PydanticAI agents using TestModel for:
 import pytest
 from pydantic_ai.models.test import TestModel
 
-from fm_app_toolkit.agents.pydantic import create_extraction_agent
-from fm_app_toolkit.agents.pydantic.analysis_agent import AnalysisContext, AnalysisResult, create_analysis_agent
-from fm_app_toolkit.agents.pydantic.extraction_agent import DataExtraction
+from src.agents.pydantic import create_extraction_agent
+from src.agents.pydantic.analysis_agent import AnalysisContext, AnalysisResult, create_analysis_agent
+from src.agents.pydantic.extraction_agent import DataExtraction
 
 
 # Test basic agent creation and structured output

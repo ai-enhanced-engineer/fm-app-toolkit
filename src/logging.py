@@ -167,20 +167,12 @@ def bind_contextvars(**kwargs: Any) -> None:
 
 
 def get_contextvars() -> dict[str, Any]:
-    """Get all context variables from the current context.
-
-    Returns:
-        Dictionary of all context variables in the current context.
-    """
+    """Get all context variables from the current context."""
     return structlog.contextvars.get_contextvars()
 
 
 def get_correlation_id() -> str:
-    """Get correlation ID from context or return default.
-
-    Returns:
-        The correlation_id from context, or "unknown" if not found.
-    """
+    """Get correlation ID from context or return 'unknown' if not found."""
     contextvars = structlog.contextvars.get_contextvars()
     return str(contextvars.get("correlation_id", "unknown"))
 
@@ -190,14 +182,7 @@ _configured = False
 
 
 def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
-    """Get a structured logger instance.
-
-    Args:
-        name: The name of the logger. If empty, uses the module name.
-
-    Returns:
-        A configured structlog BoundLogger instance.
-    """
+    """Get a configured structlog BoundLogger instance."""
     global _configured
     if not _configured:
         configure_structlog()
@@ -205,4 +190,4 @@ def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
 
     if not name:
         name = __name__
-    return structlog.get_logger(name)  # type: ignore
+    return structlog.get_logger(name)  # type: ignore  # type: ignore

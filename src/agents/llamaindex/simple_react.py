@@ -38,7 +38,7 @@ from llama_index.core.tools import (
 )
 from llama_index.core.workflow import Context
 
-from fm_app_toolkit.logging import get_logger
+from src.logging import get_logger
 
 # Get logger for this module
 logger = get_logger(__name__)
@@ -80,17 +80,6 @@ class SimpleReActAgent(BaseWorkflowAgent):
         verbose: bool = False,
         **kwargs: Any,
     ) -> None:
-        """Initialize the ReAct agent.
-
-        Args:
-            llm: The language model to use for reasoning
-            system_header: The system prompt/header for the agent
-            extra_context: Additional context to include in prompts
-            max_reasoning: Maximum reasoning iterations before stopping (default: 15)
-            tools: List of available tools
-            verbose: Whether to print reasoning steps
-            **kwargs: Additional BaseWorkflowAgent arguments
-        """
         # Convert our Tool objects to FunctionTools for BaseWorkflowAgent
         function_tools: List[Union[FunctionTool, Callable[..., Any]]] = []
         if tools:
@@ -135,30 +124,6 @@ class SimpleReActAgent(BaseWorkflowAgent):
 
         # Initialize parser - using LlamaIndex's built-in ReActOutputParser
         self._output_parser = ReActOutputParser()
-
-    @property
-    def _tool_registry(self) -> dict[str, Any]:
-        """Provide backward compatibility for accessing tools as a registry.
-
-        This property creates a tool registry from BaseWorkflowAgent's tools.
-        Returns Tool-like objects that have a 'function' attribute for compatibility.
-        """
-        registry = {}
-        if self.tools:
-            for tool in self.tools:
-                name = tool.metadata.name if hasattr(tool, "metadata") else getattr(tool, "name", "")
-                # Create a simple wrapper that looks like our original Tool
-                if hasattr(tool, "fn"):
-                    # FunctionTool case - wrap it to look like our Tool
-                    # Create a simple object with attributes (not methods)
-                    wrapper = type("ToolWrapper", (), {})()
-                    wrapper.name = name
-                    wrapper.function = tool.fn  # Store the actual function, not a method
-                    wrapper.description = tool.metadata.description if hasattr(tool, "metadata") else ""
-                    registry[name] = wrapper
-                else:
-                    registry[name] = tool
-        return cast(dict[str, Any], registry)
 
     async def take_step(
         self,
@@ -300,13 +265,7 @@ class SimpleReActAgent(BaseWorkflowAgent):
         )
 
     async def handle_tool_call_results(self, ctx: Context, results: List[ToolCallResult], memory: BaseMemory) -> None:
-        """Handle tool call results by adding observations to reasoning.
-
-        Args:
-            ctx: The workflow context
-            results: List of tool call results
-            memory: The agent's memory
-        """
+        """Handle tool call results by adding observations to reasoning."""
         # Get current reasoning from context
         current_reasoning: List[BaseReasoningStep] = await ctx.store.get(CTX_CURRENT_REASONING, default=[])
 
@@ -353,21 +312,7 @@ class SimpleReActAgent(BaseWorkflowAgent):
         await ctx.store.set(CTX_SOURCES, sources)
 
     async def finalize(self, ctx: Context, output: AgentOutput, memory: BaseMemory) -> AgentOutput:
-        """Finalize the agent's execution.
-
-        This method:
-        1. Stores the complete reasoning chain in memory
-        2. Cleans up the response (removes "Answer:" prefix)
-        3. Clears the reasoning context for next interaction
-
-        Args:
-            ctx: The workflow context
-            output: The agent's output
-            memory: The agent's memory
-
-        Returns:
-            Finalized AgentOutput
-        """
+        """Store reasoning chain in memory and clean up response format."""
         # Get current reasoning from context
         current_reasoning: List[BaseReasoningStep] = await ctx.store.get(CTX_CURRENT_REASONING, default=[])
 
@@ -398,21 +343,7 @@ class SimpleReActAgent(BaseWorkflowAgent):
         return output
 
     def _get_context(self, handler: Any) -> Optional[Context]:
-        """Get context from handler using multiple fallback strategies.
-
-        The context can be stored in different locations depending on the
-        workflow implementation. This method tries common patterns:
-        1. handler.ctx - Direct context attribute
-        2. handler._context - Private context attribute
-        3. handler.workflow._context - Context via workflow reference
-        4. self._context - Context from the workflow instance itself
-
-        Args:
-            handler: The handler object that may contain context
-
-        Returns:
-            Context object if found, None otherwise
-        """
+        """Get context from handler using multiple fallback strategies."""
         # Try direct context attribute (most common)
         if hasattr(handler, "ctx"):
             return cast(Optional[Context], handler.ctx)
@@ -432,30 +363,10 @@ class SimpleReActAgent(BaseWorkflowAgent):
         return None
 
     async def get_results_from_handler(self, handler: Any) -> dict[str, Any]:
-        """Extract results from a WorkflowHandler for testing/debugging.
-
-        This utility method shows how to work with WorkflowHandler results
-        in production code. It processes the handler's events and extracts
-        the response, reasoning steps, sources, and chat history.
-
-        Args:
-            handler: The WorkflowHandler returned by run()
-
-        Returns:
-            Dictionary containing:
-                - response: The agent's response string
-                - sources: List of tool outputs used
-                - reasoning: List of reasoning steps taken
-                - chat_history: The conversation history
-
-        Example:
-            >>> handler = agent.run(user_msg="What is 2 + 2?")
-            >>> results = await agent.get_results_from_handler(handler)
-            >>> print(results["response"])  # "The answer is 4"
-        """
+        """Extract results from a WorkflowHandler for testing and production use."""
 
         # Process all events
-        async for event in handler.stream_events():
+        async for _ in handler.stream_events():
             pass
 
         # Get the final result
@@ -503,12 +414,8 @@ class SimpleReActAgent(BaseWorkflowAgent):
 
 
 async def example_usage(llm: LLM) -> None:
-    """Demonstrate the SimpleReActAgent with sample tools.
-
-    Args:
-        llm: The language model to use for the agent
-    """
-    from fm_app_toolkit.agents.llamaindex.sample_tools import (
+    """Demonstrate the SimpleReActAgent with sample tools."""
+    from src.agents.llamaindex.sample_tools import (
         calculate,
         get_current_time,
         get_weather,
@@ -657,7 +564,7 @@ if __name__ == "__main__":
     # Run custom query or examples
     if args.query:
         # Custom query mode
-        from fm_app_toolkit.agents.llamaindex.sample_tools import (
+        from src.agents.llamaindex.sample_tools import (
             calculate,
             get_current_time,
             get_weather,

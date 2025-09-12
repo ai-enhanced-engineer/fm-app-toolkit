@@ -34,7 +34,7 @@ make process-documents
 
 ### Document Loading
 ```python
-from fm_app_toolkit.data_loading import LocalDocumentRepository
+from src.data_loading import LocalDocumentRepository
 
 repo = LocalDocumentRepository(input_dir="./data")
 documents = repo.load_documents(location="./data")
@@ -42,7 +42,7 @@ documents = repo.load_documents(location="./data")
 
 ### CSV Data Loading  
 ```python
-from fm_app_toolkit.data_loading import LocalRepository
+from src.data_loading import LocalRepository
 
 repo = LocalRepository()
 df = repo.load_data("./data/customers.csv")

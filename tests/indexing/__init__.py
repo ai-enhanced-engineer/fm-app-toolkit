@@ -1,1 +1,1 @@
-"""Tests for fm_app_toolkit.indexing module."""
+"""Tests for src.indexing module."""

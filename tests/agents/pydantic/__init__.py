@@ -1,1 +1,1 @@
-"""Tests for fm_app_toolkit.agents.pydantic module."""
+"""Tests for src.agents.pydantic module."""

@@ -1,4 +1,4 @@
-"""Tests for fm_app_toolkit.data_loading.gcp module."""
+"""Tests for src.data_loading.gcp module."""
 
 from unittest.mock import MagicMock, patch
 
@@ -6,12 +6,12 @@ import pytest
 from llama_index.core import Document
 from pydantic import ValidationError
 
-from fm_app_toolkit.data_loading import GCPDocumentRepository
-from fm_app_toolkit.data_loading.gcp import _parse_gcs_uri
+from src.data_loading import GCPDocumentRepository
+from src.data_loading.gcp import _parse_gcs_uri
 
 
 # GCPDocumentRepository Tests
-@patch("fm_app_toolkit.data_loading.gcp.GCSReader")
+@patch("src.data_loading.gcp.GCSReader")
 def test__gcp_document_repository__with_key(mock_gcs_reader):
     """Load single file: gs://bucket/path/to/file.txt"""
     mock_reader_instance = MagicMock()
@@ -26,7 +26,7 @@ def test__gcp_document_repository__with_key(mock_gcs_reader):
     mock_gcs_reader.assert_called_once_with(bucket="test-bucket", key="path/to/file.txt")
 
 
-@patch("fm_app_toolkit.data_loading.gcp.GCSReader")
+@patch("src.data_loading.gcp.GCSReader")
 def test__gcp_document_repository__with_prefix(mock_gcs_reader):
     """Load directory: gs://bucket/documents/"""
     mock_reader_instance = MagicMock()
@@ -43,7 +43,7 @@ def test__gcp_document_repository__with_prefix(mock_gcs_reader):
     mock_gcs_reader.assert_called_once_with(bucket="test-bucket", prefix="documents/")
 
 
-@patch("fm_app_toolkit.data_loading.gcp.GCSReader")
+@patch("src.data_loading.gcp.GCSReader")
 def test__gcp_document_repository__with_service_account(mock_gcs_reader):
     """Authenticate with service account credentials."""
     mock_reader_instance = MagicMock()
@@ -74,7 +74,7 @@ def test__gcp_document_repository__validates_gs_uri():
         repo.load_documents(location="bucket/file.txt")
 
 
-@patch("fm_app_toolkit.data_loading.gcp.GCSReader")
+@patch("src.data_loading.gcp.GCSReader")
 def test__gcp_document_repository__handles_load_error(mock_gcs_reader):
     """GCS errors are logged and re-raised."""
     mock_reader_instance = MagicMock()

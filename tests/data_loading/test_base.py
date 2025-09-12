@@ -1,9 +1,9 @@
-"""Tests for fm_app_toolkit.data_loading.base module."""
+"""Tests for src.data_loading.base module."""
 
 import pandas as pd
 import pytest
 
-from fm_app_toolkit.data_loading.base import BaseRepository
+from src.data_loading.base import BaseRepository
 
 
 def test__base_repository__is_abstract():
