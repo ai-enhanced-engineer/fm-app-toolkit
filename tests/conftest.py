@@ -11,9 +11,10 @@ import pytest
 from llama_index.core import Document
 from llama_index.core.embeddings.mock_embed_model import MockEmbedding
 
-from fm_app_toolkit.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-from fm_app_toolkit.data_loading import LocalDocumentRepository
-from fm_app_toolkit.testing.mocks import MockLLMEchoStream, MockLLMWithChain
+from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
+from src.data_loading import LocalDocumentRepository
+from src.testing.mock_chain import MockLLMWithChain
+from src.testing.mock_echo import MockLLMEchoStream
 
 # ----------------------------------------------
 # PATH FIXTURES
@@ -23,7 +24,7 @@ from fm_app_toolkit.testing.mocks import MockLLMEchoStream, MockLLMWithChain
 @pytest.fixture
 def test_data_dir() -> Path:
     """Path to the test data directory containing sample documents."""
-    return Path(__file__).parent.parent / "fm_app_toolkit" / "test_data"
+    return Path(__file__).parent.parent / "src" / "test_data"
 
 
 # ----------------------------------------------
@@ -107,7 +108,7 @@ def create_simple_agent() -> Callable:
 @pytest.fixture
 def sample_tools() -> list[Tool]:
     """Common test tools for agent testing."""
-    from fm_app_toolkit.tools import add, multiply
+    from src.tools import add, multiply
 
     return [
         Tool(name="add", fn=add, description="Add two numbers"),

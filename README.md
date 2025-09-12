@@ -4,6 +4,16 @@
 
 📚 **Read more on [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)** - Deep dives into production AI patterns and practices.
 
+### 📖 Article Series: From Prototype to Production
+
+**Part 1:** [Production AI systems: A reality check - Why production thinking beats prototype culture](https://aienhancedengineer.substack.com/p/a-production-first-approach-to-ai)
+
+**Part 2:** [Production AI Systems: The Data Loading Chaos - Data abstraction for testable AI systems](https://aienhancedengineer.substack.com/p/production-ai-systems-solving-the)
+
+**Part 3.0:** [Production AI Systems: The Unit Testing Paradox](https://aienhancedengineer.substack.com/p/production-ai-systems-the-unit-testing)
+
+**Part 3.1:** Deterministically Testing Agentic Systems - Coming next week
+
 ## 🏗️ The Three-Layer AI Stack
 
 In her book [AI Engineering](https://www.oreilly.com/library/view/ai-engineering/9781098166298/), Chip Huyen describes the modern AI stack as a pyramid with **three interconnected layers**. At the foundation lies the **infrastructure layer**—the massive compute resources, GPUs, and cloud platforms that power everything above. In the middle sits the **model layer**, where foundation models like GPT, Claude, and Gemini are trained and fine-tuned. At the top, where most of us work, is the **application layer**—which, as noted in [The AI Engineering Stack](https://newsletter.pragmaticengineer.com/p/the-ai-engineering-stack), has seen **explosive growth** and is where foundation model capabilities meet real-world business needs.
@@ -30,7 +40,7 @@ One of the first challenges in building AI applications is managing multiple dat
 
 The [Repository pattern](https://www.cosmicpython.com/book/chapter_02_repository.html) solves this elegantly. Whether your data lives in cloud storage, databases, or local file systems, you write your application code once against a clean interface. We provide concrete implementations—`DocumentRepository` as the abstract base, `LocalDocumentRepository` for development and testing, and `GCPDocumentRepository` for production cloud deployments. Switch between them with a single configuration change, maintaining the "build once, deploy anywhere" philosophy that makes rapid iteration possible.
 
-*📚 Full article on this pattern coming next week at [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)*
+*📚 See Part 2 of our article series above for the full deep dive into this pattern*
 
 ### Document Indexing
 **Creating Searchable Indexes from Documents**
@@ -39,7 +49,7 @@ Once you've loaded your documents, you need to make them searchable. The indexin
 
 Our `DocumentIndexer` abstraction allows you to switch between indexing strategies based on your needs. Use `VectorStoreIndexer` when you need to find semantically similar content—perfect for RAG pipelines. Choose `PropertyGraphIndexer` when you need to traverse relationships between entities—ideal for knowledge graphs. Both work seamlessly with our mock framework for deterministic testing.
 
-*See [indexing/README.md](fm_app_toolkit/indexing/README.md) for implementation details*
+*See [indexing/README.md](src/indexing/README.md) for implementation details*
 
 ### Mock LLM Framework
 **Simulating the Model Layer for Testing**
@@ -48,7 +58,9 @@ We've all heard it: "You can't unit test LLM code." This toolkit proves that wro
 
 The framework extends LlamaIndex's base LLM class for drop-in compatibility. Use `MockLLMWithChain` for sequential multi-step workflows, `MockLLMEchoStream` for testing streaming behavior, or `RuleBasedMockLLM` for dynamic query-based responses. These mocks create a controllable "model layer" for development, enabling you to test edge cases, error conditions, and complex reasoning chains that would be impossible or prohibitively expensive with real models.
 
-*See [testing/README.md](fm_app_toolkit/testing/README.md) for detailed documentation*
+*📚 See Part 3.0 of our article series for the complete testing strategy deep dive*
+
+*See [testing/README.md](src/testing/README.md) for detailed documentation*
 
 ### Agent Implementations
 **Application-Layer Orchestration**
@@ -65,8 +77,8 @@ Both approaches integrate seamlessly with your business logic through tools, han
 
 ```python
 # LlamaIndex ReAct: Step-by-step reasoning
-from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
-from fm_app_toolkit.testing import MockLLMWithChain
+from src.agents.llamaindex import SimpleReActAgent
+from src.testing import MockLLMWithChain
 
 mock_llm = MockLLMWithChain(chain=[
     "Thought: I need to calculate this.\nAction: multiply\nAction Input: {'a': 15, 'b': 7}",
@@ -78,7 +90,7 @@ result = await agent.run("What is 15 times 7 plus 23?")
 # Returns: full reasoning steps + final answer
 
 # PydanticAI: Structured output with validation  
-from fm_app_toolkit.agents.pydantic import create_analysis_agent
+from src.agents.pydantic import create_analysis_agent
 from pydantic_ai.models.test import TestModel
 
 test_model = TestModel(custom_output_args={
@@ -91,7 +103,7 @@ result = await agent.run("This product is amazing!")
 # Returns: structured AnalysisResult with validated fields
 ```
 
-*See [agents/llamaindex/README.md](fm_app_toolkit/agents/llamaindex/README.md) for ReAct implementation details and [agents/pydantic/analysis_agent.py](fm_app_toolkit/agents/pydantic/analysis_agent.py) for structured agent examples*
+*See [agents/llamaindex/README.md](src/agents/llamaindex/README.md) for ReAct implementation details and [agents/pydantic/analysis_agent.py](src/agents/pydantic/analysis_agent.py) for structured agent examples*
 
 ## 🎯 Testing Philosophy
 
@@ -100,6 +112,8 @@ result = await agent.run("This product is amazing!")
 Following the principle **"don't mock what you don't own"** from [Architecture Patterns with Python](https://www.cosmicpython.com/book/), we own the abstraction. Our mock LLMs extend framework base classes, creating clean boundaries between business logic and external services.
 
 This approach enables deterministic testing without brittle mocks. Define expected behavior with perfect control, then swap in real LLMs for production—same application code.
+
+*📚 Part 3.0 of our article series explores the theoretical foundations of this approach*
 
 ```python
 def test_business_workflow():
@@ -116,85 +130,6 @@ def test_business_workflow():
     assert len(result["sources"]) == 2
 ```
 
-*See [tests/](tests/) for 149+ test cases demonstrating these patterns.*
-
-## ⚡ Quick Start
-
-### Prerequisites
-• Python 3.12+
-• Make
-
-### Installation
-
-```bash
-# Create environment and install dependencies
-make environment-create
-
-# Run tests to verify setup
-make unit-test
-
-# See document loading and chunking in action
-make process-documents
-```
-
-## Basic Usage
-
-### Document Loading
-
-```python
-from fm_app_toolkit.data_loading import LocalDocumentRepository
-
-# Load documents from any directory
-repo = LocalDocumentRepository(
-    input_dir="./docs", 
-    required_exts=[".txt", ".md"]
-)
-documents = repo.load_documents(location="./docs")
-```
-
-The key insight: **write your code once, switch data sources with configuration**. The same `load_documents()` call works whether your data is local, in GCS, or anywhere else. See it working: `make process-documents`
-
-### Document Indexing
-
-```python
-from fm_app_toolkit.indexing import VectorStoreIndexer, PropertyGraphIndexer
-from llama_index.core.embeddings import MockEmbedding
-
-# Vector index for semantic search
-vector_indexer = VectorStoreIndexer()
-vector_index = vector_indexer.create_index(documents, embed_model=MockEmbedding(embed_dim=256))
-
-# Property graph for relationship queries
-graph_indexer = PropertyGraphIndexer()
-graph_index = graph_indexer.create_index(documents)
-```
-
-### Agents with Deterministic Testing
-
-```python
-# LlamaIndex ReAct: Full reasoning visibility
-from fm_app_toolkit.agents.llamaindex import SimpleReActAgent
-from fm_app_toolkit.testing import MockLLMWithChain
-
-mock_llm = MockLLMWithChain(chain=[
-    "Thought: Calculate total.\nAction: calculate_price\nAction Input: {'quantity': 5, 'unit_price': 10}",
-    "Thought: Apply discount.\nAnswer: Total is $45 with 10% discount"
-])
-agent = SimpleReActAgent(llm=mock_llm, tools=[calculate_price_tool])
-result = await agent.run("Price for 5 items at $10 each?")
-
-# PydanticAI: Structured output
-from fm_app_toolkit.agents.pydantic import create_analysis_agent
-from pydantic_ai.models.test import TestModel
-
-test_model = TestModel(custom_output_args={
-    "sentiment": "positive", "confidence": 0.9, "word_count": 8
-})
-agent = create_analysis_agent(model=test_model)
-result = await agent.run("Great service and fast delivery!")
-# result.output.sentiment == "positive", result.output.confidence == 0.9
-```
-
 ## 🏭 Production Patterns
 
 ### Environment-Based Configuration
@@ -204,7 +139,7 @@ Develop with mocks, test with mocks, deploy with real models—same codebase:
 ```python
 def create_agent(environment="development"):
     if environment == "development":
-        from fm_app_toolkit.testing import MockLLMWithChain
+        from src.testing import MockLLMWithChain
         llm = MockLLMWithChain(chain=[...])
     else:
         from llama_index.llms.openai import OpenAI
@@ -225,7 +160,7 @@ def create_structured_agent(environment="development"):
 
 ```
 fm-app-toolkit/
-├── fm_app_toolkit/          # Main package
+├── src/          # Main package
 │   ├── agents/              # Agent implementations
 │   │   ├── llamaindex/     # ReAct pattern with LlamaIndex
 │   │   └── pydantic/       # Structured agents with PydanticAI
@@ -266,11 +201,11 @@ make process-documents  # See document loading and chunking in action
 
 The best way to understand these patterns is to see them in action. Explore our [tests/](tests/) directory for 149+ examples of real-world scenarios, or dive into the module-specific documentation:
 
-- [testing/README.md](fm_app_toolkit/testing/README.md) - Mock LLM patterns and deterministic testing
-- [agents/llamaindex/README.md](fm_app_toolkit/agents/llamaindex/README.md) - ReAct agents with step-by-step reasoning  
-- [agents/pydantic/analysis_agent.py](fm_app_toolkit/agents/pydantic/analysis_agent.py) - Structured agents with validation and Logfire observability
-- [data_loading/README.md](fm_app_toolkit/data_loading/README.md) - Repository pattern guide
-- [indexing/README.md](fm_app_toolkit/indexing/README.md) - Vector and graph indexing strategies
+- [testing/README.md](src/testing/README.md) - Mock LLM patterns and deterministic testing
+- [agents/llamaindex/README.md](src/agents/llamaindex/README.md) - ReAct agents with step-by-step reasoning  
+- [agents/pydantic/analysis_agent.py](src/agents/pydantic/analysis_agent.py) - Structured agents with validation and Logfire observability
+- [data_loading/README.md](src/data_loading/README.md) - Repository pattern guide
+- [indexing/README.md](src/indexing/README.md) - Vector and graph indexing strategies
 
 ## 🤝 Contributing
 

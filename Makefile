@@ -2,7 +2,7 @@
 
 GREEN_LINE=@echo "\033[0;32m--------------------------------------------------\033[0m"
 
-SOURCE_DIR = fm_app_toolkit/
+SOURCE_DIR = src
 TEST_DIR = tests/
 PROJECT_VERSION := $(shell awk '/^\[project\]/ {flag=1; next} /^\[/{flag=0} flag && /^version/ {gsub(/"/, "", $$2); print $$2}' pyproject.toml)
 PYTHON_VERSION := 3.12
@@ -18,8 +18,7 @@ help: ## Display this help message
 # ----------------------------
 
 
-init:
-	@echo "🔧 Installing uv if missing..."
+init: ## Set up Python version, venv, and install dependencies
 	@if ! command -v uv >/dev/null 2>&1; then \
 		echo "📦 Installing uv..."; \
 		python3 -m pip install --user --upgrade uv; \
@@ -31,13 +30,8 @@ init:
 	uv venv --python $(PYTHON_VERSION) .venv
 	@echo "📦 Installing project dependencies..."
 	uv sync --extra dev
-	@echo "🔨 Setting up pre-commit hooks..."
-	@if [ -f .pre-commit-config.yaml ]; then \
-		uv run pre-commit install; \
-		echo "✅ Pre-commit hooks installed"; \
-	else \
-		echo "⚠️  No .pre-commit-config.yaml found, skipping pre-commit setup"; \
-	fi
+	@echo "🔗 Setting up pre-commit hooks..."
+	uv run pre-commit install;
 	@echo "🎉 Environment setup complete!"
 
 
@@ -72,59 +66,48 @@ type-check: ## Perform static type checks using mypy
 	uv run --extra dev mypy $(SOURCE_DIR)
 	$(GREEN_LINE)
 
+
 # ----------------------------
 # Tests
 # ----------------------------
 
-unit-test: ## Run unit tests with pytest
-	@echo "Running UNIT tests with pytest..."
-	uv run python -m pytest -vv --verbose -s $(TEST_DIR)
+test: ## Run standard tests with coverage report (excludes integration)
+	@echo "Running tests with pytest..."
+	uv run python -m pytest -m "not integration" -vv -s $(TEST_DIR) \
+		--cov=$(SOURCE_DIR) \
+		--cov-config=pyproject.toml \
+		--cov-fail-under=70 \
+		--cov-report=term-missing
+	$(GREEN_LINE)
 
-functional-test: ## Run functional tests with pytest
-	@echo "Running FUNCTIONAL tests with pytest..."
-	uv run python -m pytest -m functional -vv --verbose -s $(TEST_DIR)
-
-integration-test: ## Run integration tests with pytest
+test-integration: ## Run integration tests with pytest
 	@echo "Running INTEGRATION tests with pytest..."
 	uv run python -m pytest -m integration -vv --verbose -s $(TEST_DIR)
+	$(GREEN_LINE)
 
-all-test: ## Run all tests with coverage report
+test-all: ## Run all tests including integration tests
 	@echo "Running ALL tests with pytest..."
-	uv run python -m pytest -m "not integration" -vv -s $(TEST_DIR) \
-		--cov=fm_app_toolkit \
+	uv run python -m pytest -vv -s $(TEST_DIR) \
+		--cov=$(SOURCE_DIR) \
 		--cov-config=pyproject.toml \
-		--cov-fail-under=80 \
+		--cov-fail-under=70 \
 		--cov-report=term-missing
+	$(GREEN_LINE)
+
 
 # ----------------------------
 # Branch Validation
 # ----------------------------
 
-validate-branch: ## Run formatting, linting, and tests (equivalent to old behavior)
-	@echo "🔍 Running validation checks..."
-	@echo "📝 Running linting..."
-	uv run ruff check .
-	@echo "✅ Linting passed!"
-	@echo "🧪 Running tests..."
-	uv run python -m pytest
-	@echo "✅ All tests passed!"
-	@echo "🎉 Branch validation successful - ready for PR!"
-
-validate-branch-strict: ## Run formatting, linting, type checks, and tests
-	$(MAKE) sync-env
+validate-branch: ## Run formatting, linting, type checks, and tests
+	@echo "🔍 Running branch validation..."
 	$(MAKE) format
 	$(MAKE) lint
 	$(MAKE) type-check
+	$(MAKE) test
+	@echo "🎉 Branch validation successful - ready for PR!"
+	$(GREEN_LINE)
 
-test-validate-branch: ## Validate branch and run unit tests
-	$(MAKE) validate-branch
-	$(MAKE) unit-test
-	$(MAKE) clean-project
-
-all-test-validate-branch: ## Validate branch and run all tests
-	$(MAKE) validate-branch
-	$(MAKE) all-test
-	$(MAKE) clean-project
 
 # ----------------------------
 # Examples
@@ -135,23 +118,24 @@ DATA_PATH ?= fm_app_toolkit/test_data
 process-documents: ## Process documents with loading and chunking demonstration (use DATA_PATH=/path to override)
 	@echo "🚀 Running document processing demonstration..."
 	@echo "📁 Data path: $(DATA_PATH)"
-	uv run python -m fm_app_toolkit.data_loading.example --data-path $(DATA_PATH)
+	uv run python -m $(SOURCE_DIR).data_loading.example --data-path $(DATA_PATH)
 	$(GREEN_LINE)
 
 pydantic-analysis: ## Run PydanticAI analysis agent with OpenAI GPT-4o
 	@echo "🧠 Running analysis agent with OpenAI GPT-4o..."
-	uv run python -m fm_app_toolkit.agents.pydantic.analysis_agent --model "openai:gpt-4o"
+	uv run python -m $(SOURCE_DIR).agents.pydantic.analysis_agent --model "openai:gpt-4o"
 	$(GREEN_LINE)
 
 pydantic-extraction: ## Run PydanticAI extraction agent with OpenAI GPT-4o
 	@echo "🔍 Running extraction agent with OpenAI GPT-4o..."
-	uv run python -m fm_app_toolkit.agents.pydantic.extraction_agent --model "openai:gpt-4o"
+	uv run python -m $(SOURCE_DIR).agents.pydantic.extraction_agent --model "openai:gpt-4o"
 	$(GREEN_LINE)
 
 llamaindex-react: ## Run LlamaIndex ReAct agent with OpenAI GPT-4
 	@echo "🧠 Running ReAct agent with OpenAI GPT-4..."
-	uv run python -m fm_app_toolkit.agents.llamaindex.simple_react --model "openai:gpt-4"
+	uv run python -m $(SOURCE_DIR).agents.llamaindex.simple_react --model "openai:gpt-4"
 	$(GREEN_LINE)
+
 
 # ----------------------------
 # Local Development

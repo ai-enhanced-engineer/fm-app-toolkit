@@ -10,7 +10,7 @@ import sys
 import pytest
 from pytest import LogCaptureFixture, MonkeyPatch
 
-from fm_app_toolkit.logging import (
+from src.logging import (
     LoggingContext,
     bind_contextvars,
     clear_context_fields,
@@ -21,7 +21,7 @@ from fm_app_toolkit.logging import (
 )
 
 
-def test_configure_structlog_with_defaults(caplog: LogCaptureFixture) -> None:
+def test__configure_structlog__with_defaults(caplog: LogCaptureFixture) -> None:
     """Demonstrate basic structlog configuration with default settings."""
     configure_structlog()
     logger = get_logger("test_logger")
@@ -33,7 +33,7 @@ def test_configure_structlog_with_defaults(caplog: LogCaptureFixture) -> None:
     assert '"extra_field": "extra_value"' in log_output
 
 
-def test_configure_structlog_with_environment(caplog: LogCaptureFixture, monkeypatch: MonkeyPatch) -> None:
+def test__configure_structlog__with_environment(caplog: LogCaptureFixture, monkeypatch: MonkeyPatch) -> None:
     """Demonstrate how environment variables control logging configuration."""
     monkeypatch.setenv("STREAM", "stderr")
     monkeypatch.setenv("LOGGING_LEVEL", "DEBUG")
@@ -49,7 +49,7 @@ def test_configure_structlog_with_environment(caplog: LogCaptureFixture, monkeyp
     assert '"stream": "stderr"' in log_output
 
 
-def test_context_binding_and_clearing(caplog: LogCaptureFixture) -> None:
+def test__context_binding__and_clearing(caplog: LogCaptureFixture) -> None:
     """Demonstrate context variable binding for correlation across log entries."""
     configure_structlog()
 
@@ -72,7 +72,7 @@ def test_context_binding_and_clearing(caplog: LogCaptureFixture) -> None:
     assert "user_id" not in log_output
 
 
-def test_logging_levels() -> None:
+def test__logging__levels() -> None:
     """Demonstrate logging level parsing and validation."""
     # Valid levels
     assert get_logging_level("DEBUG") == logging.DEBUG
@@ -84,7 +84,7 @@ def test_logging_levels() -> None:
         get_logging_level("INVALID")
 
 
-def test_stream_configuration() -> None:
+def test__stream__configuration() -> None:
     """Demonstrate stream selection for log output."""
     assert get_stream("stdout") == sys.stdout
     assert get_stream("STDERR") == sys.stderr  # Case insensitive
@@ -94,7 +94,7 @@ def test_stream_configuration() -> None:
         get_stream("invalid")
 
 
-def test_multiple_loggers_share_context(caplog: LogCaptureFixture) -> None:
+def test__multiple_loggers__share_context(caplog: LogCaptureFixture) -> None:
     """Demonstrate that context is shared across all loggers."""
     configure_structlog()
     bind_contextvars(request_id="req-789")

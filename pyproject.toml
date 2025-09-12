@@ -54,7 +54,7 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-    "fm_app_toolkit*",
+    "src*",
 ]
 
 [tool.ruff]
@@ -91,7 +91,7 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 plugins = ["pydantic.mypy"]
 exclude = [
-    "fm_app_toolkit/agents/llamaindex/",
+    "src/agents/llamaindex/",
 ]
 
 [[tool.mypy.overrides]]

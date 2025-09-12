@@ -7,7 +7,7 @@ error handling and logging behavior.
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from fm_app_toolkit.agents.llamaindex.sample_tools import (
+from src.agents.llamaindex.sample_tools import (
     calculate,
     create_reminder,
     flip_coin,
@@ -20,7 +20,7 @@ from fm_app_toolkit.agents.llamaindex.sample_tools import (
 )
 
 
-def test_get_current_time() -> None:
+def test__get_current__time() -> None:
     """Test that get_current_time returns a properly formatted timestamp."""
     result = get_current_time()
 
@@ -35,7 +35,7 @@ def test_get_current_time() -> None:
     datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S UTC")
 
 
-def test_calculate_simple_operations() -> None:
+def test__calculate_simple__operations() -> None:
     """Test basic calculations."""
     assert calculate("2 + 2") == "2 + 2 = 4"
     assert calculate("10 - 5") == "10 - 5 = 5"
@@ -44,13 +44,13 @@ def test_calculate_simple_operations() -> None:
     assert calculate("(2 + 3) * 4") == "(2 + 3) * 4 = 20"
 
 
-def test_calculate_with_decimals() -> None:
+def test__calculate_with__decimals() -> None:
     """Test calculations with decimal numbers."""
     assert calculate("3.14 * 2") == "3.14 * 2 = 6.28"
     assert calculate("10.5 / 2.5") == "10.5 / 2.5 = 4.2"
 
 
-def test_calculate_invalid_characters() -> None:
+def test__calculate_invalid__characters() -> None:
     """Test that calculate rejects invalid characters."""
     result = calculate("2 + 2; print('hack')")
     assert result == "Error: Please use only numbers and basic operators (+, -, *, /)"
@@ -59,13 +59,13 @@ def test_calculate_invalid_characters() -> None:
     assert result == "Error: Please use only numbers and basic operators (+, -, *, /)"
 
 
-def test_calculate_division_by_zero() -> None:
+def test__calculate_division__by_zero() -> None:
     """Test that calculate handles division by zero."""
     result = calculate("10 / 0")
     assert result.startswith("Error: Could not calculate")
 
 
-def test_calculate_malformed_expression() -> None:
+def test__calculate_malformed__expression() -> None:
     """Test that calculate handles malformed expressions."""
     # Note: "2 + + 3" is actually valid Python (unary plus), so it evaluates to 5
     # Let's test with a truly malformed expression
@@ -75,7 +75,7 @@ def test_calculate_malformed_expression() -> None:
 
 @patch("random.choice")
 @patch("random.randint")
-def test_get_weather(mock_randint: MagicMock, mock_choice: MagicMock) -> None:
+def test__get__weather(mock_randint: MagicMock, mock_choice: MagicMock) -> None:
     """Test weather retrieval with mocked random values."""
     mock_choice.return_value = "sunny"
     mock_randint.return_value = 75
@@ -87,7 +87,7 @@ def test_get_weather(mock_randint: MagicMock, mock_choice: MagicMock) -> None:
     assert result == "Weather in New York: 75°F and sunny"
 
 
-def test_search_web() -> None:
+def test__search__web() -> None:
     """Test web search returns mock results."""
     result = search_web("Python programming")
 
@@ -100,7 +100,7 @@ def test_search_web() -> None:
 
 
 @patch("random.randint")
-def test_create_reminder(mock_randint: MagicMock) -> None:
+def test__create__reminder(mock_randint: MagicMock) -> None:
     """Test reminder creation with mocked ID."""
     mock_randint.return_value = 456
 
@@ -109,7 +109,7 @@ def test_create_reminder(mock_randint: MagicMock) -> None:
 
 
 @patch("random.choice")
-def test_get_random_fact(mock_choice: MagicMock) -> None:
+def test__get_random__fact(mock_choice: MagicMock) -> None:
     """Test random fact retrieval."""
     expected_fact = "Python was named after Monty Python, not the snake."
     mock_choice.return_value = expected_fact
@@ -118,7 +118,7 @@ def test_get_random_fact(mock_choice: MagicMock) -> None:
     assert result == f"Fun fact: {expected_fact}"
 
 
-def test_get_random_fact_contains_valid_facts() -> None:
+def test__get_random__fact_contains_valid_facts() -> None:
     """Test that get_random_fact returns one of the predefined facts."""
     valid_facts = [
         "Python was named after Monty Python, not the snake.",
@@ -136,7 +136,7 @@ def test_get_random_fact_contains_valid_facts() -> None:
 
 
 @patch("random.randint")
-def test_roll_dice_default(mock_randint: MagicMock) -> None:
+def test__roll_dice__default(mock_randint: MagicMock) -> None:
     """Test rolling a default 6-sided dice."""
     mock_randint.return_value = 4
 
@@ -145,7 +145,7 @@ def test_roll_dice_default(mock_randint: MagicMock) -> None:
 
 
 @patch("random.randint")
-def test_roll_dice_custom_sides(mock_randint: MagicMock) -> None:
+def test__roll_dice__custom_sides(mock_randint: MagicMock) -> None:
     """Test rolling dice with custom number of sides."""
     mock_randint.return_value = 15
 
@@ -153,7 +153,7 @@ def test_roll_dice_custom_sides(mock_randint: MagicMock) -> None:
     assert result == "Rolled a 20-sided dice: 15"
 
 
-def test_roll_dice_invalid_sides() -> None:
+def test__roll_dice__invalid_sides() -> None:
     """Test that roll_dice rejects invalid number of sides."""
     assert roll_dice(1) == "Error: Dice must have at least 2 sides"
     assert roll_dice(0) == "Error: Dice must have at least 2 sides"
@@ -161,7 +161,7 @@ def test_roll_dice_invalid_sides() -> None:
 
 
 @patch("random.choice")
-def test_flip_coin_heads(mock_choice: MagicMock) -> None:
+def test__flip_coin__heads(mock_choice: MagicMock) -> None:
     """Test coin flip returning heads."""
     mock_choice.return_value = "Heads"
 
@@ -170,7 +170,7 @@ def test_flip_coin_heads(mock_choice: MagicMock) -> None:
 
 
 @patch("random.choice")
-def test_flip_coin_tails(mock_choice: MagicMock) -> None:
+def test__flip_coin__tails(mock_choice: MagicMock) -> None:
     """Test coin flip returning tails."""
     mock_choice.return_value = "Tails"
 
@@ -178,7 +178,7 @@ def test_flip_coin_tails(mock_choice: MagicMock) -> None:
     assert result == "Coin flip: Tails"
 
 
-def test_flip_coin_valid_results() -> None:
+def test__flip_coin__valid_results() -> None:
     """Test that flip_coin only returns Heads or Tails."""
     valid_results = ["Coin flip: Heads", "Coin flip: Tails"]
 
@@ -189,7 +189,7 @@ def test_flip_coin_valid_results() -> None:
 
 
 @patch("random.choice")
-def test_get_joke(mock_choice: MagicMock) -> None:
+def test__get__joke(mock_choice: MagicMock) -> None:
     """Test joke retrieval."""
     expected_joke = "Why do programmers prefer dark mode? Because light attracts bugs!"
     mock_choice.return_value = expected_joke
@@ -198,7 +198,7 @@ def test_get_joke(mock_choice: MagicMock) -> None:
     assert result == expected_joke
 
 
-def test_get_joke_valid_jokes() -> None:
+def test__get_joke__valid_jokes() -> None:
     """Test that get_joke returns one of the predefined jokes."""
     valid_jokes = [
         "Why do programmers prefer dark mode? Because light attracts bugs!",
@@ -214,7 +214,7 @@ def test_get_joke_valid_jokes() -> None:
         assert result in valid_jokes
 
 
-def test_all_tools_return_strings() -> None:
+def test__all_tools__return_strings() -> None:
     """Test that all tools return string values as expected."""
     # This is important for the agent's text-based interface
     assert isinstance(get_current_time(), str)
