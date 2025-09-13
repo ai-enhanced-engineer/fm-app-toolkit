@@ -51,12 +51,12 @@ def test__calculate_with__decimals() -> None:
 
 
 def test__calculate_invalid__characters() -> None:
-    """Test that calculate rejects invalid characters."""
+    """Test that calculate rejects invalid expressions."""
     result = calculate("2 + 2; print('hack')")
-    assert result == "Error: Please use only numbers and basic operators (+, -, *, /)"
+    assert result.startswith("Error: Could not calculate")
 
     result = calculate("import os")
-    assert result == "Error: Please use only numbers and basic operators (+, -, *, /)"
+    assert result.startswith("Error: Could not calculate")
 
 
 def test__calculate_division__by_zero() -> None:

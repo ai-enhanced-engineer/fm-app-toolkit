@@ -15,5 +15,4 @@ class DocumentIndexer(ABC):
         self,
         documents: list[Document],
         embed_model: Optional[BaseEmbedding] = None,
-    ) -> Union[VectorStoreIndex, PropertyGraphIndex]:
-        raise NotImplementedError
+    ) -> Union[VectorStoreIndex, PropertyGraphIndex]: ...

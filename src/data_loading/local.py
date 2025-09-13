@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 from llama_index.core import Document, SimpleDirectoryReader
-from pydantic import validate_call
+from pydantic import BaseModel, validate_call
 
 from .base import BaseRepository, DocumentRepository
 
@@ -14,14 +14,10 @@ class LocalRepository(BaseRepository):
 
     def load_data(self, path: str) -> pd.DataFrame:
         """Load CSV data from file."""
-        try:
-            df = pd.read_csv(path)
-            return df
-        except Exception:
-            raise
+        return pd.read_csv(path)
 
 
-class LocalDocumentRepository(DocumentRepository):
+class LocalDocumentRepository(DocumentRepository, BaseModel):
     """Load documents from local filesystem using SimpleDirectoryReader."""
 
     input_dir: str
@@ -33,15 +29,11 @@ class LocalDocumentRepository(DocumentRepository):
     @validate_call
     def load_documents(self, location: str) -> list[Document]:
         """Load documents from filesystem directory."""
-        try:
-            reader = SimpleDirectoryReader(
-                input_dir=location,
-                recursive=self.recursive,
-                required_exts=self.required_exts,
-                exclude_hidden=self.exclude_hidden,
-                num_files_limit=self.num_files_limit,
-            )
-            documents = reader.load_data()
-            return documents
-        except Exception:
-            raise
+        reader = SimpleDirectoryReader(
+            input_dir=location,
+            recursive=self.recursive,
+            required_exts=self.required_exts,
+            exclude_hidden=self.exclude_hidden,
+            num_files_limit=self.num_files_limit,
+        )
+        return reader.load_data()

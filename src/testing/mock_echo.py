@@ -14,6 +14,7 @@ from llama_index.core.llms.callbacks import llm_chat_callback
 from llama_index.core.llms.llm import LLM
 
 # Default chunk size for streaming responses
+# Using 7 to create multiple chunks for testing streaming behavior
 CHUNK_SIZE = 7
 
 
