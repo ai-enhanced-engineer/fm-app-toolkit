@@ -64,14 +64,14 @@ class PropertyGraphIndexer(DocumentIndexer):
         embed_model: Optional[BaseEmbedding] = None,
     ) -> PropertyGraphIndex:
         """Build knowledge graph index from documents."""
-        try:
-            logger.info(f"Creating property graph index from {len(documents)} documents")
+        logger.info("Creating property graph index", document_count=len(documents))
 
+        try:
             # Select appropriate extractors
             kg_extractors = _select_extractors(self.kg_extractors, self.llm)
 
             # Log which extractors are being used for debugging
-            logger.debug(f"Using extractors: {[type(e).__name__ for e in kg_extractors]}")
+            logger.debug("Using extractors", extractors=[type(e).__name__ for e in kg_extractors])
 
             # Create index with optional embedding model
             index = PropertyGraphIndex.from_documents(
@@ -83,9 +83,9 @@ class PropertyGraphIndexer(DocumentIndexer):
                 show_progress=self.show_progress,
             )
 
-            logger.info(f"Successfully created property graph index with {len(documents)} documents")
+            logger.info("Successfully created property graph index", document_count=len(documents))
             return index
 
         except Exception as e:
-            logger.error(f"Failed to create property graph index: {e}")
+            logger.error("Failed to create property graph index", document_count=len(documents), error=str(e))
             raise

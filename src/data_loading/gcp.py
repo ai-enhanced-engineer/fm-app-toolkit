@@ -4,9 +4,13 @@ from typing import Any, Optional
 
 from llama_index.core import Document
 from llama_index.readers.gcs import GCSReader
-from pydantic import validate_call
+from pydantic import BaseModel, validate_call
+
+from src.logging import get_logger
 
 from .base import DocumentRepository
+
+logger = get_logger(__name__)
 
 
 def _parse_gcs_uri(uri: str) -> dict[str, Any]:
@@ -31,7 +35,7 @@ def _parse_gcs_uri(uri: str) -> dict[str, Any]:
     return result
 
 
-class GCPDocumentRepository(DocumentRepository):
+class GCPDocumentRepository(DocumentRepository, BaseModel):
     """Load documents from Google Cloud Storage using GCSReader."""
 
     service_account_key: Optional[dict[str, Any]] = None
@@ -42,6 +46,7 @@ class GCPDocumentRepository(DocumentRepository):
         try:
             # Parse the GCS URI
             reader_kwargs = _parse_gcs_uri(location)
+            logger.debug("Parsed GCS URI", location=location, bucket=reader_kwargs.get("bucket"))
 
             # Add service account key if provided
             if self.service_account_key:
@@ -49,7 +54,12 @@ class GCPDocumentRepository(DocumentRepository):
 
             reader = GCSReader(**reader_kwargs)
             documents: list[Document] = reader.load_data()
+            logger.info("Successfully loaded documents from GCS", location=location, count=len(documents))
 
             return documents
-        except Exception:
+        except ValueError as e:
+            logger.error("Invalid GCS URI format", location=location, error=str(e))
+            raise
+        except Exception as e:
+            logger.error("Failed to load documents from GCS", location=location, error=str(e))
             raise

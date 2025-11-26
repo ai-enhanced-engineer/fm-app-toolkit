@@ -17,7 +17,7 @@ from src.agents.pydantic.extraction_agent import DataExtraction
 
 # Test basic agent creation and structured output
 @pytest.mark.asyncio
-async def test_extraction_agent_basic():
+async def test__extraction_agent__basic():
     """Test basic extraction agent with structured output."""
     test_model = TestModel(
         custom_output_args={
@@ -39,7 +39,7 @@ async def test_extraction_agent_basic():
     assert "Apple" in result.output.summary
 
 
-def test_extraction_agent_sync():
+def test__extraction_agent__sync():
     """Test synchronous execution of extraction agent."""
     test_model = TestModel(
         custom_output_args={
@@ -61,7 +61,7 @@ def test_extraction_agent_sync():
 
 
 @pytest.mark.asyncio
-async def test_analysis_agent_with_context():
+async def test__analysis_agent__with_context():
     """Test analysis agent with dependency injection."""
     test_model = TestModel(
         custom_output_args={
@@ -88,7 +88,7 @@ async def test_analysis_agent_with_context():
 
 
 @pytest.mark.asyncio
-async def test_analysis_agent_debug_context():
+async def test__analysis_agent__debug_context():
     """Test analysis agent with debug context."""
     test_model = TestModel(
         custom_output_args={
@@ -113,7 +113,7 @@ async def test_analysis_agent_debug_context():
     assert result.output.word_count == 3
 
 
-def test_extraction_agent_empty_lists():
+def test__extraction_agent__empty_lists():
     """Test extraction agent with empty lists in output."""
     test_model = TestModel(
         custom_output_args={
@@ -136,7 +136,7 @@ def test_extraction_agent_empty_lists():
 
 
 @pytest.mark.asyncio
-async def test_multiple_agents_concurrency():
+async def test__multiple_agents__concurrency():
     """Test running multiple agents concurrently."""
     # Create different test models for different agents
     extraction_model = TestModel(
@@ -183,7 +183,7 @@ async def test_multiple_agents_concurrency():
 
 
 @pytest.mark.asyncio
-async def test_analysis_agent_high_precision_config():
+async def test__analysis_agent__high_precision_config():
     """Test analysis agent with high precision configuration."""
     test_model = TestModel(
         custom_output_args={

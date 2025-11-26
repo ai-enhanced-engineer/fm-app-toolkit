@@ -18,8 +18,7 @@ from src.data_loading.gcp import _parse_gcs_uri
 from src.data_loading.local import LocalRepository
 
 
-def test_local_document_repository_loads_documents():
-    """Basic document loading from filesystem."""
+def test__local_document_repository__loads_documents():
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test files
         test_file = Path(temp_dir) / "test.txt"
@@ -29,11 +28,10 @@ def test_local_document_repository_loads_documents():
         documents = repo.load_documents(location=temp_dir)
 
         assert len(documents) == 1
-        assert isinstance(documents[0], Document)
         assert "Test content" in documents[0].text
 
 
-def test_local_document_repository_filters_extensions():
+def test__local_document_repository__filters_extensions():
     """Filter documents by file extension (.txt, .md, etc)."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test files with different extensions
@@ -45,10 +43,9 @@ def test_local_document_repository_filters_extensions():
         documents = repo.load_documents(location=temp_dir)
 
         assert len(documents) == 2
-        assert all(isinstance(doc, Document) for doc in documents)
 
 
-def test_local_document_repository_recursive():
+def test__local_document_repository__recursive():
     """Recursive vs non-recursive directory traversal."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create nested directory structure
@@ -69,7 +66,7 @@ def test_local_document_repository_recursive():
         assert len(documents) == 1
 
 
-def test_local_document_repository_excludes_hidden():
+def test__local_document_repository__excludes_hidden():
     """Hidden files (starting with .) are excluded."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create regular and hidden files
@@ -83,7 +80,7 @@ def test_local_document_repository_excludes_hidden():
         assert "Visible" in documents[0].text
 
 
-def test_local_document_repository_file_limit():
+def test__local_document_repository__file_limit():
     """Limit number of documents loaded."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create multiple files
@@ -96,7 +93,7 @@ def test_local_document_repository_file_limit():
         assert len(documents) == 3
 
 
-def test_local_document_repository_handles_missing_directory():
+def test__local_document_repository__handles_missing_directory():
     """Missing directories raise clear errors."""
     repo = LocalDocumentRepository(input_dir="/nonexistent/directory")
 

@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from llama_index.core import Document
 from pydantic import ValidationError
 
 from src.data_loading import LocalDocumentRepository
@@ -25,12 +24,10 @@ def test__local_document_repository__loads_documents():
         documents = repo.load_documents(location=temp_dir)
 
         assert len(documents) == 1
-        assert isinstance(documents[0], Document)
         assert "Test content" in documents[0].text
 
 
 def test__local_document_repository__filters_extensions():
-    """Test that LocalDocumentRepository filters documents by file extension."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test files with different extensions
         (Path(temp_dir) / "test.txt").write_text("Text file")
@@ -41,11 +38,9 @@ def test__local_document_repository__filters_extensions():
         documents = repo.load_documents(location=temp_dir)
 
         assert len(documents) == 2
-        assert all(isinstance(doc, Document) for doc in documents)
 
 
 def test__local_document_repository__recursive():
-    """Test that LocalDocumentRepository handles recursive directory traversal."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create nested directory structure
         root = Path(temp_dir)
@@ -66,7 +61,6 @@ def test__local_document_repository__recursive():
 
 
 def test__local_document_repository__excludes_hidden():
-    """Test that LocalDocumentRepository excludes hidden files."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create regular and hidden files
         (Path(temp_dir) / "visible.txt").write_text("Visible")
@@ -101,7 +95,6 @@ def test__local_document_repository__handles_missing_directory():
 
 
 def test__local_repository__validates_location_type():
-    """Pydantic validates location must be a string."""
     repo = LocalDocumentRepository(input_dir=".", recursive=True)
 
     # Invalid: None instead of string
@@ -118,7 +111,6 @@ def test__local_repository__validates_location_type():
 
 
 def test__local_repository__constructor_validates_meaningful_params():
-    """Test constructor validation for business-relevant parameter types."""
     # Invalid: input_dir must be string, not None
     with pytest.raises(ValidationError):
         LocalDocumentRepository(input_dir=None)

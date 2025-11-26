@@ -24,16 +24,35 @@ def get_current_time() -> str:
 
 def calculate(expression: str) -> str:
     """Perform a simple calculation with basic math operators."""
-    try:
-        # Only allow basic math characters for safety
-        allowed = set("0123456789+-*/()., ")
-        if all(c in allowed for c in expression):
-            result = eval(expression, {"__builtins__": {}})
-            logger.info("Calculated expression", expression=expression, result=result)
-            return f"{expression} = {result}"
+    import ast
+    import operator
+
+    # Define safe operators
+    ops = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.USub: operator.neg,
+    }
+
+    def _safe_eval(node):
+        if isinstance(node, ast.Constant):  # numbers
+            return node.value
+        elif isinstance(node, ast.BinOp):  # binary operations
+            return ops[type(node.op)](_safe_eval(node.left), _safe_eval(node.right))
+        elif isinstance(node, ast.UnaryOp):  # unary operations
+            return ops[type(node.op)](_safe_eval(node.operand))
         else:
-            return "Error: Please use only numbers and basic operators (+, -, *, /)"
-    except Exception as e:
+            raise ValueError(f"Unsupported operation: {type(node)}")
+
+    try:
+        # Parse expression into AST
+        parsed = ast.parse(expression, mode="eval")
+        result = _safe_eval(parsed.body)
+        logger.info("Calculated expression", expression=expression, result=result)
+        return f"{expression} = {result}"
+    except (ValueError, SyntaxError, KeyError, ZeroDivisionError) as e:
         logger.error("Calculation failed", expression=expression, error=str(e))
         return f"Error: Could not calculate {expression}"
 

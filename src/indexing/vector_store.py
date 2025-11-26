@@ -37,9 +37,9 @@ class VectorStoreIndexer(DocumentIndexer):
         embed_model: Optional[BaseEmbedding] = None,
     ) -> VectorStoreIndex:
         """Build searchable index from documents."""
-        try:
-            logger.info(f"Creating index from {len(documents)} documents")
+        logger.info("Creating index from documents", document_count=len(documents))
 
+        try:
             # Create index with optional embedding model
             index = VectorStoreIndex.from_documents(
                 documents,
@@ -48,9 +48,9 @@ class VectorStoreIndexer(DocumentIndexer):
                 insert_batch_size=self.insert_batch_size,
             )
 
-            logger.info(f"Successfully created index with {len(documents)} documents")
+            logger.info("Successfully created index", document_count=len(documents))
             return index
 
         except Exception as e:
-            logger.error(f"Failed to create index: {e}")
+            logger.error("Failed to create index", document_count=len(documents), error=str(e))
             raise
