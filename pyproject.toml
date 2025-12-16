@@ -25,6 +25,9 @@ dependencies = [
     "llama-index-llms-openai>=0.5.4",
     # AI/ML Agents
     "pydantic-ai>=0.8.1",
+    # LangGraph & LangChain
+    "langchain-core>=0.3.0",
+    "langgraph>=0.2.0",
 ]
 
 [project.optional-dependencies]
