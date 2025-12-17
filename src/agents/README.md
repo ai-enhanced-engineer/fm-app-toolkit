@@ -1,860 +1,101 @@
 # Agent Implementations
 
-Transform your applications with AI agents that can reason, act, and solve complex problems autonomously. This guide shows you how to build production-ready agents using two powerful frameworks, each optimized for different use cases.
+This directory contains working code for the **[AI Agents in Production](https://aienhancedengineer.substack.com)** article series. The code is designed for learning—each implementation demonstrates concepts from specific articles.
 
-## Why Build Agents Instead of Using LLMs Directly?
-
-### The Direct LLM Problem
-
-Imagine asking an LLM: *"What's the current weather in Tokyo and should I pack an umbrella for my trip?"*
-
-**Direct LLM Response:** *"I don't have access to current weather data. As of my last update, Tokyo has a temperate climate..."* 
-
-**Result:** Useless hallucination or honest ignorance.
-
-### The Agent Solution
-
-An agent transforms this interaction:
-
-1. **Receives** your question about Tokyo weather
-2. **Reasons** "I need current weather data for Tokyo"  
-3. **Acts** by calling a weather API tool
-4. **Observes** the result: "22°C, 85% humidity, rain forecast"
-5. **Iterates** "Now I can give advice based on real data"
-
-**Agent Response:** *"Current weather in Tokyo is 22°C with rain expected this afternoon. Pack layers and definitely bring an umbrella!"*
-
-### Real-World Agent Applications
-
-**Research Assistant Agent**
-- Searches multiple academic databases
-- Synthesizes findings from 20+ papers
-- Generates literature review with citations
-- *Result: Hours of research completed in minutes*
-
-**Customer Service Agent** 
-- Checks inventory across warehouses
-- Processes return requests automatically  
-- Updates customer records in CRM
-- *Result: 24/7 support with human-level accuracy*
-
-**Data Analysis Agent**
-- Pulls metrics from multiple data sources
-- Identifies trends and anomalies
-- Generates executive summary with visualizations  
-- *Result: Business insights without data team bottleneck*
-
-## What Are Agents?
-
-An agent is an orchestration layer that creates a reasoning loop:
-
-```
-User Query → [Reason → Act → Observe] → [Reason → Act → Observe] → Answer
-```
-
-This loop continues until the agent has gathered enough information to provide a complete, accurate response.
-
-## 🎯 Learning Path: Choose Your Starting Point
-
-**🚀 New to Agents?** Start with ReAct Pattern → Build weather assistant → Learn debugging
-
-**🏗️ Need Structured Output?** Jump to PydanticAI → Build data extraction agent  
-
-**🔧 Building APIs?** Focus on PydanticAI validation → Integrate with FastAPI
-
-**📊 Want Transparency?** Master LlamaIndex ReAct → Build multi-step research workflows
-
----
+> **Series Status**: Currently at Article 2.1. Code for later articles (testing, framework comparison) exists but articles are not yet published.
 
 ## Module Organization
 
 ```
 agents/
-├── llamaindex/             # Transparent reasoning with ReAct pattern
-│   ├── minimal_react.py    # Educational implementation with explicit loop
-│   ├── simple_react.py     # Production-ready BaseWorkflowAgent
-│   ├── events.py           # Workflow event coordination
-│   └── sample_tools.py     # Example tools for learning
+├── llamaindex/              # LlamaIndex ReAct agents
+│   ├── minimal_react.py     # Educational: explicit loop (~230 lines)
+│   ├── simple_react.py      # Production: BaseWorkflowAgent (~320 lines)
+│   ├── simple_react_examples.py  # Usage examples
+│   └── sample_tools.py      # Demo tools (weather, calculate, time)
 │
-├── langgraph/              # State machine ReAct agents
-│   ├── minimal_react.py    # Educational graph construction (~288 lines)
-│   └── simple_react.py     # Production-ready create_react_agent (~169 lines)
+├── langgraph/               # LangGraph ReAct agents
+│   ├── minimal_react.py     # Educational: explicit graph (~290 lines)
+│   └── simple_react.py      # Production: create_react_agent (~170 lines)
 │
-└── pydantic/               # Structured output with validation
-    ├── analysis_agent.py   # Text analysis with guaranteed format
-    └── extraction_agent.py # Data extraction with type safety
+└── pydantic/                # PydanticAI structured output
+    ├── analysis_agent.py    # Text analysis with guaranteed format
+    └── extraction_agent.py  # Data extraction with type safety
 ```
 
----
+## Six Canonical Harness Components (Article 2.1)
 
-# Part 1: LlamaIndex ReAct Agents
+Each component maps to specific code locations:
 
-## Three-Tier Learning Path
+| Component | LlamaIndex | LangGraph | PydanticAI |
+|-----------|------------|-----------|------------|
+| **Reasoning Engine** | `llm` parameter | `llm` parameter | `model` parameter |
+| **Planning & Orchestration** | `minimal_react.py` loop | `StateGraph` nodes/edges | Agent `run()` |
+| **Tool Registry** | `Tool` dataclass | `@tool` decorator | `@agent.tool` |
+| **Memory & Context** | `ctx.store` | `AgentState` reducer | `deps` injection |
+| **State & Persistence** | `BaseWorkflowAgent` | `CompiledStateGraph` | Result object |
+| **Structured I/O** | ReActOutputParser | Message types | Pydantic models |
 
-We provide a structured learning progression for ReAct agents, from fundamental concepts to production patterns:
-
-### 🎯 Tier 1: Understand ReAct from Scratch
-**File:** `minimal_react.py` (~227 lines)
-
-Learn how ReAct agents work by reading the explicit implementation:
-- Complete reasoning loop visible in a single for-loop
-- No hidden base classes or abstractions
-- Simple regex parsing - no framework dependencies
-- Inline prompt template you can modify
-
-**Perfect for:** Blog posts, tutorials, understanding the fundamentals
-
-### 🏗️ Tier 2: Proper BaseWorkflowAgent Usage
-**File:** `simple_react.py` (~355 lines)
-
-See how to correctly use LlamaIndex infrastructure:
-- Implements all 3 abstract methods from BaseWorkflowAgent
-- `take_step()`: Get LLM response and parse it
-- `handle_tool_call_results()`: Process tool outputs
-- `finalize()`: Clean up and format final response
-- Uses ReActChatFormatter and ReActOutputParser
-- Simple print-based verbose logging (no complexity)
-
-**Perfect for:** Learning production patterns, understanding BaseWorkflowAgent
-
-### 🚀 Tier 3: Production Examples
-**File:** `simple_react_examples.py` (~243 lines)
-
-Production usage patterns and runnable examples:
-- Tool setup and configuration
-- Agent initialization with various parameters
-- Different query patterns (calculation, time, weather, search)
-- Result extraction and display
-
-**Perfect for:** Copy-paste starting points, integration examples
-
-### How to Progress Through the Tiers
+## Quick Start
 
 ```python
-# Tier 1: Read minimal_react.py to understand ReAct
-# - See the explicit for-loop
-# - Understand Thought/Action/Observation/Answer
-# - Learn prompt engineering basics
-
-# Tier 2: Study simple_react.py to learn BaseWorkflowAgent
-from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-
-# - Understand the 3 abstract methods
-# - See proper context management
-# - Learn error handling patterns
-
-# Tier 3: Run simple_react_examples.py for production patterns
-python -m src.agents.llamaindex.simple_react_examples --model openai:gpt-4
-
-# - Get working code to start from
-# - See complete usage examples
-# - Learn integration patterns
-```
-
----
-
-## Choosing Your Implementation: Learning vs Production
-
-We provide implementations optimized for different purposes:
-
-### MinimalReActAgent: For Learning
-
-**Purpose:** Understand how ReAct agents work by reading the explicit loop.
-
-**Design:**
-- Explicit for-loop showing the reasoning cycle
-- Inline prompt template (visible, not abstracted)
-- Simple regex parsing (no framework dependencies)
-- Heavily commented for pedagogy
-
-**Perfect for:**
-- Blog articles and tutorials
-- Learning the ReAct pattern
-- Debugging agent logic
-- Understanding prompt engineering
-
-**Example:**
-```python
-from src.agents.llamaindex.minimal_react import MinimalReActAgent, Tool
-
-# The loop is visible - read minimal_react.py to understand ReAct
-agent = MinimalReActAgent(llm=llm, tools=tools, max_steps=10)
-result = await agent.run("What's 2+2?")
-```
-
-### SimpleReActAgent: For Production (~355 lines)
-
-**Purpose:** Build robust applications with LlamaIndex's infrastructure.
-
-**Design:**
-- Extends BaseWorkflowAgent for workflow integration
-- Uses ReActChatFormatter for flexible prompting
-- ReActOutputParser for robust parsing
-- Memory management and context handling
-- Comprehensive error handling and observability
-
-**Perfect for:**
-- Production applications
-- Integration with LlamaIndex RAG systems
-- Complex multi-agent workflows
-- Long-running conversations
-
-**Example:**
-```python
-from src.agents.llamaindex import SimpleReActAgent, Tool
-
-# Production-ready with all the features
-agent = SimpleReActAgent(
-    llm=llm,
-    system_header="You are a helpful assistant",
-    tools=tools,
-    max_reasoning=15,
-    verbose=True
-)
-
-handler = agent.run(user_msg="Complex research task")
-result = await agent.get_results_from_handler(handler)
-```
-
-### Comparison Table
-
-| Aspect | MinimalReActAgent | SimpleReActAgent |
-|--------|-------------------|------------------|
-| **Lines of Code** | ~227 | ~355 |
-| **Dependencies** | LLM + regex + json | BaseWorkflowAgent + formatters |
-| **Prompt Template** | Inline constant | ReActChatFormatter |
-| **Parsing** | Simple regex | ReActOutputParser |
-| **Error Handling** | Basic | Comprehensive |
-| **Memory** | None | Full chat history |
-| **Observability** | Optional verbose mode | Structured logging |
-| **Best For** | Learning | Production |
-
-### When to Use Each
-
-**Use MinimalReActAgent when:**
-- Writing blog posts or tutorials
-- Teaching the ReAct pattern
-- Debugging prompt issues
-- Rapid prototyping without infrastructure
-
-**Use SimpleReActAgent when:**
-- Building production applications
-- Need robust error handling
-- Want conversation memory
-- Integrating with LlamaIndex ecosystem
-
-Both agents use the same tools from `sample_tools.py` and can be tested with `MockLLMWithChain`.
-
----
-
-## The Power of Visible Reasoning
-
-**Core Concept:** See exactly how your agent thinks, step by step.
-
-```
-User: "Research renewable energy adoption in Nordic countries"
-
-Agent Reasoning (Visible):
-Thought: I need recent data on renewable energy in Nordic countries
-Action: search_academic_papers  
-Action Input: {"query": "renewable energy adoption Nordic 2023-2024"}
-Observation: Found 15 papers with key statistics...
-
-Thought: I should get government policy data too
-Action: search_government_reports
-Action Input: {"query": "Nordic renewable energy policy 2024"}  
-Observation: Retrieved policy documents from Norway, Sweden, Denmark...
-
-Thought: Now I can synthesize a comprehensive response
-Answer: Nordic countries lead global renewable adoption with Norway at 85%...
-```
-
-## Quick Start: Weather Assistant Agent
-
-Let's build something immediately useful - a weather assistant that gives travel advice.
-
-```python
-from src.agents.llamaindex import SimpleReActAgent
-from src.testing import MockLLMWithChain
-
-# For learning: Use deterministic responses
-learning_responses = [
-    "Thought: I need current weather for the requested city.\nAction: get_weather\nAction Input: {'city': 'Tokyo'}",
-    "Thought: Got the weather data. Now I should give clothing recommendations.\nAnswer: It's 22°C and rainy in Tokyo. Pack layers and bring an umbrella!"
-]
-
-mock_llm = MockLLMWithChain(chain=learning_responses)
-
-# Create your first agent
-agent = SimpleReActAgent(
-    llm=mock_llm,
-    tools=[get_weather_tool, get_clothing_advice_tool],
-    verbose=True  # See the reasoning process
-)
-
-# Watch it think and act
-handler = agent.run("What should I wear in Tokyo today?")
-result = await agent.get_results_from_handler(handler)
-
-print("🤖 Agent Response:", result["response"])
-print("🧠 Reasoning Steps:", result["reasoning"])  
-print("📊 Sources Used:", result["sources"])
-```
-
-**What You'll See:**
-- Every reasoning step the agent takes
-- Which tools it chooses and why
-- The data it gathered to form its answer
-
-## Production Example: Research Agent
-
-```python
-from llama_index.llms.openai import OpenAI
-
-# Production setup with real LLM
-research_agent = SimpleReActAgent(
-    llm=OpenAI(model="gpt-4", temperature=0.1),  # Low temp for consistency
-    tools=[
-        search_papers_tool,
-        search_news_tool, 
-        analyze_trends_tool,
-        generate_summary_tool
-    ],
-    max_iterations=10,  # Prevent infinite loops
-    verbose=True
-)
-
-# Complex multi-step research
-result = await research_agent.run(
-    "Analyze the latest developments in quantum computing and identify "
-    "the top 3 companies likely to achieve commercial breakthrough first"
-)
-```
-
-**Agent Reasoning Flow:**
-1. Searches recent quantum computing papers
-2. Finds news about company developments  
-3. Analyzes funding and patent trends
-4. Cross-references technical capabilities
-5. Synthesizes findings into ranked recommendations
-
-## When to Choose LlamaIndex ReAct
-
-✅ **Perfect For:**
-- **Debugging Required**: Need to see why agent made specific decisions
-- **Complex Workflows**: Multi-step processes with branching logic
-- **Audit Trails**: Compliance requires decision documentation  
-- **LlamaIndex Ecosystem**: Already using RAG or query engines
-- **Learning**: Understanding how agents work internally
-
-❌ **Not Ideal For:**
-- Simple single-step tasks
-- APIs requiring consistent output format
-- Performance-critical applications (reasoning adds overhead)
-
----
-
-# Part 2: LangGraph ReAct Agents
-
-## State Machine Architecture for Agents
-
-**Core Concept:** Build agents as explicit state machines with nodes and edges for maximum control and observability.
-
-LangGraph brings graph-based agent design from LangChain, enabling:
-- **Explicit control flow**: See every node and transition
-- **State persistence**: Track agent state across steps
-- **Conditional routing**: Branch based on agent decisions
-- **Production-ready**: Built-in error handling and retries
-
-### Two-Tier Learning Path
-
-Like LlamaIndex, we provide both educational and production patterns:
-
-#### 🎯 Tier 1: Understand Graph Construction
-**File:** `minimal_react.py` (~288 lines)
-
-Learn how LangGraph agents work by building the state machine explicitly:
-- StateGraph construction with typed state
-- Node functions (agent, tools)
-- Conditional edges for routing
-- Message accumulation with reducers
-
-**Perfect for:** Understanding graph-based agent architecture
-
-#### 🚀 Tier 2: Production Prebuilt
-**File:** `simple_react.py` (~169 lines)
-
-Use `create_react_agent` for production:
-- One-line graph creation
-- Automatic state management
-- Built-in tool routing
-- Minimal boilerplate
-
-**Perfect for:** Production applications, rapid development
-
-### Framework Comparison
-
-| Aspect | LlamaIndex ReAct | LangGraph ReAct |
-|--------|------------------|-----------------|
-| **Architecture** | Workflow-based | State machine (graph) |
-| **State Management** | Context objects | Typed state with reducers |
-| **Tool Routing** | Conditional logic | Graph edges |
-| **Observable** | Reasoning steps visible | Graph execution trace |
-| **Best For** | RAG integration, workflows | Complex routing, cycles |
-
-### Quick Start: LangGraph Weather Agent
-
-```python
-from src.agents.langgraph import SimpleReActAgent, Tool
-from src.testing.mock_langchain import MockChatModelWithChain
-
-# For learning: Use deterministic responses
-mock_llm = MockChatModelWithChain(chain=[
+from src.agents.llamaindex import MinimalReActAgent, MinimalTool
+from src.testing.mock_chain import MockLLMWithChain
+
+# Deterministic responses for learning
+mock_llm = MockLLMWithChain(chain=[
     'Thought: I need weather data.\nAction: get_weather\nAction Input: {"location": "Tokyo"}',
-    'Thought: Got it.\nAnswer: Weather in Tokyo: 22°C and sunny'
+    'Thought: Got it.\nAnswer: Tokyo is 22°C and sunny.'
 ])
 
-# Create agent with tools
-agent = SimpleReActAgent(
+# Simple tool
+def get_weather(location: str) -> str:
+    return f"{location}: 22°C, sunny"
+
+agent = MinimalReActAgent(
     llm=mock_llm,
-    tools=[get_weather_tool],
-    verbose=True  # See graph execution
+    tools=[MinimalTool(name="get_weather", description="Get weather", function=get_weather)],
+    verbose=True
 )
 
-# Run the agent
 result = await agent.run("What's the weather in Tokyo?")
-
-print("Response:", result["response"])
-print("Reasoning steps:", len(result["reasoning"]))
-print("Sources:", result["sources"])
+# result = {"response": "...", "reasoning": [...], "sources": [...]}
 ```
 
-### When to Choose LangGraph
+## Code Reference by Article
 
-✅ **Perfect For:**
-- **Complex routing**: Multi-path agent logic with cycles
-- **State persistence**: Long-running agent workflows
-- **Graph visualization**: Need to visualize agent flow
-- **LangChain ecosystem**: Already using LangChain tools
-- **Human-in-the-loop**: Approval gates in agent flow
+| Article | Topic | Key Files |
+|---------|-------|-----------|
+| **2** | Agent Loop | `llamaindex/minimal_react.py` (explicit loop) |
+| **2.1** | Harness Components | All agent files (see table above) |
+| **3** | Testing *(upcoming)* | `src/testing/mock_chain.py`, `src/testing/mock_langchain.py` |
+| **4** | Framework Comparison *(upcoming)* | `llamaindex/`, `langgraph/`, `pydantic/` |
 
-❌ **Not Ideal For:**
-- Simple linear reasoning tasks
-- RAG-heavy applications (use LlamaIndex)
-- When you don't need explicit state management
+## Learning Path
 
----
+**Understand the loop** → Read `minimal_react.py` (explicit for-loop, regex parsing)
 
-# Part 3: PydanticAI Agents  
+**Use a framework** → Study `simple_react.py` (BaseWorkflowAgent pattern)
 
-## Guaranteed Structure, Every Time
+**See examples** → Run `simple_react_examples.py`
 
-**Core Concept:** Get exactly the data format you need, validated and type-safe.
+## Testing
 
-Instead of hoping your agent returns JSON in the right format, PydanticAI guarantees it:
+All agents support deterministic testing via mock LLMs:
 
 ```python
-# What you define
-class AnalysisResult(BaseModel):
-    sentiment: Literal["positive", "negative", "neutral"]
-    confidence: float = Field(ge=0.0, le=1.0)  
-    key_insights: List[str] = Field(min_items=1)
-    word_count: int
+# LlamaIndex
+from src.testing.mock_chain import MockLLMWithChain
 
-# What you're guaranteed to get
-result.output.sentiment     # Always a valid sentiment string
-result.output.confidence    # Always a float between 0.0 and 1.0  
-result.output.key_insights  # Always a non-empty list of strings
-result.output.word_count    # Always an integer
-```
-
-## Quick Start: Customer Feedback Analyzer
-
-Perfect for APIs that need reliable data formats:
-
-```python
-from src.agents.pydantic import create_analysis_agent
-from pydantic_ai.models.test import TestModel
-
-# For learning: Control exact outputs
-test_model = TestModel(custom_output_args={
-    "sentiment": "positive",
-    "confidence": 0.92,
-    "word_count": 47,
-    "key_insights": ["Customer loves product quality", "Delivery exceeded expectations"]
-})
-
-agent = create_analysis_agent(model=test_model)
-
-# Analyze customer feedback
-result = await agent.run(
-    "This product is absolutely amazing! Fast delivery and great quality."
-)
-
-# Access validated fields
-print(f"Sentiment: {result.output.sentiment}")        # "positive"  
-print(f"Confidence: {result.output.confidence}")      # 0.92
-print(f"Insights: {result.output.key_insights}")      # List[str]
-```
-
-## Production Example: Data Extraction Agent  
-
-```python
-from src.agents.pydantic import create_extraction_agent
-
-# Extract structured data from unstructured text
-agent = create_extraction_agent(model="openai:gpt-4o")
-
-business_text = """
-Apple reported Q3 revenue of $394.3 billion, driven by strong iPhone 15 sales. 
-CEO Tim Cook noted 15% growth in Services revenue. The company announced 
-plans to invest $10 billion in R&D next year.
-"""
-
-result = await agent.run(business_text)
-
-# Guaranteed structured output
-extracted = result.output
-print(f"Companies: {extracted.entities}")     # ["Apple"] 
-print(f"Numbers: {extracted.numbers}")       # [394.3, 15, 10]
-print(f"Summary: {extracted.summary}")       # Auto-generated summary
-```
-
-## Advanced: Multi-Tenant Context Management
-
-PydanticAI excels at dependency injection for complex applications:
-
-```python
-@dataclass  
-class BusinessContext:
-    user_id: str
-    subscription_tier: str
-    api_rate_limit: int
-    custom_instructions: Dict[str, str]
-
-# Context-aware analysis
-context = BusinessContext(
-    user_id="enterprise_client_001",
-    subscription_tier="premium", 
-    api_rate_limit=1000,
-    custom_instructions={"tone": "formal", "detail_level": "comprehensive"}
-)
-
-result = await analysis_agent.run(
-    "Analyze this quarterly report",
-    deps=context  # Agent adapts behavior based on context
-)
-```
-
-## When to Choose PydanticAI
-
-✅ **Perfect For:**
-- **API Development**: Need consistent response formats
-- **Data Extraction**: Converting unstructured → structured data
-- **Type Safety**: Compile-time validation requirements
-- **Multi-Tenant**: Context-dependent agent behavior
-- **Observability**: Built-in Logfire integration
-
-❌ **Not Ideal For:**  
-- Learning how agents work (black box reasoning)
-- Simple text generation tasks
-- When you need to debug agent decision-making
-
----
-
-# Choosing the Right Framework
-
-## 🤔 Decision Tree
-
-**Start Here: What's Your Primary Goal?**
-
-### "I need to debug why my agent made a decision"
-→ **LlamaIndex ReAct** or **LangGraph ReAct** (transparent reasoning)
-
-*Example: Medical diagnosis agent where you need to audit the reasoning chain*
-
-### "I need complex agent routing with cycles"
-→ **LangGraph ReAct** (state machine with graph structure)
-
-*Example: Multi-step approval workflow with branching and loops*
-
-### "I'm building an API that returns structured data"
-→ **PydanticAI** (guaranteed output format)
-
-*Example: Customer support API that categorizes tickets and assigns priority*
-
-### "I want to process documents with citations"
-→ **LlamaIndex ReAct** (sources tracking + RAG integration)
-
-*Example: Legal research agent that provides case law citations*
-
-### "I need multi-tenant context management"
-→ **PydanticAI** (dependency injection)
-
-*Example: SaaS platform where agent behavior varies by subscription tier*
-
-### "I'm already using LangChain tools"
-→ **LangGraph ReAct** (seamless LangChain integration)
-
-*Example: Extending existing LangChain pipeline with agent capabilities*
-
-## Framework Comparison
-
-| Aspect | LlamaIndex ReAct | LangGraph ReAct | PydanticAI |
-|--------|------------------|-----------------|------------|
-| **Core Strength** | RAG + reasoning | State machines + routing | Type-safe outputs |
-| **Architecture** | Workflow-based | Graph-based | Function-based |
-| **Output Format** | Text + sources + reasoning | Messages + graph trace | Pydantic models |
-| **Debugging** | Step-by-step visibility | Graph execution trace | Final result only |
-| **Tool Integration** | FunctionTool | LangChain tools | Python functions |
-| **Testing** | MockLLMWithChain | MockChatModelWithChain | TestModel |
-| **State Management** | Context objects | Typed state + reducers | Dependency injection |
-| **Performance** | Moderate (reasoning) | Moderate (graph overhead) | Fast (direct) |
-| **Best For** | RAG + research | Complex routing | APIs + validation |
-
----
-
-# Testing Strategy: Why Agent Testing Is Different
-
-## The Challenge
-
-Agents are **non-deterministic** by nature - the same input might take different reasoning paths. But your **business logic** should be predictable.
-
-**Without Proper Testing:**
-- Slow (API calls for every test)
-- Expensive ($$ per test run)  
-- Flaky (different responses break tests)
-- Unreliable (can't run in CI/CD)
-
-**With Mock Testing:**
-- Fast (no network calls)
-- Free (no API costs)
-- Deterministic (same result every time)
-- Reliable (works offline)
-
-## Testing All Three Frameworks
-
-### LlamaIndex Testing: Control the Reasoning
-
-```python
-from src.testing import MockLLMWithChain
-
-def test_research_agent_handles_missing_data():
-    # Test error recovery path
-    chain = [
-        "Thought: I need to search for data.\nAction: search\nAction Input: {'query': 'AI trends'}",
-        "Thought: No results found. I should try a broader search.\nAction: search\nAction Input: {'query': 'artificial intelligence'}",
-        "Thought: Found some results. I can provide a response now.\nAnswer: Based on available data..."
-    ]
-
-    mock_llm = MockLLMWithChain(chain=chain)
-    agent = SimpleReActAgent(llm=mock_llm, tools=[search_tool])
-
-    result = await agent.run("What are the latest AI trends?")
-
-    assert "artificial intelligence" in result["reasoning"]  # Used fallback search
-    assert len(result["sources"]) > 0  # Found data eventually
-```
-
-### LangGraph Testing: Control Graph Execution
-
-```python
+# LangGraph
 from src.testing.mock_langchain import MockChatModelWithChain
 
-def test_langgraph_agent_tool_routing():
-    # Test graph execution with tool calls
-    mock_llm = MockChatModelWithChain(chain=[
-        'Thought: Need to calculate.\nAction: calculate\nAction Input: {"expression": "2+2"}',
-        'Thought: Got result.\nAnswer: The answer is 4'
-    ])
-
-    agent = MinimalReActAgent(llm=mock_llm, tools=[calculate_tool])
-
-    result = await agent.run("What is 2+2?")
-
-    assert "4" in result["response"]
-    assert len(result["reasoning"]) == 2  # Two graph steps
-    assert len(result["sources"]) == 1  # One tool execution
-```
-
-### PydanticAI Testing: Validate Output Structure
-
-```python
+# PydanticAI
 from pydantic_ai.models.test import TestModel
-
-def test_sentiment_agent_output_format():
-    # Guarantee exact output structure
-    test_model = TestModel(custom_output_args={
-        "sentiment": "negative",
-        "confidence": 0.78,
-        "key_insights": ["Customer frustrated with shipping", "Product quality concerns"]
-    })
-
-    agent = create_analysis_agent(model=test_model)
-    result = await agent.run("This product was terrible and took weeks to arrive!")
-
-    # Type-safe assertions
-    assert isinstance(result.output.sentiment, str)
-    assert result.output.sentiment in ["positive", "negative", "neutral"]
-    assert 0.0 <= result.output.confidence <= 1.0
-    assert len(result.output.key_insights) >= 1
 ```
 
-## Testing Strategy by Use Case
+## Further Reading
 
-| Use Case | Testing Approach | What to Test |
-|----------|------------------|---------------|
-| **API Endpoints** | Mock all frameworks | Output format, error handling |
-| **Multi-step Workflows** | Mock LlamaIndex/LangGraph | Path taken, tools used |
-| **Graph Routing** | Mock LangGraph | Node transitions, state updates |
-| **Data Extraction** | Mock PydanticAI outputs | Field validation, edge cases |
-| **Error Handling** | Mock failure scenarios | Graceful degradation |
-
----
-
-# Advanced Patterns & Best Practices
-
-## 🚨 Common Pitfalls and Solutions
-
-### The Infinite Loop Problem
-```python
-# ❌ BAD: Agent gets stuck in reasoning loop
-agent = SimpleReActAgent(llm=llm, tools=tools)  # No limits!
-
-# ✅ GOOD: Set boundaries  
-agent = SimpleReActAgent(
-    llm=llm, 
-    tools=tools,
-    max_iterations=8,      # Prevent infinite loops
-    timeout=30            # Hard timeout
-)
-```
-
-### The Tool Overuse Problem  
-```python
-# ❌ BAD: Agent calls tools unnecessarily
-"Thought: Let me search for 2+2\nAction: search\nAction Input: {'query': '2+2'}"
-
-# ✅ GOOD: Train with examples that reason first
-chain = [
-    "Thought: 2+2 is basic math, I don't need tools for this.\nAnswer: 4"
-]
-```
-
-### The Hallucinated Tool Problem
-```python  
-# ❌ BAD: Agent tries to use non-existent tools
-"Action: magic_tool\nAction Input: {...}"
-
-# ✅ GOOD: Validate tools exist and provide clear descriptions
-tools = [
-    FunctionTool.from_defaults(
-        fn=search_web,
-        name="search_web",  # Exact name agent should use
-        description="Search the internet for current information. Use for recent events, news, or facts not in training data."
-    )
-]
-```
-
-## Performance Optimization
-
-### When Agents Add Value vs Overhead
-
-**Agents Excel At:**
-- Complex decision trees (>3 steps)
-- Real-time data integration  
-- Context-dependent responses
-- Error recovery and retry logic
-
-**Direct LLM Better For:**
-- Simple text generation
-- Single-step transformations
-- Creative writing tasks
-- When response time is critical
-
-### Optimization Strategies
-
-```python
-# Reduce reasoning overhead
-llm = OpenAI(
-    model="gpt-4",
-    temperature=0.1,      # More deterministic
-    max_tokens=500        # Limit reasoning verbosity  
-)
-
-# Cache expensive tool calls
-@lru_cache(maxsize=1000)
-def search_web(query: str) -> str:
-    return expensive_api_call(query)
-
-# Use streaming for better perceived performance
-agent = SimpleReActAgent(llm=llm, tools=tools, streaming=True)
-```
-
-## Quick Start Installation
-
-### Install Dependencies
-```bash
-# For LlamaIndex agents
-uv add llama-index-core
-
-# For PydanticAI agents  
-uv add pydantic-ai logfire
-
-# Development and testing
-uv add --dev pytest pytest-asyncio
-```
-
-### Environment Setup
-```python
-import os
-from pathlib import Path
-
-# Development: Use mocks for fast testing
-if os.getenv("ENVIRONMENT") == "development":
-    from src.testing import MockLLMWithChain
-    llm = MockLLMWithChain(chain=your_test_responses)
-else:
-    # Production: Use real models  
-    from llama_index.llms.openai import OpenAI
-    llm = OpenAI(model="gpt-4", api_key=os.getenv("OPENAI_API_KEY"))
-```
-
----
-
-# Summary: Your Agent Journey
-
-## 🎯 Next Steps Based on Your Goal
-
-### **Learning Agents** (Start Here)
-1. Run the weather assistant example with MockLLMWithChain
-2. Add a new tool and watch the reasoning change
-3. Try breaking it and see how error handling works
-
-### **Building APIs**  
-1. Create a PydanticAI agent with your data model
-2. Test with TestModel to verify output structure
-3. Integrate with FastAPI for production endpoint
-
-### **Research & Analysis**
-1. Build a ReAct agent with search tools
-2. Add multiple data sources and watch synthesis
-3. Use reasoning traces to improve prompts
-
-### **Production Deployment**
-1. Start with mocks for development
-2. Add error handling and rate limiting  
-3. Monitor agent performance with Logfire
-4. Scale with async patterns
-
-## Key Takeaways
-
-- **LlamaIndex ReAct**: Choose when you need transparent reasoning, complex workflows, or debugging capability
-- **PydanticAI**: Choose when you need guaranteed output structure, type safety, or production APIs
-- **Both Frameworks**: Support deterministic testing, work with any LLM provider, integrate with business logic
-
-**The most important skill**: Learning to test agents effectively with mocks. This enables rapid iteration and reliable production deployment.
-
----
-
-*Ready to build your first agent? Start with the Quick Start examples above and join the conversation in our community!*
+- **Article Series**: [AI Agents in Production](https://aienhancedengineer.substack.com)
+- **Repository**: [fm-app-toolkit](https://github.com/ai-enhanced-engineer/fm-app-toolkit)
+- **Design Patterns**: [agentic-design-patterns](https://github.com/ai-enhanced-engineer/agentic-design-patterns)
