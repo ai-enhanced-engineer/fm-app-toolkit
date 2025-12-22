@@ -98,7 +98,7 @@
 
 ### Features
 
-- MockLLMWithChain for deterministic response sequences
+- TrajectoryMockLLMLlamaIndex for deterministic response sequences
 - MockLLMEchoStream for testing streaming behavior
 - SimpleReActAgent as pedagogical ReAct implementation
 - Workflow events for agent communication

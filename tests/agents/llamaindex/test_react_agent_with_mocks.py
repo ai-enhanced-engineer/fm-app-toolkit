@@ -4,7 +4,7 @@ import pytest
 from llama_index.core.agent.workflow import ReActAgent
 from llama_index.core.tools import FunctionTool
 
-from src.testing.mock_chain import MockLLMWithChain
+from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
 from src.testing.mock_echo import MockLLMEchoStream
 from src.tools import add, divide, multiply, reverse_string, word_count
 
@@ -13,7 +13,7 @@ from src.tools import add, divide, multiply, reverse_string, word_count
 async def test__react_agent__predefined_responses() -> None:
     """Test that ReActAgent executes correctly with predefined mock LLM responses."""
     # Create a mock LLM with predefined ReAct-formatted responses
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Thought: I need to add these two numbers together.\nAction: add\nAction Input: {'a': 5, 'b': 3}",
             "Thought: I have the result of the addition.\nAnswer: The sum of 5 and 3 is 8.",
@@ -40,7 +40,7 @@ async def test__react_agent__predefined_responses() -> None:
 async def test__react_agent__multi_step_reasoning() -> None:
     """Test that ReActAgent handles multi-step reasoning with multiple tool calls."""
     # Create mock with multi-step reasoning
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Thought: I need to first multiply 4 by 5.\nAction: multiply\nAction Input: {'a': 4, 'b': 5}",
             "Thought: I got 20. Now I need to add 10 to this result.\nAction: add\nAction Input: {'a': 20, 'b': 10}",
@@ -66,7 +66,7 @@ async def test__react_agent__multi_step_reasoning() -> None:
 async def test__react_agent__string_tools() -> None:
     """Test that ReActAgent works correctly with string manipulation tools."""
     # Create mock for string operations
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Thought: I need to reverse the given string.\nAction: reverse_string\nAction Input: {'text': 'hello world'}",
             "Thought: I have reversed the string.\nAnswer: The reversed string is 'dlrow olleh'.",
@@ -90,7 +90,7 @@ async def test__react_agent__string_tools() -> None:
 async def test__react_agent__error_handling() -> None:
     """Test that ReActAgent handles tool errors gracefully."""
     # Create mock that will trigger division by zero
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Thought: I need to divide 10 by 0.\nAction: divide\nAction Input: {'a': 10, 'b': 0}",
             "Thought: There was an error dividing by zero. Division by zero is undefined.\nAnswer: Cannot divide by zero - this operation is undefined.",
@@ -138,7 +138,7 @@ async def test__react_agent__streaming_echo() -> None:
 async def test__react_agent__tool_selection() -> None:
     """Test that ReActAgent correctly selects appropriate tools from multiple options."""
     # Create mock that selects different tools based on the task
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Thought: I need to count the words in the text.\nAction: word_count\nAction Input: {'text': 'hello world test'}",
             "Thought: The text contains 3 words.\nAnswer: The text 'hello world test' contains 3 words.",
@@ -165,7 +165,7 @@ async def test__react_agent__tool_selection() -> None:
 async def test__react_agent__direct_answer() -> None:
     """Test that ReActAgent can provide direct answers without using tools."""
     # Create mock that answers directly without tool use
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Thought: This is a simple greeting that doesn't require any tools.\nAnswer: Hello! I'm a ReAct agent. How can I help you today?"
         ]
@@ -188,7 +188,7 @@ async def test__react_agent__direct_answer() -> None:
 async def test__react_agent_streaming__response_collection() -> None:
     """Test that ReActAgent streaming response collection works correctly."""
     # Create a mock that will stream a response
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=["Thought: I'll provide information about Python.\nAnswer: Python is a high-level programming language."]
     )
 
@@ -212,7 +212,7 @@ async def test__react_agent_streaming__response_collection() -> None:
 async def test__react_agent_streaming__with_tools() -> None:
     """Test that ReActAgent streaming behavior works when tools are executed."""
     # Create mock for tool execution with streaming
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Thought: I need to add 15 and 25.\nAction: add\nAction Input: {'a': 15, 'b': 25}",
             "Thought: The addition gives us 40.\nAnswer: The sum of 15 and 25 is 40.",

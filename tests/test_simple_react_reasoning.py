@@ -14,7 +14,7 @@ from llama_index.core.agent.react.types import (
 )
 
 from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-from src.testing.mock_chain import MockLLMWithChain
+from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
 from src.tools import add, multiply
 
 
@@ -23,7 +23,7 @@ def setup_simple_react_agent() -> Callable[[list[str], list[Tool] | None, int], 
     """Fixture to create SimpleReActAgent with mock LLM for reasoning tests."""
 
     def _create_agent(chain: list[str], tools: list[Tool] | None = None, max_reasoning: int = 1) -> SimpleReActAgent:
-        mock_llm = MockLLMWithChain(chain=chain)
+        mock_llm = TrajectoryMockLLMLlamaIndex(chain=chain)
         return SimpleReActAgent(
             llm=mock_llm,
             system_header="You are a helpful assistant that provides clear and concise answers.",
@@ -286,7 +286,7 @@ async def test_handles_thought_without_answer(setup_simple_react_agent: Callable
     When parser fails to extract action/answer from thought-only responses,
     the agent continues until either:
     1. Max reasoning is hit
-    2. MockLLMWithChain runs out of messages (returns empty)
+    2. TrajectoryMockLLMLlamaIndex runs out of messages (returns empty)
 
     In this test, we provide exactly max_reasoning thought-only responses
     so the agent will exhaust the chain and get an empty response.

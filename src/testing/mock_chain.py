@@ -15,11 +15,11 @@ from llama_index.core.llms.llm import LLM
 from pydantic import Field
 
 
-class MockLLMWithChain(LLM):
+class TrajectoryMockLLMLlamaIndex(LLM):
     """Returns responses from a predefined sequence, advancing with each call.
 
     Usage:
-        >>> mock = MockLLMWithChain(chain=["Response 1", "Response 2"])
+        >>> mock = TrajectoryMockLLMLlamaIndex(chain=["Response 1", "Response 2"])
         >>> response1 = mock.chat([...])  # Gets "Response 1"
         >>> response2 = mock.chat([...])  # Gets "Response 2"
         >>> mock.reset()  # Replay from beginning

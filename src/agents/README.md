@@ -40,10 +40,10 @@ Each component maps to specific code locations:
 
 ```python
 from src.agents.llamaindex import MinimalReActAgent, MinimalTool
-from src.testing.mock_chain import MockLLMWithChain
+from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
 
 # Deterministic responses for learning
-mock_llm = MockLLMWithChain(chain=[
+mock_llm = TrajectoryMockLLMLlamaIndex(chain=[
     'Thought: I need weather data.\nAction: get_weather\nAction Input: {"location": "Tokyo"}',
     'Thought: Got it.\nAnswer: Tokyo is 22°C and sunny.'
 ])
@@ -85,10 +85,10 @@ All agents support deterministic testing via mock LLMs:
 
 ```python
 # LlamaIndex
-from src.testing.mock_chain import MockLLMWithChain
+from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
 
 # LangGraph
-from src.testing.mock_langchain import MockChatModelWithChain
+from src.testing.mock_langchain import TrajectoryMockLLMLangChain
 
 # PydanticAI
 from pydantic_ai.models.test import TestModel

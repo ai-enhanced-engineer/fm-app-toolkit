@@ -5,14 +5,14 @@ from llama_cloud import MessageRole
 from llama_index.core.base.llms.types import ChatMessage
 
 # ----------------------------------------------
-# MockLLMWithChain TESTS - Sequential Response Control
+# TrajectoryMockLLMLlamaIndex TESTS - Sequential Response Control
 # ----------------------------------------------
 
 
 def test__mock_llm_chain__sequential_responses(mock_llm_factory):
     """Demonstrate controlling exact LLM response sequences for deterministic testing.
 
-    MockLLMWithChain enables testing complex agent workflows by providing
+    TrajectoryMockLLMLlamaIndex enables testing complex agent workflows by providing
     predetermined responses in sequence, ensuring reproducible test scenarios.
     """
     chain = ["First response", "Second response", "Third response"]
@@ -197,7 +197,7 @@ async def test_mock_llm_echo_async_cumulative_building(mock_llm_echo):
 
 def test__mock_llm_metadata__properties(mock_llm_factory, mock_llm_echo):
     """Verify mock LLMs provide expected metadata for compatibility."""
-    # MockLLMWithChain metadata
+    # TrajectoryMockLLMLlamaIndex metadata
     chain_llm = mock_llm_factory(["test"])
     chain_metadata = chain_llm.metadata
     assert chain_metadata.context_window == 4096
