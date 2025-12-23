@@ -12,7 +12,7 @@
 
 **Part 3.0:** [Production AI Systems: The Unit Testing Paradox](https://aienhancedengineer.substack.com/p/production-ai-systems-the-unit-testing)
 
-**Part 3.1:** Deterministically Testing Agentic Systems - Coming next week
+**Part 3.1:** [AI Agents in Production: Testing the Reasoning Loop](https://aienhancedengineer.substack.com/p/ai-agents-in-production-testing-the)
 
 ## 🏗️ The Three-Layer AI Stack
 
