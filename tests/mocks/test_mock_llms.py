@@ -5,14 +5,14 @@ from llama_cloud import MessageRole
 from llama_index.core.base.llms.types import ChatMessage
 
 # ----------------------------------------------
-# MockLLMWithChain TESTS - Sequential Response Control
+# TrajectoryMockLLMLlamaIndex TESTS - Sequential Response Control
 # ----------------------------------------------
 
 
 def test__mock_llm_chain__sequential_responses(mock_llm_factory):
     """Demonstrate controlling exact LLM response sequences for deterministic testing.
 
-    MockLLMWithChain enables testing complex agent workflows by providing
+    TrajectoryMockLLMLlamaIndex enables testing complex agent workflows by providing
     predetermined responses in sequence, ensuring reproducible test scenarios.
     """
     chain = ["First response", "Second response", "Third response"]
@@ -52,9 +52,13 @@ def test__mock_llm_chain__streaming_preserves_content(mock_llm_factory):
     full_content = "".join(c.delta for c in chunks)
     assert full_content == chain[0]
 
-    # Verify character-by-character streaming
-    assert len(chunks) == len(chain[0])
-    assert chunks[0].delta == "T"
+    # Verify chunked streaming (10-char chunks for better performance)
+    import math
+
+    chunk_size = 10
+    expected_chunks = math.ceil(len(chain[0]) / chunk_size)
+    assert len(chunks) == expected_chunks
+    assert chunks[0].delta == chain[0][:chunk_size]  # First chunk is 10 chars
     assert chunks[-1].message.content == chain[0]  # Final chunk has full content
 
 
@@ -89,9 +93,14 @@ async def test_mock_llm_chain_async_streaming(mock_llm_factory):
         chunks.append(chunk)
 
     # Verify async streaming maintains content integrity
+    import math
+
     full_content = "".join(c.delta for c in chunks)
     assert full_content == "Async response"
-    assert len(chunks) == len("Async response")
+    # Chunked streaming (10-char chunks)
+    chunk_size = 10
+    expected_chunks = math.ceil(len("Async response") / chunk_size)
+    assert len(chunks) == expected_chunks
 
 
 # ----------------------------------------------
@@ -197,7 +206,7 @@ async def test_mock_llm_echo_async_cumulative_building(mock_llm_echo):
 
 def test__mock_llm_metadata__properties(mock_llm_factory, mock_llm_echo):
     """Verify mock LLMs provide expected metadata for compatibility."""
-    # MockLLMWithChain metadata
+    # TrajectoryMockLLMLlamaIndex metadata
     chain_llm = mock_llm_factory(["test"])
     chain_metadata = chain_llm.metadata
     assert chain_metadata.context_window == 4096

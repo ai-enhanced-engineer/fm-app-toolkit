@@ -62,7 +62,7 @@ results = retriever.retrieve("What is RAG?")
 
 ```python
 from src.indexing import PropertyGraphIndexer
-from src.testing.mocks import MockLLMWithChain
+from src.mocks import TrajectoryMockLLMLlamaIndex
 
 # Create documents with relationships
 documents = [
@@ -79,7 +79,7 @@ basic_indexer = PropertyGraphIndexer(
 basic_index = basic_indexer.create_index(documents)
 
 # With LLM: Enhanced entity extraction
-mock_llm = MockLLMWithChain(chain=["Entities: Alice, CEO, TechCorp"])
+mock_llm = TrajectoryMockLLMLlamaIndex(chain=["Entities: Alice, CEO, TechCorp"])
 enhanced_indexer = PropertyGraphIndexer(
     llm=mock_llm,
     show_progress=False
@@ -95,13 +95,13 @@ Both indexers work with mock embeddings and LLMs for testing:
 
 ```python
 from llama_index.core.embeddings import MockEmbedding
-from src.testing.mocks import MockLLMWithChain
+from src.mocks import TrajectoryMockLLMLlamaIndex
 
 # Mock embedding for vector indexing
 mock_embed = MockEmbedding(embed_dim=256)
 
 # Mock LLM for entity extraction
-mock_llm = MockLLMWithChain(
+mock_llm = TrajectoryMockLLMLlamaIndex(
     chain=["Expected LLM response 1", "Response 2"]
 )
 

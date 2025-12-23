@@ -10,7 +10,7 @@ from llama_index.core.embeddings import MockEmbedding
 
 from src.data_loading import LocalDocumentRepository
 from src.data_loading.local import LocalRepository
-from src.testing.mock_chain import MockLLMWithChain
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 # ----------------------------------------------
 # FIXTURES
@@ -82,7 +82,7 @@ def test__build_simple__rag_pipeline(sample_repository, samples_dir):
     documents = sample_repository.load_documents(location=str(samples_dir))
 
     # Use mock LLM to avoid API calls
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Based on the context, RAG (Retrieval-Augmented Generation) combines retrieval of relevant documents with generation to improve accuracy and reduce hallucinations.",
             "Context construction involves four levels: Basic RAG, Query Understanding, Memory Management, and Personalization.",
@@ -415,7 +415,7 @@ def test__local_repository__csv_to_document_conversion():
 
         # Simulate building an index from the converted documents
         Settings.embed_model = MockEmbedding(embed_dim=256)
-        Settings.llm = MockLLMWithChain(
+        Settings.llm = TrajectoryMockLLMLlamaIndex(
             chain=["Based on the knowledge base, RAG improves accuracy by combining retrieval with generation."]
         )
 

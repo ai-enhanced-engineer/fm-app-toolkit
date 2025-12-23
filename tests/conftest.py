@@ -13,8 +13,8 @@ from llama_index.core.embeddings.mock_embed_model import MockEmbedding
 
 from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
 from src.data_loading import LocalDocumentRepository
-from src.testing.mock_chain import MockLLMWithChain
-from src.testing.mock_echo import MockLLMEchoStream
+from src.mocks.llamaindex.mock_echo import MockLLMEchoStream
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 # ----------------------------------------------
 # PATH FIXTURES
@@ -39,11 +39,11 @@ def mock_embed() -> MockEmbedding:
 
 
 @pytest.fixture
-def mock_llm_factory() -> Callable[[list[str]], MockLLMWithChain]:
-    """Factory for creating MockLLMWithChain instances with custom chains."""
+def mock_llm_factory() -> Callable[[list[str]], TrajectoryMockLLMLlamaIndex]:
+    """Factory for creating TrajectoryMockLLMLlamaIndex instances with custom chains."""
 
-    def _create(chain: list[str]) -> MockLLMWithChain:
-        return MockLLMWithChain(chain=chain)
+    def _create(chain: list[str]) -> TrajectoryMockLLMLlamaIndex:
+        return TrajectoryMockLLMLlamaIndex(chain=chain)
 
     return _create
 
@@ -88,7 +88,7 @@ def create_simple_agent() -> Callable:
     def _create(
         chain: list[str], tools: list[Tool] | None = None, max_reasoning: int = 10, verbose: bool = False
     ) -> SimpleReActAgent:
-        mock_llm = MockLLMWithChain(chain=chain)
+        mock_llm = TrajectoryMockLLMLlamaIndex(chain=chain)
         return SimpleReActAgent(
             llm=mock_llm,
             system_header="You are a helpful assistant.",

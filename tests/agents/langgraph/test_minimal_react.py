@@ -1,16 +1,16 @@
-"""Tests for LangGraph MinimalReActAgent using MockChatModelWithChain."""
+"""Tests for LangGraph MinimalReActAgent using TrajectoryMockLLMLangChain."""
 
 import pytest
 
 from src.agents.langgraph.minimal_react import MinimalReActAgent, Tool
 from src.agents.llamaindex.sample_tools import calculate, get_current_time, get_weather
-from src.testing.mock_langchain import MockChatModelWithChain
+from src.mocks.langchain.mock_trajectory import TrajectoryMockLLMLangChain
 
 
 @pytest.mark.asyncio
 async def test__single_tool_call__returns_response_with_one_source() -> None:
     """Test agent with single tool call followed by answer."""
-    mock_llm = MockChatModelWithChain(
+    mock_llm = TrajectoryMockLLMLangChain(
         chain=[
             'Thought: I need to get the weather for Tokyo.\nAction: get_weather\nAction Input: {"location": "Tokyo"}',
             "Thought: I have the weather information.\nAnswer: Weather in Tokyo: 75°F and sunny",
@@ -33,7 +33,7 @@ async def test__single_tool_call__returns_response_with_one_source() -> None:
 @pytest.mark.asyncio
 async def test__multi_step_reasoning__accumulates_multiple_sources() -> None:
     """Test agent with multiple tool calls in sequence."""
-    mock_llm = MockChatModelWithChain(
+    mock_llm = TrajectoryMockLLMLangChain(
         chain=[
             'Thought: I need to calculate 15 times 7 first.\nAction: calculate\nAction Input: {"expression": "15 * 7"}',
             'Thought: I got 105. Now I need to add 23.\nAction: calculate\nAction Input: {"expression": "105 + 23"}',
@@ -57,7 +57,7 @@ async def test__multi_step_reasoning__accumulates_multiple_sources() -> None:
 @pytest.mark.asyncio
 async def test__direct_answer__returns_response_with_no_sources() -> None:
     """Test agent answering directly without using tools."""
-    mock_llm = MockChatModelWithChain(
+    mock_llm = TrajectoryMockLLMLangChain(
         chain=["Thought: This is a greeting that doesn't require tools.\nAnswer: Hello! How can I help you today?"]
     )
 
@@ -78,7 +78,7 @@ async def test__direct_answer__returns_response_with_no_sources() -> None:
 @pytest.mark.asyncio
 async def test__max_steps_reached__returns_result() -> None:
     """Test agent reaching max steps limit."""
-    mock_llm = MockChatModelWithChain(
+    mock_llm = TrajectoryMockLLMLangChain(
         chain=[
             'Thought: Let me check the weather.\nAction: get_weather\nAction Input: {"location": "Tokyo"}',
             'Thought: Let me check again.\nAction: get_weather\nAction Input: {"location": "Tokyo"}',
@@ -102,7 +102,7 @@ async def test__max_steps_reached__returns_result() -> None:
 @pytest.mark.asyncio
 async def test__tool_not_found__adds_error_to_sources() -> None:
     """Test agent handling nonexistent tool gracefully."""
-    mock_llm = MockChatModelWithChain(
+    mock_llm = TrajectoryMockLLMLangChain(
         chain=[
             'Thought: I\'ll use a nonexistent tool.\nAction: magic_tool\nAction Input: {"param": "value"}',
             "Thought: That didn't work. Let me provide an answer.\nAnswer: I encountered an error with the tool.",
@@ -124,7 +124,7 @@ async def test__tool_not_found__adds_error_to_sources() -> None:
 @pytest.mark.asyncio
 async def test__multiple_tools_available__selects_correct_tool() -> None:
     """Test agent with multiple tools, using the appropriate one."""
-    mock_llm = MockChatModelWithChain(
+    mock_llm = TrajectoryMockLLMLangChain(
         chain=[
             "Thought: I need the current time.\nAction: get_current_time\nAction Input: {}",
             "Thought: I have the time.\nAnswer: The current time is shown above.",
@@ -149,7 +149,7 @@ async def test__multiple_tools_available__selects_correct_tool() -> None:
 @pytest.mark.asyncio
 async def test__empty_llm_response__handles_gracefully() -> None:
     """Test agent handling empty LLM response."""
-    mock_llm = MockChatModelWithChain(chain=[""])
+    mock_llm = TrajectoryMockLLMLangChain(chain=[""])
 
     tools = [
         Tool(name="get_weather", description="Get weather for a city", function=get_weather),

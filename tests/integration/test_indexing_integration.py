@@ -2,7 +2,7 @@
 
 from src.data_loading import LocalDocumentRepository
 from src.indexing import PropertyGraphIndexer, VectorStoreIndexer
-from src.testing.mock_chain import MockLLMWithChain
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 # All fixtures (test_data_dir, sample_documents, mock_embed) come from conftest.py
 
@@ -93,7 +93,7 @@ def test__property_graph_with__llm_extraction(sample_documents, mock_embed):
     entities and relationships from technical documents.
     """
     # Mock LLM simulates extraction of technical entities
-    mock_llm = MockLLMWithChain(
+    mock_llm = TrajectoryMockLLMLlamaIndex(
         chain=[
             "Entities: RAG, Pipeline, Vector Database",
             "Entities: Evaluation, Metrics, Guardrails",

@@ -5,6 +5,7 @@ sequence, enabling deterministic testing without real API calls.
 """
 
 import json
+import logging
 import re
 from typing import Any, AsyncIterator, Iterator, Sequence
 
@@ -13,15 +14,17 @@ from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from pydantic import Field
 
+logger = logging.getLogger(__name__)
 
-class MockChatModelWithChain(BaseChatModel):
+
+class TrajectoryMockLLMLangChain(BaseChatModel):
     """Returns responses from a predefined sequence for testing LangGraph agents.
 
     This mock supports tool calling by parsing Action/Action Input patterns
     from the response text and converting them to LangChain tool call format.
 
     Usage:
-        >>> mock = MockChatModelWithChain(chain=[
+        >>> mock = TrajectoryMockLLMLangChain(chain=[
         ...     'Thought: Need weather\nAction: get_weather\nAction Input: {"location": "Tokyo"}',
         ...     'Thought: Got it\nAnswer: Weather in Tokyo: 75°F and sunny'
         ... ])
@@ -67,7 +70,8 @@ class MockChatModelWithChain(BaseChatModel):
             if input_match:
                 try:
                     action_input = json.loads(input_match.group(1))
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
+                    logger.debug(f"Failed to parse action input as JSON: {e}")
                     action_input = {}
 
         return action, action_input
@@ -166,7 +170,7 @@ class MockChatModelWithChain(BaseChatModel):
         self,
         tools: Sequence[Any],
         **kwargs: Any,
-    ) -> "MockChatModelWithChain":
+    ) -> "TrajectoryMockLLMLangChain":
         """Bind tools to the model (no-op for mock, returns self).
 
         Args:

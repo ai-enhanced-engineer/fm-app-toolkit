@@ -14,7 +14,7 @@ from llama_index.core.agent.react.types import (
 )
 
 from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-from src.testing.mock_chain import MockLLMWithChain
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 from src.tools import add, divide, multiply, reverse_string, word_count
 
 
@@ -25,7 +25,7 @@ def setup_simple_react_agent() -> Callable[[list[str], list[Tool] | None, int, b
     def _create_agent(
         chain: list[str], tools: list[Tool] | None = None, max_reasoning: int = 15, verbose: bool = False
     ) -> SimpleReActAgent:
-        mock_llm = MockLLMWithChain(chain=chain)
+        mock_llm = TrajectoryMockLLMLlamaIndex(chain=chain)
         return SimpleReActAgent(
             llm=mock_llm,
             system_header="You are a helpful assistant.",
@@ -277,7 +277,7 @@ async def test_workflow_with_tools(setup_simple_react_agent: Callable) -> None:
 
 @pytest.mark.asyncio
 async def test_mock_llm_chain_agent_integration_sequence(setup_simple_react_agent: Callable) -> None:
-    """Validate MockLLMWithChain returns responses in exact order when used by agent.
+    """Validate TrajectoryMockLLMLlamaIndex returns responses in exact order when used by agent.
 
     This test validates that the mock LLM properly simulates a real LLM's behavior
     by returning predefined responses in sequence, allowing deterministic testing

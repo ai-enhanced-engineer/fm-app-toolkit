@@ -28,8 +28,8 @@ from src.agents.llamaindex.sample_tools import (
     roll_dice,
 )
 from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-from src.testing.mock_chain import MockLLMWithChain
-from src.testing.mock_rule_based import RuleBasedMockLLM
+from src.mocks.llamaindex.mock_rule_based import RuleBasedMockLLM
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def create_agent_with_sample_tools() -> Callable:
             description = func.__doc__.split("\n")[0] if func.__doc__ else f"Tool: {name}"
             tools.append(Tool(name=name, function=func, description=description))
 
-        mock_llm = MockLLMWithChain(chain=chain)
+        mock_llm = TrajectoryMockLLMLlamaIndex(chain=chain)
         return SimpleReActAgent(
             llm=mock_llm,
             system_header="You are a helpful assistant with access to various tools.",

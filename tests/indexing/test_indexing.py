@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from src.indexing import DocumentIndexer, PropertyGraphIndexer, VectorStoreIndexer
 from src.indexing.property_graph import _select_extractors
-from src.testing.mock_chain import MockLLMWithChain
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 
 def test__vector_store_indexer__creates_index():
@@ -139,7 +139,7 @@ def test__property_graph_indexer__with_llm():
         Document(text="Microsoft was founded by Bill Gates", doc_id="2"),
     ]
 
-    mock_llm = MockLLMWithChain(chain=["Entities: Apple Inc., Steve Jobs, founder relationship"])
+    mock_llm = TrajectoryMockLLMLlamaIndex(chain=["Entities: Apple Inc., Steve Jobs, founder relationship"])
 
     indexer = PropertyGraphIndexer(llm=mock_llm, show_progress=False, embed_kg_nodes=False)
     mock_embed = MockEmbedding(embed_dim=256)
@@ -180,7 +180,7 @@ def test__select_extractors__helper():
     assert isinstance(extractors[0], ImplicitPathExtractor)
 
     # With LLM: both extractors
-    mock_llm = MockLLMWithChain(chain=["test"])
+    mock_llm = TrajectoryMockLLMLlamaIndex(chain=["test"])
     extractors = _select_extractors(None, mock_llm)
     assert len(extractors) == 2
     assert isinstance(extractors[0], SimpleLLMPathExtractor)

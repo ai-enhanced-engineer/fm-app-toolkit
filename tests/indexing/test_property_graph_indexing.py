@@ -12,7 +12,7 @@ from llama_index.core.indices.property_graph.transformations import (
 from pydantic import ValidationError
 
 from src.indexing import PropertyGraphIndexer
-from src.testing.mock_chain import MockLLMWithChain
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 
 def test__property_graph_indexer__creates_index():
@@ -64,7 +64,7 @@ def test__property_graph_extractor__selection():
     mock_embed = MockEmbedding(embed_dim=256)
 
     # Test WITH LLM - should use both SimpleLLMPathExtractor and ImplicitPathExtractor
-    mock_llm = MockLLMWithChain(chain=["Extracted entities"])
+    mock_llm = TrajectoryMockLLMLlamaIndex(chain=["Extracted entities"])
     indexer_with_llm = PropertyGraphIndexer(
         llm=mock_llm,
         kg_extractors=None,  # Let it auto-select

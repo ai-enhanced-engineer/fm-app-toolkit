@@ -12,7 +12,7 @@
 
 **Part 3.0:** [Production AI Systems: The Unit Testing Paradox](https://aienhancedengineer.substack.com/p/production-ai-systems-the-unit-testing)
 
-**Part 3.1:** Deterministically Testing Agentic Systems - Coming next week
+**Part 3.1:** [AI Agents in Production: Testing the Reasoning Loop](https://aienhancedengineer.substack.com/p/ai-agents-in-production-testing-the)
 
 ## 🏗️ The Three-Layer AI Stack
 
@@ -56,11 +56,11 @@ Our `DocumentIndexer` abstraction allows you to switch between indexing strategi
 
 We've all heard it: "You can't unit test LLM code." This toolkit proves that wrong. Our mock LLMs provide deterministic responses for unit tests without ever hitting the internet, making your test suite fast, reliable, and free.
 
-The framework extends LlamaIndex's base LLM class for drop-in compatibility. Use `MockLLMWithChain` for sequential multi-step workflows, `MockLLMEchoStream` for testing streaming behavior, or `RuleBasedMockLLM` for dynamic query-based responses. These mocks create a controllable "model layer" for development, enabling you to test edge cases, error conditions, and complex reasoning chains that would be impossible or prohibitively expensive with real models.
+The framework extends LlamaIndex's base LLM class for drop-in compatibility. Use `TrajectoryMockLLMLlamaIndex` for sequential multi-step workflows, `MockLLMEchoStream` for testing streaming behavior, or `RuleBasedMockLLM` for dynamic query-based responses. These mocks create a controllable "model layer" for development, enabling you to test edge cases, error conditions, and complex reasoning chains that would be impossible or prohibitively expensive with real models.
 
 *📚 See Part 3.0 of our article series for the complete testing strategy deep dive*
 
-*See [testing/README.md](src/testing/README.md) for detailed documentation*
+*See [mocks/README.md](src/mocks/README.md) for detailed documentation*
 
 ### Agent Implementations
 **Application-Layer Orchestration**
@@ -78,9 +78,9 @@ Both approaches integrate seamlessly with your business logic through tools, han
 ```python
 # LlamaIndex ReAct: Step-by-step reasoning
 from src.agents.llamaindex import SimpleReActAgent
-from src.testing import MockLLMWithChain
+from src.testing import TrajectoryMockLLMLlamaIndex
 
-mock_llm = MockLLMWithChain(chain=[
+mock_llm = TrajectoryMockLLMLlamaIndex(chain=[
     "Thought: I need to calculate this.\nAction: multiply\nAction Input: {'a': 15, 'b': 7}",
     "Thought: Now add 23.\nAction: add\nAction Input: {'a': 105, 'b': 23}", 
     "Thought: Done.\nAnswer: 15 × 7 + 23 = 128"
@@ -117,7 +117,7 @@ This approach enables deterministic testing without brittle mocks. Define expect
 
 ```python
 def test_business_workflow():
-    mock_llm = MockLLMWithChain(chain=[
+    mock_llm = TrajectoryMockLLMLlamaIndex(chain=[
         "Thought: Check stock.\nAction: check_stock",
         "Thought: Calculate total.\nAction: calculate_price", 
         "Thought: Done.\nAnswer: Order #123 confirmed"
@@ -139,8 +139,8 @@ Develop with mocks, test with mocks, deploy with real models—same codebase:
 ```python
 def create_agent(environment="development"):
     if environment == "development":
-        from src.testing import MockLLMWithChain
-        llm = MockLLMWithChain(chain=[...])
+        from src.testing import TrajectoryMockLLMLlamaIndex
+        llm = TrajectoryMockLLMLlamaIndex(chain=[...])
     else:
         from llama_index.llms.openai import OpenAI
         llm = OpenAI(model="gpt-4")
@@ -201,7 +201,7 @@ make process-documents  # See document loading and chunking in action
 
 The best way to understand these patterns is to see them in action. Explore our [tests/](tests/) directory for 149+ examples of real-world scenarios, or dive into the module-specific documentation:
 
-- [testing/README.md](src/testing/README.md) - Mock LLM patterns and deterministic testing
+- [mocks/README.md](src/mocks/README.md) - Mock LLM patterns and deterministic testing
 - [agents/llamaindex/README.md](src/agents/llamaindex/README.md) - ReAct agents with step-by-step reasoning  
 - [agents/pydantic/analysis_agent.py](src/agents/pydantic/analysis_agent.py) - Structured agents with validation and Logfire observability
 - [data_loading/README.md](src/data_loading/README.md) - Repository pattern guide

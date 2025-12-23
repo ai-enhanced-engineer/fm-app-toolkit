@@ -21,15 +21,15 @@ Our solution: custom testing abstractions that provide deterministic, controlled
 
 This module provides mock implementations that extend base LLM classes, enabling drop-in replacement during testing while maintaining full compatibility with production code.
 
-### MockLLMWithChain
+### TrajectoryMockLLMLlamaIndex
 
 Returns responses from a predefined sequence, perfect for testing multi-step agent workflows.
 
 ```python
-from src.testing import MockLLMWithChain
+from src.mocks import TrajectoryMockLLMLlamaIndex
 
 # Define exact sequence of responses
-mock_llm = MockLLMWithChain(chain=[
+mock_llm = TrajectoryMockLLMLlamaIndex(chain=[
     "Thought: I need to search.\nAction: search\nAction Input: {'query': 'python'}",
     "Thought: Found results.\nAnswer: Python is a programming language."
 ])
@@ -54,7 +54,7 @@ result = agent.run("Tell me about Python")
 Echoes user input back, useful for testing streaming behavior and message flow.
 
 ```python
-from src.testing import MockLLMEchoStream
+from src.mocks import MockLLMEchoStream
 
 mock_llm = MockLLMEchoStream()
 
@@ -73,7 +73,7 @@ assert chunks == ["Test me", "ssage"]
 Responds dynamically based on content patterns, offering more flexibility than predefined chains.
 
 ```python
-from src.testing import RuleBasedMockLLM
+from src.mocks import RuleBasedMockLLM
 
 # Define behavior rules
 rules = {
@@ -103,7 +103,7 @@ def test_multi_step_calculation():
         "Thought: Result is 22.\nAnswer: 5 × 3 + 7 = 22"
     ]
     
-    agent = create_agent(MockLLMWithChain(chain=chain))
+    agent = create_agent(TrajectoryMockLLMLlamaIndex(chain=chain))
     result = agent.run("Calculate 5 * 3 + 7")
     
     assert result.response == "5 × 3 + 7 = 22"
@@ -121,7 +121,7 @@ def test_agent_error_recovery():
         "Thought: Retry with valid format.\nAnswer: Recovered successfully"
     ]
     
-    agent = create_agent(MockLLMWithChain(chain=chain))
+    agent = create_agent(TrajectoryMockLLMLlamaIndex(chain=chain))
     result = agent.run("Test error handling")
     
     assert "Recovered successfully" in result.response
@@ -179,7 +179,7 @@ def mock_calculation_agent():
         "Thought: Result is 10.\nAnswer: 2 × 3 + 4 = 10"
     ]
     
-    mock_llm = MockLLMWithChain(chain=chain)
+    mock_llm = TrajectoryMockLLMLlamaIndex(chain=chain)
     return YourReActAgent(llm=mock_llm, tools=[multiply_tool, add_tool])
 
 def test_calculation_workflow(mock_calculation_agent):
@@ -196,7 +196,7 @@ All mocks extend base LLM classes, making them compatible with any framework:
 
 ```python
 # Works with any LLM-expecting component
-mock_llm = MockLLMWithChain(chain=[...])
+mock_llm = TrajectoryMockLLMLlamaIndex(chain=[...])
 
 # Your framework here
 agent = create_agent(llm=mock_llm)
@@ -225,7 +225,7 @@ Ensure mock responses match your agent's expected format:
     (["Invalid format", ""], ""),                          # Failure case
 ])
 def test_various_scenarios(chain, expected):
-    agent = create_agent(MockLLMWithChain(chain=chain))
+    agent = create_agent(TrajectoryMockLLMLlamaIndex(chain=chain))
     result = agent.run("Test query") 
     assert expected in result.response
 ```
@@ -237,7 +237,7 @@ def test_various_scenarios(chain, expected):
 def mock_llm_factory():
     """Factory for creating mocks with different chains."""
     def _create(chain):
-        return MockLLMWithChain(chain=chain)
+        return TrajectoryMockLLMLlamaIndex(chain=chain)
     return _create
 
 @pytest.fixture(autouse=True)
