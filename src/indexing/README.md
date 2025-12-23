@@ -62,7 +62,7 @@ results = retriever.retrieve("What is RAG?")
 
 ```python
 from src.indexing import PropertyGraphIndexer
-from src.testing.mocks import TrajectoryMockLLMLlamaIndex
+from src.mocks import TrajectoryMockLLMLlamaIndex
 
 # Create documents with relationships
 documents = [
@@ -95,7 +95,7 @@ Both indexers work with mock embeddings and LLMs for testing:
 
 ```python
 from llama_index.core.embeddings import MockEmbedding
-from src.testing.mocks import TrajectoryMockLLMLlamaIndex
+from src.mocks import TrajectoryMockLLMLlamaIndex
 
 # Mock embedding for vector indexing
 mock_embed = MockEmbedding(embed_dim=256)

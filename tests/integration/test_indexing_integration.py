@@ -2,7 +2,7 @@
 
 from src.data_loading import LocalDocumentRepository
 from src.indexing import PropertyGraphIndexer, VectorStoreIndexer
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 # All fixtures (test_data_dir, sample_documents, mock_embed) come from conftest.py
 

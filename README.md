@@ -60,7 +60,7 @@ The framework extends LlamaIndex's base LLM class for drop-in compatibility. Use
 
 *📚 See Part 3.0 of our article series for the complete testing strategy deep dive*
 
-*See [testing/README.md](src/testing/README.md) for detailed documentation*
+*See [mocks/README.md](src/mocks/README.md) for detailed documentation*
 
 ### Agent Implementations
 **Application-Layer Orchestration**
@@ -201,7 +201,7 @@ make process-documents  # See document loading and chunking in action
 
 The best way to understand these patterns is to see them in action. Explore our [tests/](tests/) directory for 149+ examples of real-world scenarios, or dive into the module-specific documentation:
 
-- [testing/README.md](src/testing/README.md) - Mock LLM patterns and deterministic testing
+- [mocks/README.md](src/mocks/README.md) - Mock LLM patterns and deterministic testing
 - [agents/llamaindex/README.md](src/agents/llamaindex/README.md) - ReAct agents with step-by-step reasoning  
 - [agents/pydantic/analysis_agent.py](src/agents/pydantic/analysis_agent.py) - Structured agents with validation and Logfire observability
 - [data_loading/README.md](src/data_loading/README.md) - Repository pattern guide

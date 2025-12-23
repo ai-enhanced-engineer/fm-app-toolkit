@@ -11,10 +11,10 @@ This directory contains working test code that demonstrates the deterministic te
 | Article Concept | Framework | Test File | What It Demonstrates |
 |-----------------|-----------|-----------|---------------------|
 | **Reasoning Trajectory Mocking** | LlamaIndex | `llamaindex/test_react_agent_with_mocks.py` | Pre-defined LLM response chains |
-| **Multi-Step Reasoning** | LlamaIndex | `test__react_agent__multi_step_reasoning` | Sequential tool calls with mock chains |
-| **Error Recovery Testing** | LlamaIndex | `test__react_agent__error_handling` | Graceful degradation on tool errors |
+| **Multi-Step Reasoning** | LlamaIndex | `llamaindex/test_react_agent_with_mocks.py` | Sequential tool calls with mock chains |
+| **Error Recovery Testing** | LlamaIndex | `llamaindex/test_react_agent_with_mocks.py` | Graceful degradation on tool errors |
 | **Tool Selection Verification** | LangGraph | `langgraph/test_simple_react.py` | Correct tool invocation from multiple options |
-| **Source Tracking** | LangGraph | `test__multi_step_reasoning__accumulates_multiple_sources` | Verifying tool call accumulation |
+| **Source Tracking** | LangGraph | `langgraph/test_simple_react.py` | Verifying tool call accumulation |
 | **Structured Output Validation** | PydanticAI | `pydantic/test_pydantic_agent.py` | Type-safe output with TestModel |
 
 ## Module Organization
@@ -128,5 +128,5 @@ Use these patterns as templates:
 ## Related Resources
 
 - **Article**: [AI Agents in Production: Testing the Reasoning Loop](https://aienhancedengineer.substack.com/p/ai-agents-in-production-testing-the)
-- **Mock implementations**: `src/testing/` directory
+- **Mock implementations**: `src/mocks/` directory
 - **Agent implementations**: `src/agents/` directory

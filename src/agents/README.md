@@ -40,7 +40,7 @@ Each component maps to specific code locations:
 
 ```python
 from src.agents.llamaindex import MinimalReActAgent, MinimalTool
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 # Deterministic responses for learning
 mock_llm = TrajectoryMockLLMLlamaIndex(chain=[
@@ -68,7 +68,7 @@ result = await agent.run("What's the weather in Tokyo?")
 |---------|-------|-----------|
 | **2** | Agent Loop | `llamaindex/minimal_react.py` (explicit loop) |
 | **2.1** | Harness Components | All agent files (see table above) |
-| **3** | Testing *(upcoming)* | `src/testing/mock_chain.py`, `src/testing/mock_langchain.py` |
+| **3** | Testing *(upcoming)* | `src/mocks/llamaindex/`, `src/mocks/langchain/` |
 | **4** | Framework Comparison *(upcoming)* | `llamaindex/`, `langgraph/`, `pydantic/` |
 
 ## Learning Path
@@ -85,10 +85,10 @@ All agents support deterministic testing via mock LLMs:
 
 ```python
 # LlamaIndex
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 # LangGraph
-from src.testing.mock_langchain import TrajectoryMockLLMLangChain
+from src.mocks.langchain.mock_trajectory import TrajectoryMockLLMLangChain
 
 # PydanticAI
 from pydantic_ai.models.test import TestModel

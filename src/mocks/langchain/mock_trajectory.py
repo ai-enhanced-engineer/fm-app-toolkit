@@ -5,6 +5,7 @@ sequence, enabling deterministic testing without real API calls.
 """
 
 import json
+import logging
 import re
 from typing import Any, AsyncIterator, Iterator, Sequence
 
@@ -12,6 +13,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from pydantic import Field
+
+logger = logging.getLogger(__name__)
 
 
 class TrajectoryMockLLMLangChain(BaseChatModel):
@@ -67,7 +70,8 @@ class TrajectoryMockLLMLangChain(BaseChatModel):
             if input_match:
                 try:
                     action_input = json.loads(input_match.group(1))
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
+                    logger.debug(f"Failed to parse action input as JSON: {e}")
                     action_input = {}
 
         return action, action_input

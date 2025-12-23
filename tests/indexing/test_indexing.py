@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from src.indexing import DocumentIndexer, PropertyGraphIndexer, VectorStoreIndexer
 from src.indexing.property_graph import _select_extractors
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 
 def test__vector_store_indexer__creates_index():

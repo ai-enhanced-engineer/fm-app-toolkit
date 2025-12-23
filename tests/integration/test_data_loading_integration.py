@@ -10,7 +10,7 @@ from llama_index.core.embeddings import MockEmbedding
 
 from src.data_loading import LocalDocumentRepository
 from src.data_loading.local import LocalRepository
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 # ----------------------------------------------
 # FIXTURES

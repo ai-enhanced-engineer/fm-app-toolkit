@@ -4,7 +4,7 @@ import pytest
 
 from src.agents.llamaindex.minimal_react import MinimalReActAgent, Tool
 from src.agents.llamaindex.sample_tools import calculate, get_current_time, get_weather
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 
 @pytest.mark.asyncio

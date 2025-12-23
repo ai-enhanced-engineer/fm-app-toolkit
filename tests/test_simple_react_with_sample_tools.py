@@ -28,8 +28,8 @@ from src.agents.llamaindex.sample_tools import (
     roll_dice,
 )
 from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
-from src.testing.mock_rule_based import RuleBasedMockLLM
+from src.mocks.llamaindex.mock_rule_based import RuleBasedMockLLM
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 
 @pytest.fixture

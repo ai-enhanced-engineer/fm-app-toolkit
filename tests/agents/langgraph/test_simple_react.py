@@ -4,7 +4,7 @@ import pytest
 
 from src.agents.langgraph.simple_react import SimpleReActAgent, Tool
 from src.agents.llamaindex.sample_tools import calculate, get_current_time, get_weather
-from src.testing.mock_langchain import TrajectoryMockLLMLangChain
+from src.mocks.langchain.mock_trajectory import TrajectoryMockLLMLangChain
 
 
 @pytest.mark.asyncio

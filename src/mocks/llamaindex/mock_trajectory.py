@@ -42,12 +42,14 @@ class TrajectoryMockLLMLlamaIndex(LLM):
                 chat_message = self.message_chain[self._current_index]
                 self._current_index += 1  # Advance to next message for next call
 
-                # Stream character by character for realistic streaming behavior
+                # Stream in chunks for better performance (configurable chunk size)
                 content = chat_message.content or ""
+                chunk_size = 10
                 cumulative = ""
-                for char in content:
-                    cumulative += char
-                    yield ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=cumulative), delta=char)
+                for i in range(0, len(content), chunk_size):
+                    chunk = content[i : i + chunk_size]
+                    cumulative += chunk
+                    yield ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=cumulative), delta=chunk)
             else:
                 # Chain exhausted - return empty response
                 yield ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=""), delta="")
@@ -62,12 +64,14 @@ class TrajectoryMockLLMLlamaIndex(LLM):
                 chat_message = self.message_chain[self._current_index]
                 self._current_index += 1  # Advance for next call
 
-                # Stream character by character
+                # Stream in chunks for better performance
                 content = chat_message.content or ""
+                chunk_size = 10
                 cumulative = ""
-                for char in content:
-                    cumulative += char
-                    yield ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=cumulative), delta=char)
+                for i in range(0, len(content), chunk_size):
+                    chunk = content[i : i + chunk_size]
+                    cumulative += chunk
+                    yield ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=cumulative), delta=chunk)
             else:
                 # Chain exhausted
                 yield ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=""), delta="")

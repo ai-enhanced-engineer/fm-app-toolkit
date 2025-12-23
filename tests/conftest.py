@@ -13,8 +13,8 @@ from llama_index.core.embeddings.mock_embed_model import MockEmbedding
 
 from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
 from src.data_loading import LocalDocumentRepository
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
-from src.testing.mock_echo import MockLLMEchoStream
+from src.mocks.llamaindex.mock_echo import MockLLMEchoStream
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 # ----------------------------------------------
 # PATH FIXTURES

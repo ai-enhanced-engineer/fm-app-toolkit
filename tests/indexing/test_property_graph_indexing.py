@@ -12,7 +12,7 @@ from llama_index.core.indices.property_graph.transformations import (
 from pydantic import ValidationError
 
 from src.indexing import PropertyGraphIndexer
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 
 
 def test__property_graph_indexer__creates_index():

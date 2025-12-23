@@ -14,7 +14,7 @@ from llama_index.core.agent.react.types import (
 )
 
 from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
-from src.testing.mock_chain import TrajectoryMockLLMLlamaIndex
+from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
 from src.tools import add, multiply
 
 

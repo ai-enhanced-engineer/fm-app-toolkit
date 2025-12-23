@@ -26,7 +26,7 @@ This module provides mock implementations that extend base LLM classes, enabling
 Returns responses from a predefined sequence, perfect for testing multi-step agent workflows.
 
 ```python
-from src.testing import TrajectoryMockLLMLlamaIndex
+from src.mocks import TrajectoryMockLLMLlamaIndex
 
 # Define exact sequence of responses
 mock_llm = TrajectoryMockLLMLlamaIndex(chain=[
@@ -54,7 +54,7 @@ result = agent.run("Tell me about Python")
 Echoes user input back, useful for testing streaming behavior and message flow.
 
 ```python
-from src.testing import MockLLMEchoStream
+from src.mocks import MockLLMEchoStream
 
 mock_llm = MockLLMEchoStream()
 
@@ -73,7 +73,7 @@ assert chunks == ["Test me", "ssage"]
 Responds dynamically based on content patterns, offering more flexibility than predefined chains.
 
 ```python
-from src.testing import RuleBasedMockLLM
+from src.mocks import RuleBasedMockLLM
 
 # Define behavior rules
 rules = {
