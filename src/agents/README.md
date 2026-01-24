@@ -97,5 +97,5 @@ from pydantic_ai.models.test import TestModel
 ## Further Reading
 
 - **Article Series**: [AI Agents in Production](https://aienhancedengineer.substack.com)
-- **Repository**: [fm-app-toolkit](https://github.com/ai-enhanced-engineer/fm-app-toolkit)
+- **Repository**: [aiee-toolset](https://github.com/ai-enhanced-engineer/aiee-toolset)
 - **Design Patterns**: [agentic-design-patterns](https://github.com/ai-enhanced-engineer/agentic-design-patterns)

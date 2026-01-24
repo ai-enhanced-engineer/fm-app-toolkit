@@ -1,7 +1,7 @@
 [project]
-name = "fm-app-toolkit"
-version = "1.2.0"
-description = "Foundation Model Application Toolkit - Production patterns for FM-based applications"
+name = "aiee-toolset"
+version = "2.0.0"
+description = "AI-Enhanced Engineer Toolset - Battle-tested patterns for production AI applications"
 authors = [{name="Leopoldo Garcia Vargas", email="lk13.dev@gmail.com"}]
 requires-python = ">=3.12"
 license = {text = "Apache-2.0"}

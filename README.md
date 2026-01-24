@@ -1,6 +1,6 @@
-# FM App Toolkit
+# AIEE Toolset
 
-**Foundation Model Application Toolkit** - Battle-tested patterns and concrete implementations for building production-grade AI applications.
+**AI-Enhanced Engineer Toolset** - Battle-tested patterns and concrete implementations for building production-grade AI applications.
 
 📚 **Read more on [AI Enhanced Engineer](https://aienhancedengineer.substack.com/)** - Deep dives into production AI patterns and practices.
 
@@ -21,7 +21,7 @@ In her book [AI Engineering](https://www.oreilly.com/library/view/ai-engineering
 ![AI Stack Pyramid - Three Layers: Infrastructure (bottom), Model (middle), Application (top)](assets/images/ai-stack-pyramid.png)
 *The AI Stack Pyramid: Each layer depends on the one below, with accessibility increasing as you move up. Source: Adapted from Chip Huyen's AI Engineering framework.*
 
-The pyramid structure reveals an important truth: as you move up the stack, the technology becomes **more accessible** to non-specialists, but paradoxically, building production-grade applications at this layer presents **unique challenges**. You're working with **models you don't control**, **infrastructure you don't manage**, and **outputs that aren't deterministic**<sup>[1](#ref1)</sup>. This is where the FM App Toolkit comes in.
+The pyramid structure reveals an important truth: as you move up the stack, the technology becomes **more accessible** to non-specialists, but paradoxically, building production-grade applications at this layer presents **unique challenges**. You're working with **models you don't control**, **infrastructure you don't manage**, and **outputs that aren't deterministic**<sup>[1](#ref1)</sup>. This is where the AIEE Toolset comes in.
 
 ## 💡 The Reality of Building at the Application Layer
 
@@ -159,7 +159,7 @@ def create_structured_agent(environment="development"):
 ## Project Structure
 
 ```
-fm-app-toolkit/
+aiee-toolset/
 ├── src/          # Main package
 │   ├── agents/              # Agent implementations
 │   │   ├── llamaindex/     # ReAct pattern with LlamaIndex

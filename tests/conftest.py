@@ -1,4 +1,4 @@
-"""Shared test fixtures for the fm-app-toolkit test suite.
+"""Shared test fixtures for the aiee-toolset test suite.
 
 This module provides common fixtures used across multiple test files,
 reducing duplication and ensuring consistency.

@@ -113,7 +113,7 @@ validate-branch: ## Run formatting, linting, type checks, and tests
 # Examples
 # ----------------------------
 
-DATA_PATH ?= fm_app_toolkit/test_data
+DATA_PATH ?= aiee_toolset/test_data
 
 process-documents: ## Process documents with loading and chunking demonstration (use DATA_PATH=/path to override)
 	@echo "🚀 Running document processing demonstration..."
