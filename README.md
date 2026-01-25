@@ -1,10 +1,8 @@
-# AIEE Toolset
-
 ![AIEE Toolset Cover](assets/images/cover.jpeg)
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-220%2B%20passing-green)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-75%25-green)](tests/)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/ai-enhanced-engineer/aiee-toolset/ci.yml?branch=main)](https://github.com/ai-enhanced-engineer/aiee-toolset/actions)
 
 The official [AI-Enhanced Engineer](https://aiee.io) toolset | [Subscribe](https://aienhancedengineer.substack.com/)
