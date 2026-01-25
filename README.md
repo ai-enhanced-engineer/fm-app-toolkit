@@ -1,11 +1,15 @@
-# AIEE Toolset
+<p align="center">
+  <img src="assets/images/cover.jpeg" alt="AIEE Toolset Cover" />
+</p>
 
-**The official AI-Enhanced Engineer toolset** from [aiee.io](https://aiee.io)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" /></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python Version" /></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/coverage-75%25-green" alt="Coverage" /></a>
+  <a href="https://github.com/ai-enhanced-engineer/aiee-toolset/actions"><img src="https://img.shields.io/github/actions/workflow/status/ai-enhanced-engineer/aiee-toolset/ci.yml?branch=main" alt="Build Status" /></a>
+</p>
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-220%2B%20passing-green)](tests/)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/ai-enhanced-engineer/aiee-toolset/ci.yml?branch=main)](https://github.com/ai-enhanced-engineer/aiee-toolset/actions)
+The official [AI-Enhanced Engineer](https://aiee.io) toolset | [Subscribe](https://aienhancedengineer.substack.com/)
 
 Production-grade patterns and battle-tested implementations for building reliable AI applications. Nearly a decade of deployment experience distilled into reusable code.
 
@@ -141,6 +145,10 @@ This toolkit grows stronger with community input. We especially welcome:
 - [PydanticAI Documentation](https://ai.pydantic.dev/) - Official PydanticAI docs
 - [CLAUDE.md](CLAUDE.md) - Development guidelines for this project
 
+### Community
+- [AIEE Substack](https://aienhancedengineer.substack.com/) - Deep dives into production AI patterns
+- [aiee.io](https://aiee.io) - Official website
+
 ## 📝 References
 
 ### Academic Foundations
@@ -169,3 +177,5 @@ Apache License 2.0 - See [LICENSE](LICENSE) file for details.
 🚀 **Ready to ship production AI?** Start with `just init` and have your first deterministic agent test running in minutes.
 
 *From nearly a decade of production AI deployments. For developers shipping real systems.*
+
+📬 [Subscribe](https://aienhancedengineer.substack.com/) for practical guides on production AI engineering.

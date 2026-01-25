@@ -1,8 +1,6 @@
 # Agent Implementations
 
-This directory contains working code for the **[AI Agents in Production](https://aienhancedengineer.substack.com)** article series. The code is designed for learning—each implementation demonstrates concepts from specific articles.
-
-> **Series Status**: Currently at Article 2.1. Code for later articles (testing, framework comparison) exists but articles are not yet published.
+Production-ready agent implementations using LlamaIndex, LangGraph, and PydanticAI. Each implementation demonstrates patterns for building reliable AI agents with deterministic testing support.
 
 ## Module Organization
 
@@ -94,14 +92,14 @@ result = await agent.run("What's the weather in Tokyo?")
 # result = {"response": "...", "reasoning": [...], "sources": [...]}
 ```
 
-## Code Reference by Article
+## Implementation Guide
 
-| Article | Topic | Key Files |
-|---------|-------|-----------|
-| **2** | Agent Loop | `llamaindex/minimal_react.py` (explicit loop) |
-| **2.1** | Harness Components | All agent files (see table above) |
-| **3** | Testing *(upcoming)* | `src/mocks/llamaindex/`, `src/mocks/langchain/` |
-| **4** | Framework Comparison *(upcoming)* | `llamaindex/`, `langgraph/`, `pydantic/` |
+| Concept | Key Files |
+|---------|-----------|
+| ReAct Agent Loop | `llamaindex/minimal_react.py` (explicit loop, educational) |
+| Six Harness Components | All agent files (see component table above) |
+| Testing with Mocks | `src/mocks/llamaindex/`, `src/mocks/langchain/` |
+| Framework Comparison | `llamaindex/`, `langgraph/`, `pydantic/` |
 
 ## Learning Path
 
@@ -128,6 +126,6 @@ from pydantic_ai.models.test import TestModel
 
 ## Further Reading
 
-- **Article Series**: [AI Agents in Production](https://aienhancedengineer.substack.com)
-- **Repository**: [aiee-toolset](https://github.com/ai-enhanced-engineer/aiee-toolset)
-- **Design Patterns**: [agentic-design-patterns](https://github.com/ai-enhanced-engineer/agentic-design-patterns)
+- [AI Agents in Production](https://aienhancedengineer.substack.com) - Article series covering these patterns in depth
+- [LlamaIndex Documentation](https://docs.llamaindex.ai/) - ReAct agent reference
+- [PydanticAI Documentation](https://ai.pydantic.dev/) - Structured output agents

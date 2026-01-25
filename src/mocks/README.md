@@ -1,6 +1,6 @@
 # Testing AI Systems - Custom Abstractions for Deterministic Testing
 
-> **Related Article**: [Production AI Systems: The Unit Testing Paradox](https://aienhancedengineer.substack.com/p/production-ai-systems-the-unit-testing)
+> 📖 For the design rationale behind this approach, see [Production AI Systems: The Unit Testing Paradox](https://aienhancedengineer.substack.com/p/production-ai-systems-the-unit-testing)
 
 The unit testing paradox in AI systems: traditional testing breaks down when your system calls non-deterministic language models. Teams face an impossible choice between expensive API-based tests or no automated testing at all.
 

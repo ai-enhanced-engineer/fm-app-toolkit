@@ -2,13 +2,11 @@
 
 This module implements the Repository Pattern for document and data loading, providing clean abstractions over different data sources while maintaining testability and flexibility.
 
-> 📚 Full implementation details and architectural reasoning available at: [Production AI Systems: Solving the Repository Pattern Challenge](https://aienhancedengineer.substack.com/p/production-ai-systems-solving-the)
-
 ## Quick Start
 
 ```bash
 # See the repository pattern in action
-make process-documents
+just process-documents
 ```
 
 ## File Guide
@@ -101,3 +99,8 @@ Follows Domain-Driven Design principles:
 - Concrete implementations handle infrastructure concerns
 - Business logic remains pure and testable
 - Dependency inversion enables easy mocking
+
+## Further Reading
+
+- [Production AI Systems: Solving the Repository Pattern Challenge](https://aienhancedengineer.substack.com/p/production-ai-systems-solving-the) - Deep dive into design decisions
+- [Architecture Patterns with Python](https://www.cosmicpython.com/book/chapter_02_repository.html) - Repository pattern foundations

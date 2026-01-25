@@ -1,8 +1,8 @@
 # Agent Testing Examples
 
-Hands-on examples for the **[AI Agents in Production: Testing the Reasoning Loop](https://aienhancedengineer.substack.com/p/ai-agents-in-production-testing-the)** article (Part 3: Deterministic Testing with Trajectory Mocking).
+Deterministic testing patterns for AI agents using trajectory mocking. These tests demonstrate how to verify agent reasoning without API calls.
 
-> **Getting Started**: Run `make environment-create` from the repository root. See the [main README](../../README.md#-development-workflow) for full setup.
+> **Getting Started**: Run `just init` from the repository root. See the [main README](../../README.md) for full setup.
 
 This directory contains working test code that demonstrates the deterministic testing patterns described in the article. Each test maps to specific concepts—use them as templates for your own agent tests.
 
@@ -127,6 +127,6 @@ Use these patterns as templates:
 
 ## Related Resources
 
-- **Article**: [AI Agents in Production: Testing the Reasoning Loop](https://aienhancedengineer.substack.com/p/ai-agents-in-production-testing-the)
-- **Mock implementations**: `src/mocks/` directory
-- **Agent implementations**: `src/agents/` directory
+- `src/mocks/` - Mock LLM implementations
+- `src/agents/` - Agent implementations being tested
+- [AI Agents in Production: Testing the Reasoning Loop](https://aienhancedengineer.substack.com/p/ai-agents-in-production-testing-the) - Article covering these patterns
