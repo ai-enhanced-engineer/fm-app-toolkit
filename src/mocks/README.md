@@ -6,6 +6,19 @@ The unit testing paradox in AI systems: traditional testing breaks down when you
 
 The breakthrough isn't about replacing LLMs—it's about controlling the interface.
 
+## Mock vs Real LLM Comparison
+
+| Characteristic | Mock LLM | Real LLM (OpenAI, Anthropic) |
+|----------------|----------|------------------------------|
+| **Cost** | $0.00 per test | $0.001–$0.10 per test |
+| **Speed** | <1ms | 500–5000ms (network + inference) |
+| **Determinism** | 100% predictable | Non-deterministic outputs |
+| **CI/CD Ready** | No API keys required | Requires secret management |
+| **Offline Testing** | Works without internet | Requires network access |
+| **Best For** | Unit tests, regression tests, CI pipelines | Integration tests, acceptance tests, production |
+
+**Table 1**: Key differences between mock and real LLM testing approaches.
+
 ## The Testing Challenge
 
 AI-powered applications introduce unique testing challenges:
@@ -16,6 +29,43 @@ AI-powered applications introduce unique testing challenges:
 - **CI/CD**: API keys shouldn't be required in build environments
 
 Our solution: custom testing abstractions that provide deterministic, controlled test environments without external API calls.
+
+## Flow
+
+How mock LLMs integrate into your testing workflow:
+
+```mermaid
+sequenceDiagram
+    participant Test as Test Suite
+    participant Agent as AI Agent
+    participant Mock as Mock LLM
+    participant Real as Real LLM
+
+    Note over Test,Real: Development/CI Environment
+    Test->>Agent: run("What's the weather?")
+    Agent->>Mock: generate_response()
+    Mock->>Mock: Return predefined trajectory
+    Mock-->>Agent: "Thought: Check weather...<br/>Action: get_weather"
+    Agent->>Agent: Execute tool
+    Agent->>Mock: generate_response()
+    Mock-->>Agent: "Answer: 22°C and sunny"
+    Agent-->>Test: Result + reasoning steps
+
+    Note over Test,Real: Production Environment
+    Test->>Agent: run("What's the weather?")
+    Agent->>Real: generate_response()
+    Real->>Real: LLM inference
+    Real-->>Agent: "Thought: Check weather...<br/>Action: get_weather"
+    Agent->>Agent: Execute tool
+    Agent->>Real: generate_response()
+    Real-->>Agent: "Answer: Based on data, 22°C"
+    Agent-->>Test: Result + reasoning steps
+
+    style Mock fill:#1a8888,stroke:#0d4444,color:#fff
+    style Real fill:#e8f4f8,stroke:#1a8888
+```
+
+**Figure 1**: Mock LLM testing flow—same agent code runs with mock LLMs (development/CI) or real LLMs (production) via dependency injection.
 
 ## Custom Testing Abstractions
 

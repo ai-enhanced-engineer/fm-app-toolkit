@@ -2,7 +2,6 @@
 
 from typing import Any, Sequence
 
-from llama_cloud import MessageRole
 from llama_index.core.base.llms.types import (
     ChatMessage,
     ChatResponse,
@@ -10,6 +9,7 @@ from llama_index.core.base.llms.types import (
     ChatResponseGen,
     LLMMetadata,
 )
+from llama_index.core.llms import MessageRole
 from llama_index.core.llms.callbacks import llm_chat_callback
 from llama_index.core.llms.llm import LLM
 from pydantic import Field
