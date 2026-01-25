@@ -26,7 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -34,22 +37,27 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
             *.py
-      
+
       - name: Set up Python
         run: uv python install 3.12
-      
+
       - name: Install dependencies
-        run: make init
-      
+        run: |
+          uv venv --python 3.12
+          just sync
+
       - name: Run linters
-        run: make lint
+        run: just lint
 
   type-check:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -57,22 +65,27 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
             *.py
-      
+
       - name: Set up Python
         run: uv python install 3.12
-      
+
       - name: Install dependencies
-        run: make init
-      
+        run: |
+          uv venv --python 3.12
+          just sync
+
       - name: Run type checks
-        run: make type-check
+        run: just type-check
 
   test:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -80,15 +93,17 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
             *.py
-      
+
       - name: Set up Python
         run: uv python install 3.12
-      
+
       - name: Install dependencies
-        run: make init
-      
+        run: |
+          uv venv --python 3.12
+          just sync
+
       - name: Run tests
-        run: make unit-test
+        run: just test
 
   merged-test:
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
@@ -98,7 +113,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: 0
-      
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -106,15 +124,17 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
             *.py
-      
+
       - name: Set up Python
         run: uv python install 3.12
-      
+
       - name: Install dependencies
-        run: make init
-      
+        run: |
+          uv venv --python 3.12
+          just sync
+
       - name: Run tests
-        run: make unit-test
+        run: just test
 
   release:
     needs: [lint, type-check, test]
@@ -127,7 +147,10 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}
-      
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -135,19 +158,21 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
             *.py
-      
+
       - name: Set up Python
         run: uv python install 3.12
-      
+
       - name: Install dependencies
-        run: make init
+        run: |
+          uv venv --python 3.12
+          just sync
           uv pip install python-semantic-release
-      
+
       - name: Configure Git
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-      
+
       - name: Bump version and publish release
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
