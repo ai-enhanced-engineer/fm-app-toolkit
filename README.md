@@ -1,9 +1,13 @@
-![AIEE Toolset Cover](assets/images/cover.jpeg)
+<p align="center">
+  <img src="assets/images/cover.jpeg" alt="AIEE Toolset Cover" />
+</p>
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Coverage](https://img.shields.io/badge/coverage-75%25-green)](tests/)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/ai-enhanced-engineer/aiee-toolset/ci.yml?branch=main)](https://github.com/ai-enhanced-engineer/aiee-toolset/actions)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" /></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python Version" /></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/coverage-75%25-green" alt="Coverage" /></a>
+  <a href="https://github.com/ai-enhanced-engineer/aiee-toolset/actions"><img src="https://img.shields.io/github/actions/workflow/status/ai-enhanced-engineer/aiee-toolset/ci.yml?branch=main" alt="Build Status" /></a>
+</p>
 
 The official [AI-Enhanced Engineer](https://aiee.io) toolset | [Subscribe](https://aienhancedengineer.substack.com/)
 
