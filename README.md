@@ -2,7 +2,28 @@
 
 **The official AI-Enhanced Engineer toolset** from [aiee.io](https://aiee.io)
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Tests](https://img.shields.io/badge/tests-220%2B%20passing-green)](tests/)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/ai-enhanced-engineer/aiee-toolset/ci.yml?branch=main)](https://github.com/ai-enhanced-engineer/aiee-toolset/actions)
+
 Production-grade patterns and battle-tested implementations for building reliable AI applications. Nearly a decade of deployment experience distilled into reusable code.
+
+---
+
+## Table of Contents
+
+- [Why This Exists](#why-this-exists)
+- [🚀 Quick Start](#-quick-start)
+- [🔧 Key Features](#-key-features)
+- [🎯 Testing Philosophy](#-testing-philosophy)
+- [🏭 Production Patterns](#-production-patterns)
+- [📂 Project Structure](#-project-structure)
+- [📚 Documentation](#-documentation)
+- [🤝 Contributing](#-contributing)
+- [📖 Resources](#-resources)
+- [📝 References](#-references)
+- [📜 License](#-license)
 
 ---
 
@@ -19,7 +40,29 @@ You're working with models you don't control, infrastructure you don't manage, a
 
 **We've built these systems.** This toolkit distills nearly a decade of production AI deployments into concrete, reusable patterns<sup>[5](#ref5)</sup> using LlamaIndex, PydanticAI, and proven architectural principles.
 
-## 🔧 Key Components
+## 🚀 Quick Start
+
+### Essential Commands
+
+```bash
+# Environment
+make environment-create   # First-time setup
+make environment-sync     # Update dependencies
+
+# Development
+make format              # Auto-format code
+make lint               # Fix linting issues
+make type-check         # Type checking
+
+# Testing
+make unit-test          # Run all tests
+make validate-branch    # Pre-commit validation
+
+# Examples
+make process-documents  # See document loading and chunking in action
+```
+
+## 🔧 Key Features
 
 ### Data Loading with Repository Pattern
 
@@ -45,29 +88,7 @@ Following **"don't mock what you don't own"** from [Architecture Patterns with P
 
 Develop with mocks, test with mocks, deploy with real models—same codebase. Switch between environments with simple configuration, keeping business logic unchanged. See module documentation for implementation examples.
 
-## 🚀 Quick Start
-
-### Essential Commands
-
-```bash
-# Environment
-make environment-create   # First-time setup
-make environment-sync     # Update dependencies
-
-# Development
-make format              # Auto-format code
-make lint               # Fix linting issues
-make type-check         # Type checking
-
-# Testing
-make unit-test          # Run all tests
-make validate-branch    # Pre-commit validation
-
-# Examples
-make process-documents  # See document loading and chunking in action
-```
-
-## Project Structure
+## 📂 Project Structure
 
 ```
 aiee-toolset/
@@ -103,7 +124,7 @@ This toolkit grows stronger with community input. We especially welcome:
 - Industry-specific tool implementations
 - Real-world case studies and examples
 
-## Resources
+## 📖 Resources
 
 ### Essential Reading
 - [AI Engineering Book](https://www.oreilly.com/library/view/ai-engineering/9781098166298/) - Chip Huyen's comprehensive guide to AI engineering
@@ -116,7 +137,7 @@ This toolkit grows stronger with community input. We especially welcome:
 - [PydanticAI Documentation](https://ai.pydantic.dev/) - Official PydanticAI docs
 - [CLAUDE.md](CLAUDE.md) - Development guidelines for this project
 
-## References
+## 📝 References
 
 ### Academic Foundations
 
@@ -135,7 +156,7 @@ This toolkit grows stronger with community input. We especially welcome:
 - Huyen, Chip (2023). ["Building LLM applications for production"](https://huyenchip.com/2023/04/11/llm-engineering.html). Practical insights on why "it's easy to make something cool with LLMs, but very hard to make something production-ready with them."
 - MLOps Community (2024). [MLOps World Conference Proceedings](https://mlops.community/). Latest practices and challenges in deploying ML systems at scale.
 
-## License
+## 📜 License
 
 Apache License 2.0 - See [LICENSE](LICENSE) file for details.
 
