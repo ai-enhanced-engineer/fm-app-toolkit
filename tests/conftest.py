@@ -13,8 +13,25 @@ from llama_index.core.embeddings.mock_embed_model import MockEmbedding
 
 from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
 from src.data_loading import LocalDocumentRepository
+from src.logging import clear_context_fields
 from src.mocks.llamaindex.mock_echo import MockLLMEchoStream
 from src.mocks.llamaindex.mock_trajectory import TrajectoryMockLLMLlamaIndex
+
+# ----------------------------------------------
+# CLEANUP FIXTURES
+# ----------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def clear_logging_context() -> None:
+    """Automatically clear logging context after each test to prevent interference.
+
+    This fixture runs after every test to ensure structlog contextvars don't leak
+    between tests, which can cause failures when tests check for specific log content.
+    """
+    yield  # Let the test run first
+    clear_context_fields()  # Clean up after
+
 
 # ----------------------------------------------
 # PATH FIXTURES
