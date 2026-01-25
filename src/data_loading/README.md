@@ -18,6 +18,28 @@ make process-documents
 - **`gcp.py`** - Google Cloud Storage implementation (`GCPDocumentRepository`)
 - **`example.py`** - Working demonstration with CLI (`process_documents`)
 
+## Architecture
+
+The Repository Pattern provides a clean abstraction layer between your application and data sources:
+
+```mermaid
+graph LR
+    App[Application Code] -->|depends on| Protocol[DocumentRepository Protocol]
+
+    Protocol -->|implemented by| Local[LocalDocumentRepository]
+    Protocol -->|implemented by| GCP[GCPDocumentRepository]
+
+    Local -->|reads from| FS[Local Filesystem]
+    GCP -->|reads from| Cloud[GCS Bucket]
+
+    style Protocol fill:#1a8888,stroke:#0d4444,color:#fff
+    style App fill:#f5f5f5,stroke:#333
+    style Local fill:#e8f4f8,stroke:#1a8888
+    style GCP fill:#e8f4f8,stroke:#1a8888
+```
+
+**Figure 1**: Repository Pattern architecture showing dependency inversion—application code depends on the protocol, not concrete implementations.
+
 ## Key Concepts
 
 **Repository Pattern Benefits:**

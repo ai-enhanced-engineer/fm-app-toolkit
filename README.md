@@ -66,7 +66,7 @@ make process-documents  # See document loading and chunking in action
 
 ### Data Loading with Repository Pattern
 
-Abstract your data sources using the [Repository pattern](https://www.cosmicpython.com/book/chapter_02_repository.html). Write once against `DocumentRepository`, deploy anywhere with `LocalDocumentRepository` (dev/test) or `GCPDocumentRepository` (production).
+Abstract your data sources using the [Repository pattern](https://www.cosmicpython.com/book/chapter_02_repository.html). Write once against `DocumentRepository`, deploy anywhere with `LocalDocumentRepository` (dev/test) or `GCPDocumentRepository` (production). → See [architecture diagram](src/data_loading/README.md#architecture)
 
 ### Document Indexing
 
@@ -78,11 +78,11 @@ Test AI applications deterministically without API costs. Use `TrajectoryMockLLM
 
 ### Agent Implementations
 
-Choose **LlamaIndex ReAct** for transparent step-by-step reasoning with full observability, or **PydanticAI** for structured output with type-safe validation. Both integrate with your tools and support deterministic testing.
+Choose **LlamaIndex ReAct** for transparent step-by-step reasoning with full observability, or **PydanticAI** for structured output with type-safe validation. Both integrate with your tools and support deterministic testing. → See [comparison diagram](src/agents/README.md#architecture)
 
 ## 🎯 Testing Philosophy
 
-Following **"don't mock what you don't own"** from [Architecture Patterns with Python](https://www.cosmicpython.com/book/), our mock LLMs extend framework base classes, creating clean boundaries between business logic and external services. Define expected behavior with perfect control for tests, then swap in real LLMs for production—same application code.
+Following **"don't mock what you don't own"** from [Architecture Patterns with Python](https://www.cosmicpython.com/book/), our mock LLMs extend framework base classes, creating clean boundaries between business logic and external services. Define expected behavior with perfect control for tests, then swap in real LLMs for production—same application code. → See [flow diagram](src/mocks/README.md#flow)
 
 ## 🏭 Production Patterns
 

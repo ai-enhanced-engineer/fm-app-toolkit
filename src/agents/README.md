@@ -23,6 +23,38 @@ agents/
     └── extraction_agent.py  # Data extraction with type safety
 ```
 
+## Architecture
+
+Two architectural approaches for different use cases:
+
+```mermaid
+graph TB
+    subgraph LlamaIndex["LlamaIndex ReAct Agent"]
+        LQ[User Query] --> LLoop{ReAct Loop}
+        LLoop -->|Thought| LThink[Reason About Task]
+        LThink --> LDecide{Need Tool?}
+        LDecide -->|Yes| LAction[Execute Tool]
+        LAction --> LObserve[Observe Result]
+        LObserve --> LLoop
+        LDecide -->|No| LAnswer[Final Answer]
+    end
+
+    subgraph Pydantic["PydanticAI Agent"]
+        PQ[User Query] --> PModel[LLM Inference]
+        PModel --> PValidate{Valid Output?}
+        PValidate -->|No| PRetry[Retry with Validation Error]
+        PRetry --> PModel
+        PValidate -->|Yes| PStructured[Type-Safe Result]
+    end
+
+    style LDecide fill:#1a8888,stroke:#0d4444,color:#fff
+    style PValidate fill:#1a8888,stroke:#0d4444,color:#fff
+    style LAnswer fill:#e8f4f8,stroke:#1a8888
+    style PStructured fill:#e8f4f8,stroke:#1a8888
+```
+
+**Figure 1**: Architecture comparison—LlamaIndex ReAct provides transparent multi-step reasoning with observability, while PydanticAI enforces structured output with type safety.
+
 ## Six Canonical Harness Components (Article 2.1)
 
 Each component maps to specific code locations:
