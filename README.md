@@ -46,20 +46,24 @@ You're working with models you don't control, infrastructure you don't manage, a
 
 ```bash
 # Environment
-make environment-create   # First-time setup
-make environment-sync     # Update dependencies
+just init               # First-time setup (installs uv, Python, dependencies, pre-commit)
+just sync               # Update dependencies
 
 # Development
-make format              # Auto-format code
-make lint               # Fix linting issues
-make type-check         # Type checking
+just format             # Auto-format code
+just lint               # Fix linting issues
+just type-check         # Type checking
 
 # Testing
-make unit-test          # Run all tests
-make validate-branch    # Pre-commit validation
+just test               # Run tests with coverage (excludes integration)
+just test-integration   # Run integration tests
+just test-all           # Run all tests
+just validate-branch    # Full validation: format, lint, type-check, test
 
 # Examples
-make process-documents  # See document loading and chunking in action
+just process-documents  # See document loading and chunking in action
+just pydantic-analysis  # Run PydanticAI analysis agent
+just llamaindex-react   # Run LlamaIndex ReAct agent
 ```
 
 ## 🔧 Key Features
@@ -101,7 +105,7 @@ aiee-toolset/
 │   ├── testing/             # Mock LLM framework
 │   └── tools.py            # Core tool implementations
 ├── tests/                   # 220+ tests demonstrating patterns
-├── Makefile                # Development commands
+├── justfile                # Development commands (run `just` to see all)
 └── CLAUDE.md              # Development guide
 ```
 
@@ -162,6 +166,6 @@ Apache License 2.0 - See [LICENSE](LICENSE) file for details.
 
 ---
 
-🚀 **Ready to ship production AI?** Start with `make environment-create` and have your first deterministic agent test running in minutes.
+🚀 **Ready to ship production AI?** Start with `just init` and have your first deterministic agent test running in minutes.
 
 *From nearly a decade of production AI deployments. For developers shipping real systems.*

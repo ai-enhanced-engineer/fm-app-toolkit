@@ -3,21 +3,21 @@ repos:
     hooks:
       - id: lint-check
         name: Run ruff linter
-        entry: make lint
+        entry: just lint
         language: system
         stages: [pre-commit]
         verbose: true
         pass_filenames: false
       - id: type-check
         name: Run mypy type checker
-        entry: make type-check
+        entry: just type-check
         language: system
         stages: [pre-commit]
         verbose: true
         pass_filenames: false
       - id: unit-tests
         name: Run unit tests
-        entry: make unit-test
+        entry: just test
         language: system
         stages: [pre-commit]
         verbose: true

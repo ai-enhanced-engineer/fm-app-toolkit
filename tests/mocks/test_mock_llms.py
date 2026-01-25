@@ -1,8 +1,8 @@
 """Tests for mock LLM implementations demonstrating deterministic testing patterns."""
 
 import pytest
-from llama_cloud import MessageRole
 from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.llms import MessageRole
 
 # ----------------------------------------------
 # TrajectoryMockLLMLlamaIndex TESTS - Sequential Response Control

@@ -205,19 +205,21 @@ async def test_handles_untagged_output(setup_simple_react_agent: Callable) -> No
 
 
 @pytest.mark.asyncio
-async def test_handles_response_without_thought(setup_simple_react_agent: Callable) -> None:
-    """Test handling of Answer without Thought prefix."""
-    agent = setup_simple_react_agent(chain=["Answer: Sure! I can help you with that."])
+async def test_handles_direct_answer_with_thought(setup_simple_react_agent: Callable) -> None:
+    """Test handling of direct Answer with Thought prefix (no tool calls)."""
+    # ReActOutputParser requires Thought prefix before Answer
+    agent = setup_simple_react_agent(
+        chain=["Thought: This is a simple request I can answer directly.\nAnswer: Sure! I can help you with that."]
+    )
 
     handler = agent.run(user_msg="Can you help me?")
 
     result: dict[str, Any] = await agent.get_results_from_handler(handler)
 
-    # ReActOutputParser treats Answer without Thought as direct response
-    # Note: SimpleReActAgent's finalize method removes "Answer:" prefix for cleaner output
+    # SimpleReActAgent's finalize method removes "Answer:" prefix for cleaner output
     assert result["response"] == "Sure! I can help you with that."
 
-    # Validate sources should be empty
+    # Validate sources should be empty (no tool calls)
     assert len(result["sources"]) == 0
 
     # Should have a ResponseReasoningStep
