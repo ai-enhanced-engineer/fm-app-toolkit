@@ -133,16 +133,10 @@ process-documents data_path="aiee_toolset/test_data":
     uv run python -m {{ source_dir }}.data_loading.example --data-path {{ data_path }}
     @printf '\033[0;32m--------------------------------------------------\033[0m\n'
 
-# Run PydanticAI analysis agent with OpenAI GPT-4o
-pydantic-analysis model="openai:gpt-4o":
-    @echo "🧠 Running analysis agent with {{ model }}..."
-    uv run python -m {{ source_dir }}.agents.pydantic.analysis_agent --model "{{ model }}"
-    @printf '\033[0;32m--------------------------------------------------\033[0m\n'
-
-# Run PydanticAI extraction agent with OpenAI GPT-4o
-pydantic-extraction model="openai:gpt-4o":
-    @echo "🔍 Running extraction agent with {{ model }}..."
-    uv run python -m {{ source_dir }}.agents.pydantic.extraction_agent --model "{{ model }}"
+# Run deep research pipeline on a topic
+deep-research topic:
+    @echo "🔬 Running deep research on: {{ topic }}..."
+    uv run python -m {{ source_dir }}.agents.pydantic.research --topic "{{ topic }}"
     @printf '\033[0;32m--------------------------------------------------\033[0m\n'
 
 # Run LlamaIndex ReAct agent with OpenAI GPT-4
