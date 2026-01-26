@@ -1,7 +1,5 @@
 """PropertyGraph index implementation."""
 
-from typing import Optional
-
 from llama_index.core import Document, PropertyGraphIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.indices.property_graph.transformations import (
@@ -19,9 +17,7 @@ from .base import DocumentIndexer
 logger = get_logger(__name__)
 
 
-def _select_extractors(
-    kg_extractors: Optional[list[TransformComponent]], llm: Optional[LLM]
-) -> list[TransformComponent]:
+def _select_extractors(kg_extractors: list[TransformComponent] | None, llm: LLM | None) -> list[TransformComponent]:
     """Choose extractors: LLM-based if available, otherwise implicit only."""
     if kg_extractors is not None:
         return kg_extractors
@@ -40,11 +36,11 @@ class PropertyGraphIndexer(DocumentIndexer):
 
     def __init__(
         self,
-        kg_extractors: Optional[list[TransformComponent]] = None,
-        llm: Optional[LLM] = None,
+        kg_extractors: list[TransformComponent] | None = None,
+        llm: LLM | None = None,
         embed_kg_nodes: bool = True,
         show_progress: bool = False,
-    ):
+    ) -> None:
         self.kg_extractors = kg_extractors
         self.llm = llm
         self.embed_kg_nodes = embed_kg_nodes
@@ -61,7 +57,7 @@ class PropertyGraphIndexer(DocumentIndexer):
     def create_index(
         self,
         documents: list[Document],
-        embed_model: Optional[BaseEmbedding] = None,
+        embed_model: BaseEmbedding | None = None,
     ) -> PropertyGraphIndex:
         """Build knowledge graph index from documents."""
         logger.info("Creating property graph index", document_count=len(documents))

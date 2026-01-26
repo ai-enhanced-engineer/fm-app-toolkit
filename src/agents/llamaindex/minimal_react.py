@@ -17,20 +17,44 @@ and provides better error handling, memory management, and observability.
 
 import json
 import re
-from dataclasses import dataclass
-from typing import Any, Callable, List
+from typing import Any
 
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms.llm import LLM
 
+from src.agents.common import Tool
 
-@dataclass
-class Tool:
-    """Simple tool representation - a function with metadata."""
 
-    name: str
-    description: str
-    function: Callable[..., Any]
+class ToolExecutionError(Exception):
+    """Raised when a tool execution fails.
+
+    Provides structured error information including the tool name and original error.
+    This exception is used internally by the agent to provide better error context.
+
+    Error Handling Pattern:
+        - **Raised by**: `_execute_tool()` when a tool function raises any exception
+        - **Caught by**: `run()` method during the ReAct loop, converted to observation
+        - **Propagated**: Never propagated to callers; errors become observations for the LLM
+
+    This design allows the agent to gracefully handle tool failures by informing the
+    LLM about the error, giving it a chance to retry or try alternative approaches.
+
+    Attributes:
+        tool_name: Name of the tool that failed.
+        original_error: The original exception raised by the tool function.
+
+    Example:
+        >>> try:
+        ...     raise ToolExecutionError("calculate", ValueError("Invalid expression"))
+        ... except ToolExecutionError as e:
+        ...     print(f"Tool '{e.tool_name}' failed: {e.original_error}")
+        Tool 'calculate' failed: Invalid expression
+    """
+
+    def __init__(self, tool_name: str, original_error: Exception) -> None:
+        self.tool_name = tool_name
+        self.original_error = original_error
+        super().__init__(f"Error executing {tool_name}: {original_error}")
 
 
 # The ReAct prompt template - visible and inline for learning
@@ -86,7 +110,7 @@ class MinimalReActAgent:
         >>> result = await agent.run("What's the weather in Tokyo?")
     """
 
-    def __init__(self, llm: LLM, tools: List[Tool], max_steps: int = 10, verbose: bool = False):
+    def __init__(self, llm: LLM, tools: list[Tool], max_steps: int = 10, verbose: bool = False) -> None:
         """Initialize the agent with an LLM and tools.
 
         Args:
@@ -138,8 +162,12 @@ class MinimalReActAgent:
 
         return thought, action, action_input, answer
 
-    def _execute_tool(self, name: str, input_args: dict) -> str:
-        """Execute a tool and return its output as a string."""
+    def _execute_tool(self, name: str, input_args: dict[str, Any]) -> str:
+        """Execute a tool and return its output as a string.
+
+        Raises:
+            ToolExecutionError: When tool execution fails (caught internally for error message).
+        """
         if name not in self.tools:
             return f"Error: Tool '{name}' not found. Available tools: {list(self.tools.keys())}"
 
@@ -147,10 +175,13 @@ class MinimalReActAgent:
             tool = self.tools[name]
             result = tool.function(**input_args)
             return str(result)
+        except (TypeError, ValueError, KeyError, AttributeError) as e:
+            raise ToolExecutionError(name, e) from e
         except Exception as e:
-            return f"Error executing {name}: {str(e)}"
+            # Catch-all for unexpected errors, but still wrap in structured error
+            raise ToolExecutionError(name, e) from e
 
-    async def run(self, query: str) -> dict:
+    async def run(self, query: str) -> dict[str, Any]:
         """Run the agent on a query using the explicit ReAct loop.
 
         This is THE CORE LOOP - read this carefully to understand ReAct:
@@ -162,10 +193,10 @@ class MinimalReActAgent:
             Dictionary with 'response', 'reasoning' (list of steps), 'sources' (tool outputs)
         """
         # Track the conversation for context
-        chat_history = []
-        observations = ""
-        reasoning_steps = []
-        sources = []
+        chat_history: list[ChatMessage] = []
+        observations: list[str] = []  # Use list for efficient string building
+        reasoning_steps: list[str] = []
+        sources: list[str] = []
 
         # THE EXPLICIT REACT LOOP
         for step in range(self.max_steps):
@@ -179,7 +210,7 @@ class MinimalReActAgent:
                 tool_descriptions=self._format_tools(),
                 chat_history="\n".join([f"{msg.role}: {msg.content}" for msg in chat_history]),
                 query=query,
-                observations=observations,
+                observations="\n".join(observations),
             )
 
             # 2. Get LLM response
@@ -207,16 +238,19 @@ class MinimalReActAgent:
                 if self.verbose:
                     print(f"🔧 Action: {action}")
                     print(f"📝 Input: {action_input}")
-                observation = self._execute_tool(action, action_input)
+                try:
+                    observation = self._execute_tool(action, action_input)
+                except ToolExecutionError as e:
+                    observation = str(e)
                 if self.verbose:
                     print(f"👀 Observation: {observation}")
-                observations += f"\nObservation: {observation}"
+                observations.append(f"Observation: {observation}")
                 sources.append(observation)
             else:
                 # No valid action or answer - ask LLM to continue
                 if self.verbose:
                     print("⚠️  No valid action or answer detected")
-                observations += "\nObservation: Please provide either an Action or Answer."
+                observations.append("Observation: Please provide either an Action or Answer.")
 
         # Max steps reached without answer
         return {

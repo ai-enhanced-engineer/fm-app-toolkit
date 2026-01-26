@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from src.data_loading import (
     GCPDocumentRepository,
+    GCSURIError,
     LocalDocumentRepository,
 )
 from src.data_loading.base import BaseRepository
@@ -156,11 +157,11 @@ def test_gcp_document_repository_validates_gs_uri():
     repo = GCPDocumentRepository()
 
     # Invalid: not a gs:// URI
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         repo.load_documents(location="s3://bucket/file.txt")
 
     # Invalid: missing gs:// prefix
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         repo.load_documents(location="bucket/file.txt")
 
 
@@ -297,14 +298,14 @@ def test_parse_gcs_uri_single_dir():
 
 
 def test_parse_gcs_uri_invalid_format():
-    """Invalid URI format raises ValueError."""
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    """Invalid URI format raises GCSURIError."""
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         _parse_gcs_uri("s3://bucket/file.txt")
 
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         _parse_gcs_uri("http://bucket/file.txt")
 
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         _parse_gcs_uri("/local/path/file.txt")
 
 

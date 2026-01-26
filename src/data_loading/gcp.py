@@ -1,6 +1,6 @@
 """Google Cloud Storage document repository implementation."""
 
-from typing import Any, Optional
+from typing import Any
 
 from llama_index.core import Document
 from llama_index.readers.gcs import GCSReader
@@ -9,14 +9,19 @@ from pydantic import BaseModel, validate_call
 from src.logging import get_logger
 
 from .base import DocumentRepository
+from .exceptions import GCSLoadError, GCSURIError
 
 logger = get_logger(__name__)
 
 
 def _parse_gcs_uri(uri: str) -> dict[str, Any]:
-    """Parse GCS URI into bucket and path components for GCSReader."""
+    """Parse GCS URI into bucket and path components for GCSReader.
+
+    Raises:
+        GCSURIError: If the URI doesn't start with gs:// or is otherwise invalid.
+    """
     if not uri.startswith("gs://"):
-        raise ValueError("GCS location must start with gs://")
+        raise GCSURIError(uri, "URI must start with gs://")
 
     # Remove gs:// prefix and split into bucket and path
     path_without_prefix = uri[5:]
@@ -38,11 +43,16 @@ def _parse_gcs_uri(uri: str) -> dict[str, Any]:
 class GCPDocumentRepository(DocumentRepository, BaseModel):
     """Load documents from Google Cloud Storage using GCSReader."""
 
-    service_account_key: Optional[dict[str, Any]] = None
+    service_account_key: dict[str, Any] | None = None
 
     @validate_call
     def load_documents(self, location: str) -> list[Document]:
-        """Load documents from GCS bucket using gs:// URI format."""
+        """Load documents from GCS bucket using gs:// URI format.
+
+        Raises:
+            GCSURIError: If the location URI is invalid.
+            GCSLoadError: If loading documents fails.
+        """
         try:
             # Parse the GCS URI
             reader_kwargs = _parse_gcs_uri(location)
@@ -57,9 +67,22 @@ class GCPDocumentRepository(DocumentRepository, BaseModel):
             logger.info("Successfully loaded documents from GCS", location=location, count=len(documents))
 
             return documents
-        except ValueError as e:
-            logger.error("Invalid GCS URI format", location=location, error=str(e))
+        except GCSURIError:
+            logger.error("Invalid GCS URI format", location=location)
             raise
-        except Exception as e:
+        except (OSError, IOError, PermissionError) as e:
+            # File system and permission errors
             logger.error("Failed to load documents from GCS", location=location, error=str(e))
-            raise
+            raise GCSLoadError(location, str(e)) from e
+        except (ConnectionError, TimeoutError) as e:
+            # Network-related errors
+            logger.error("Network error loading documents from GCS", location=location, error=str(e))
+            raise GCSLoadError(location, f"Network error: {e}") from e
+        except (ValueError, TypeError, KeyError) as e:
+            # Data parsing and configuration errors
+            logger.error("Configuration error loading documents from GCS", location=location, error=str(e))
+            raise GCSLoadError(location, f"Configuration error: {e}") from e
+        except RuntimeError as e:
+            # Runtime errors from GCS client
+            logger.error("Runtime error loading documents from GCS", location=location, error=str(e))
+            raise GCSLoadError(location, str(e)) from e

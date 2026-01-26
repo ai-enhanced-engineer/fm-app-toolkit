@@ -93,9 +93,6 @@ warn_return_any = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 plugins = ["pydantic.mypy"]
-exclude = [
-    "src/agents/llamaindex/",
-]
 
 [[tool.mypy.overrides]]
 module = "llama_index.*"

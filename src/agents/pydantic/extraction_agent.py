@@ -8,7 +8,6 @@ This module demonstrates:
 
 import argparse
 import asyncio
-from typing import List
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
@@ -17,9 +16,9 @@ from pydantic_ai import Agent
 class DataExtraction(BaseModel):
     """Structured output for extracting data from text."""
 
-    entities: List[str] = Field(default_factory=list, description="Named entities found")
-    numbers: List[float] = Field(default_factory=list, description="Numbers mentioned")
-    key_phrases: List[str] = Field(default_factory=list, description="Important phrases")
+    entities: list[str] = Field(default_factory=list, description="Named entities found")
+    numbers: list[float] = Field(default_factory=list, description="Numbers mentioned")
+    key_phrases: list[str] = Field(default_factory=list, description="Important phrases")
     summary: str = Field(description="Brief summary of the text")
     word_count: int = Field(description="Total word count")
 

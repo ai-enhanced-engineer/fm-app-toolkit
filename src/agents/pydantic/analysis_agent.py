@@ -7,7 +7,7 @@ This module demonstrates:
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
@@ -22,7 +22,7 @@ class AnalysisResult(BaseModel):
     word_count: int = Field(description="Number of words")
     sentiment: str = Field(description="Detected sentiment: positive, negative, or neutral")
     confidence: float = Field(description="Confidence score between 0 and 1")
-    key_insights: List[str] = Field(default_factory=list, description="Key insights from analysis")
+    key_insights: list[str] = Field(default_factory=list, description="Key insights from analysis")
 
 
 # Dependency injection example
@@ -32,7 +32,7 @@ class AnalysisContext:
 
     user_id: str
     session_id: str
-    config: Dict[str, Any]
+    config: dict[str, Any]
     debug: bool = False
 
 

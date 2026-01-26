@@ -1,11 +1,16 @@
-"""Data loading module for FM App Toolkit."""
+"""Data loading module for aiee-toolset."""
 
 from .base import DocumentRepository
+from .exceptions import DataLoadingError, GCSError, GCSLoadError, GCSURIError
 from .gcp import GCPDocumentRepository
 from .local import LocalDocumentRepository
 
 __all__ = [
+    "DataLoadingError",
     "DocumentRepository",
-    "LocalDocumentRepository",
     "GCPDocumentRepository",
+    "GCSError",
+    "GCSLoadError",
+    "GCSURIError",
+    "LocalDocumentRepository",
 ]

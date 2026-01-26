@@ -1,7 +1,5 @@
 """VectorStore index implementation."""
 
-from typing import Optional
-
 from llama_index.core import Document, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from pydantic import validate_call
@@ -20,7 +18,7 @@ class VectorStoreIndexer(DocumentIndexer):
         self,
         show_progress: bool = False,
         insert_batch_size: int = 2048,
-    ):
+    ) -> None:
         self.show_progress = show_progress
         self.insert_batch_size = insert_batch_size
 
@@ -34,7 +32,7 @@ class VectorStoreIndexer(DocumentIndexer):
     def create_index(
         self,
         documents: list[Document],
-        embed_model: Optional[BaseEmbedding] = None,
+        embed_model: BaseEmbedding | None = None,
     ) -> VectorStoreIndex:
         """Build searchable index from documents."""
         logger.info("Creating index from documents", document_count=len(documents))

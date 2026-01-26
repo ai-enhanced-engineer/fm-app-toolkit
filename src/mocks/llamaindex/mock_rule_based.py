@@ -1,6 +1,7 @@
 """Rule-based mock LLM that generates responses based on keyword patterns in user input."""
 
-from typing import Any, Dict, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from llama_index.core.base.llms.types import (
     ChatMessage,
@@ -25,12 +26,12 @@ class RuleBasedMockLLM(LLM):
         >>> assert "get_weather" in response.message.content
     """
 
-    rules: Dict[str, str] = Field(default_factory=dict)
+    rules: dict[str, str] = Field(default_factory=dict)
     default_behavior: str = Field(default="direct_answer")
     call_count: int = Field(default=0)
 
     def __init__(
-        self, rules: Optional[Dict[str, str]] = None, default_behavior: str = "direct_answer", **kwargs: Any
+        self, rules: dict[str, str] | None = None, default_behavior: str = "direct_answer", **kwargs: Any
     ) -> None:
         super().__init__(**kwargs)
         self.rules = rules or {}
