@@ -21,7 +21,7 @@ from typing import Annotated, Any, Literal, TypedDict
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.tools import tool as langchain_tool
-from langgraph.graph import END, StateGraph
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 from src.agents.common import Tool
@@ -108,8 +108,9 @@ class MinimalReActAgent:
         workflow.add_node("agent", self._call_model)
         workflow.add_node("tools", self._execute_tools)
 
-        # Set the entry point - start with the agent node
-        workflow.set_entry_point("agent")
+        # Set the entry point using START node (modern pattern)
+        # This is equivalent to set_entry_point() but more explicit
+        workflow.add_edge(START, "agent")
 
         # Add conditional edges - this is the routing logic
         # After agent runs, check if we should continue or end
