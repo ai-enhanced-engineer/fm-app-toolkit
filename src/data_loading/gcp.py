@@ -71,8 +71,18 @@ class GCPDocumentRepository(DocumentRepository, BaseModel):
             logger.error("Invalid GCS URI format", location=location)
             raise
         except (OSError, IOError, PermissionError) as e:
+            # File system and permission errors
             logger.error("Failed to load documents from GCS", location=location, error=str(e))
             raise GCSLoadError(location, str(e)) from e
-        except Exception as e:
-            logger.error("Unexpected error loading documents from GCS", location=location, error=str(e))
+        except (ConnectionError, TimeoutError) as e:
+            # Network-related errors
+            logger.error("Network error loading documents from GCS", location=location, error=str(e))
+            raise GCSLoadError(location, f"Network error: {e}") from e
+        except (ValueError, TypeError, KeyError) as e:
+            # Data parsing and configuration errors
+            logger.error("Configuration error loading documents from GCS", location=location, error=str(e))
+            raise GCSLoadError(location, f"Configuration error: {e}") from e
+        except RuntimeError as e:
+            # Runtime errors from GCS client
+            logger.error("Runtime error loading documents from GCS", location=location, error=str(e))
             raise GCSLoadError(location, str(e)) from e

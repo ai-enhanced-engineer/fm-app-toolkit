@@ -17,6 +17,7 @@ from src.logging import (
     LoggingContext,
     bind_contextvars,
     clear_context_fields,
+    clear_logger_cache,
     configure_structlog,
     get_logger,
     get_logging_level,
@@ -41,10 +42,13 @@ def test__configure_structlog__with_environment(caplog: LogCaptureFixture, monke
     monkeypatch.setenv("STREAM", "stderr")
     monkeypatch.setenv("LOGGING_LEVEL", "DEBUG")
 
+    # Clear cache to ensure new config is picked up
+    clear_logger_cache()
+
     context = LoggingContext()
     configure_structlog(context)
 
-    logger = get_logger("test_logger")
+    logger = get_logger("test_logger_env")
     logger.debug("Debug message")
 
     log_output = caplog.records[0].message
@@ -133,10 +137,14 @@ def test_logging_configuration_combinations(
     monkeypatch.setenv("LOGGING_LEVEL", level)
     monkeypatch.setenv("STREAM", stream)
 
+    # Clear cache to ensure new config is picked up
+    clear_logger_cache()
+
     context = LoggingContext()
     configure_structlog(context)
 
-    logger = get_logger("test")
+    # Use unique logger name per test to avoid cache issues
+    logger = get_logger(f"test_{level}_{stream}")
     getattr(logger, expected_level)("Test message")
 
     if caplog.records:  # Only check if the level allows the message

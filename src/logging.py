@@ -7,6 +7,7 @@ JSON and key-value formats, context variables, and proper log field handling.
 import logging
 import sys
 import threading
+from functools import lru_cache
 from typing import Any, TextIO
 
 import structlog
@@ -183,8 +184,8 @@ _configure_lock = threading.Lock()
 _configured = False
 
 
-def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
-    """Get a configured structlog BoundLogger instance."""
+def _ensure_configured() -> None:
+    """Ensure structlog is configured (thread-safe, called once)."""
     global _configured
     if not _configured:
         with _configure_lock:
@@ -193,6 +194,38 @@ def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
                 configure_structlog()
                 _configured = True
 
-    if not name:
-        name = __name__
+
+@lru_cache(maxsize=128)
+def _get_cached_logger(name: str) -> structlog.stdlib.BoundLogger:
+    """Get a cached logger instance by name.
+
+    Using lru_cache avoids repeated logger lookups and reduces
+    overhead in high-frequency logging scenarios.
+    """
     return structlog.get_logger(name)  # type: ignore[no-any-return]
+
+
+def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
+    """Get a configured structlog BoundLogger instance.
+
+    Logger instances are cached for performance. The first call ensures
+    structlog is properly configured using thread-safe initialization.
+
+    Args:
+        name: Logger name. Defaults to the module name if not provided.
+
+    Returns:
+        A configured BoundLogger instance.
+    """
+    _ensure_configured()
+    logger_name = name if name else __name__
+    return _get_cached_logger(logger_name)
+
+
+def clear_logger_cache() -> None:
+    """Clear the logger cache.
+
+    This is primarily useful for testing when you need to reconfigure
+    structlog and want loggers to pick up the new configuration.
+    """
+    _get_cached_logger.cache_clear()

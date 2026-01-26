@@ -29,6 +29,26 @@ class ToolExecutionError(Exception):
     """Raised when a tool execution fails.
 
     Provides structured error information including the tool name and original error.
+    This exception is used internally by the agent to provide better error context.
+
+    Error Handling Pattern:
+        - **Raised by**: `_execute_tool()` when a tool function raises any exception
+        - **Caught by**: `run()` method during the ReAct loop, converted to observation
+        - **Propagated**: Never propagated to callers; errors become observations for the LLM
+
+    This design allows the agent to gracefully handle tool failures by informing the
+    LLM about the error, giving it a chance to retry or try alternative approaches.
+
+    Attributes:
+        tool_name: Name of the tool that failed.
+        original_error: The original exception raised by the tool function.
+
+    Example:
+        >>> try:
+        ...     raise ToolExecutionError("calculate", ValueError("Invalid expression"))
+        ... except ToolExecutionError as e:
+        ...     print(f"Tool '{e.tool_name}' failed: {e.original_error}")
+        Tool 'calculate' failed: Invalid expression
     """
 
     def __init__(self, tool_name: str, original_error: Exception) -> None:
