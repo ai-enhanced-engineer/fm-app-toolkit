@@ -2,6 +2,69 @@
 
 <!-- version list -->
 
+## v2.1.0 (2026-01-26)
+
+### Bug Fixes
+
+- Use TestModel in gathering agent test to avoid CI API key requirement
+  ([#19](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/19),
+  [`60ef0c4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/60ef0c4648777d2259d3eae29ef015c9b0e0f50f))
+
+### Chores
+
+- Add cover image and update README documentation
+  ([#16](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/16),
+  [`37f05e4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/37f05e46e13bb130593799bcb8a0ab0c9f6193e6))
+
+- Improve code quality with shared types, exception hierarchy, and thread-safe logging
+  ([#17](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/17),
+  [`9128dc1`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/9128dc15e31ad2413e0ad8b5adfd9125dc18340b))
+
+- Remove unused ai-stack-pyramid image
+  ([#16](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/16),
+  [`37f05e4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/37f05e46e13bb130593799bcb8a0ab0c9f6193e6))
+
+- Update LangGraph to use modern START node pattern
+  ([#19](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/19),
+  [`60ef0c4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/60ef0c4648777d2259d3eae29ef015c9b0e0f50f))
+
+### Continuous Integration
+
+- Trigger workflow refresh for updated merge commit SHA
+  ([#19](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/19),
+  [`60ef0c4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/60ef0c4648777d2259d3eae29ef015c9b0e0f50f))
+
+### Documentation
+
+- Add cover image and update README documentation
+  ([#16](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/16),
+  [`37f05e4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/37f05e46e13bb130593799bcb8a0ab0c9f6193e6))
+
+- Center cover image and badges
+  ([#16](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/16),
+  [`37f05e4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/37f05e46e13bb130593799bcb8a0ab0c9f6193e6))
+
+- Remove title (now in cover image) and use coverage badge
+  ([#16](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/16),
+  [`37f05e4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/37f05e46e13bb130593799bcb8a0ab0c9f6193e6))
+
+### Features
+
+- Add deep research system with 4-phase pipeline
+  ([#19](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/19),
+  [`60ef0c4`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/60ef0c4648777d2259d3eae29ef015c9b0e0f50f))
+
+### Refactoring
+
+- Address PR review suggestions
+  ([#17](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/17),
+  [`9128dc1`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/9128dc15e31ad2413e0ad8b5adfd9125dc18340b))
+
+- Improve code quality with shared types, exception hierarchy, and thread-safe logging
+  ([#17](https://github.com/ai-enhanced-engineer/aiee-toolset/pull/17),
+  [`9128dc1`](https://github.com/ai-enhanced-engineer/aiee-toolset/commit/9128dc15e31ad2413e0ad8b5adfd9125dc18340b))
+
+
 ## v2.0.0 (2026-01-24)
 
 ### BREAKING CHANGES
