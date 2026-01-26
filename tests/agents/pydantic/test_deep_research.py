@@ -169,7 +169,15 @@ class TestGatheringAgentConfiguration:
         """Test that gathering agent is configured with WebSearchTool."""
         from pydantic_ai import WebSearchTool
 
-        agent = create_gathering_agent()
+        # Use TestModel to avoid requiring real API keys on CI
+        test_model = TestModel(
+            custom_output_args={
+                "query": "test query",
+                "findings": "test findings",
+                "sources": ["https://example.com"],
+            }
+        )
+        agent = create_gathering_agent(model=test_model)
 
         # Verify WebSearchTool is in builtin_tools
         assert agent._builtin_tools is not None
