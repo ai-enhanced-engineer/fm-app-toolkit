@@ -6,7 +6,7 @@ import pytest
 from llama_index.core import Document
 from pydantic import ValidationError
 
-from src.data_loading import GCPDocumentRepository
+from src.data_loading import DataLoadingError, GCPDocumentRepository, GCSError, GCSLoadError, GCSURIError
 from src.data_loading.gcp import _parse_gcs_uri
 
 
@@ -66,11 +66,11 @@ def test__gcp_document_repository__validates_gs_uri():
     repo = GCPDocumentRepository()
 
     # Invalid: not a gs:// URI
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         repo.load_documents(location="s3://bucket/file.txt")
 
     # Invalid: missing gs:// prefix
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         repo.load_documents(location="bucket/file.txt")
 
 
@@ -156,14 +156,14 @@ def test__parse_gcs__uri_single_dir():
 
 
 def test__parse_gcs__uri_invalid_format():
-    """Invalid URI format raises ValueError."""
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    """Invalid URI format raises GCSURIError."""
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         _parse_gcs_uri("s3://bucket/file.txt")
 
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         _parse_gcs_uri("http://bucket/file.txt")
 
-    with pytest.raises(ValueError, match="GCS location must start with gs://"):
+    with pytest.raises(GCSURIError, match="URI must start with gs://"):
         _parse_gcs_uri("/local/path/file.txt")
 
 
@@ -180,3 +180,113 @@ def test__parse_gcs__uri_edge_cases():
     # Multiple trailing slashes (treated as prefix)
     result = _parse_gcs_uri("gs://bucket/path//")
     assert result == {"bucket": "bucket", "prefix": "path//"}
+
+
+# GCS Exception Hierarchy Tests
+class TestGCSExceptionHierarchy:
+    """Tests for GCS exception classes."""
+
+    def test__gcs_uri_error__preserves_context(self) -> None:
+        """GCSURIError stores URI and reason."""
+        error = GCSURIError("s3://bucket/file.txt", "URI must start with gs://")
+
+        assert error.uri == "s3://bucket/file.txt"
+        assert error.reason == "URI must start with gs://"
+        assert "s3://bucket/file.txt" in str(error)
+        assert "URI must start with gs://" in str(error)
+
+    def test__gcs_uri_error__formats_message(self) -> None:
+        """GCSURIError message follows consistent format."""
+        error = GCSURIError("http://example.com", "Invalid protocol")
+
+        expected = "Invalid GCS URI 'http://example.com': Invalid protocol"
+        assert str(error) == expected
+
+    def test__gcs_load_error__preserves_context(self) -> None:
+        """GCSLoadError stores location and reason."""
+        error = GCSLoadError("gs://bucket/file.txt", "Permission denied")
+
+        assert error.location == "gs://bucket/file.txt"
+        assert error.reason == "Permission denied"
+        assert "gs://bucket/file.txt" in str(error)
+        assert "Permission denied" in str(error)
+
+    def test__gcs_load_error__formats_message(self) -> None:
+        """GCSLoadError message follows consistent format."""
+        error = GCSLoadError("gs://my-bucket/data/", "Network timeout")
+
+        expected = "Failed to load from 'gs://my-bucket/data/': Network timeout"
+        assert str(error) == expected
+
+    def test__gcs_exception_hierarchy__gcs_uri_error_inheritance(self) -> None:
+        """GCSURIError inherits from GCSError and DataLoadingError."""
+        error = GCSURIError("test://uri", "test reason")
+
+        assert isinstance(error, GCSError)
+        assert isinstance(error, DataLoadingError)
+        assert isinstance(error, Exception)
+
+    def test__gcs_exception_hierarchy__gcs_load_error_inheritance(self) -> None:
+        """GCSLoadError inherits from GCSError and DataLoadingError."""
+        error = GCSLoadError("gs://test", "test error")
+
+        assert isinstance(error, GCSError)
+        assert isinstance(error, DataLoadingError)
+        assert isinstance(error, Exception)
+
+    def test__gcs_exception_hierarchy__base_classes_instantiable(self) -> None:
+        """Base exception classes can be instantiated."""
+        data_loading_error = DataLoadingError("Generic data loading error")
+        gcs_error = GCSError("Generic GCS error")
+
+        assert str(data_loading_error) == "Generic data loading error"
+        assert str(gcs_error) == "Generic GCS error"
+        assert isinstance(gcs_error, DataLoadingError)
+
+
+@patch("src.data_loading.gcp.GCSReader")
+def test__gcp_document_repository__raises_gcs_load_error_on_os_error(mock_gcs_reader):
+    """GCS load failures from OSError raise GCSLoadError."""
+    mock_reader_instance = MagicMock()
+    mock_reader_instance.load_data.side_effect = OSError("Permission denied")
+    mock_gcs_reader.return_value = mock_reader_instance
+
+    repo = GCPDocumentRepository()
+
+    with pytest.raises(GCSLoadError) as exc_info:
+        repo.load_documents(location="gs://test-bucket/file.txt")
+
+    assert exc_info.value.location == "gs://test-bucket/file.txt"
+    assert "Permission denied" in exc_info.value.reason
+
+
+@patch("src.data_loading.gcp.GCSReader")
+def test__gcp_document_repository__raises_gcs_load_error_on_io_error(mock_gcs_reader):
+    """GCS load failures from IOError raise GCSLoadError."""
+    mock_reader_instance = MagicMock()
+    mock_reader_instance.load_data.side_effect = IOError("Network unreachable")
+    mock_gcs_reader.return_value = mock_reader_instance
+
+    repo = GCPDocumentRepository()
+
+    with pytest.raises(GCSLoadError) as exc_info:
+        repo.load_documents(location="gs://test-bucket/data/")
+
+    assert exc_info.value.location == "gs://test-bucket/data/"
+    assert "Network unreachable" in exc_info.value.reason
+
+
+@patch("src.data_loading.gcp.GCSReader")
+def test__gcp_document_repository__raises_gcs_load_error_on_permission_error(mock_gcs_reader):
+    """GCS load failures from PermissionError raise GCSLoadError."""
+    mock_reader_instance = MagicMock()
+    mock_reader_instance.load_data.side_effect = PermissionError("Access denied")
+    mock_gcs_reader.return_value = mock_reader_instance
+
+    repo = GCPDocumentRepository()
+
+    with pytest.raises(GCSLoadError) as exc_info:
+        repo.load_documents(location="gs://secure-bucket/file.txt")
+
+    assert exc_info.value.location == "gs://secure-bucket/file.txt"
+    assert "Access denied" in exc_info.value.reason

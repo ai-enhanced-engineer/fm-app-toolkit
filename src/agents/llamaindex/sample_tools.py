@@ -26,9 +26,10 @@ def calculate(expression: str) -> str:
     """Perform a simple calculation with basic math operators."""
     import ast
     import operator
+    from typing import Union
 
     # Define safe operators
-    ops = {
+    ops: dict[type, object] = {
         ast.Add: operator.add,
         ast.Sub: operator.sub,
         ast.Mult: operator.mul,
@@ -36,13 +37,15 @@ def calculate(expression: str) -> str:
         ast.USub: operator.neg,
     }
 
-    def _safe_eval(node):
+    def _safe_eval(node: ast.expr) -> Union[int, float]:
         if isinstance(node, ast.Constant):  # numbers
-            return node.value
+            return node.value  # type: ignore[return-value]
         elif isinstance(node, ast.BinOp):  # binary operations
-            return ops[type(node.op)](_safe_eval(node.left), _safe_eval(node.right))
+            op_func = ops[type(node.op)]
+            return op_func(_safe_eval(node.left), _safe_eval(node.right))  # type: ignore[operator,no-any-return]
         elif isinstance(node, ast.UnaryOp):  # unary operations
-            return ops[type(node.op)](_safe_eval(node.operand))
+            op_func = ops[type(node.op)]
+            return op_func(_safe_eval(node.operand))  # type: ignore[operator,no-any-return]
         else:
             raise ValueError(f"Unsupported operation: {type(node)}")
 

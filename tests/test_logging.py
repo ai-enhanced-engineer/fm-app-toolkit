@@ -4,12 +4,15 @@ These tests demonstrate the core logging functionality without excessive repetit
 Each test teaches a specific concept about the logging system.
 """
 
+import concurrent.futures
 import logging
 import sys
+import threading
 
 import pytest
 from pytest import LogCaptureFixture, MonkeyPatch
 
+import src.logging
 from src.logging import (
     LoggingContext,
     bind_contextvars,
@@ -140,3 +143,81 @@ def test_logging_configuration_combinations(
         log_output = caplog.records[0].message
         assert f'"level": "{expected_level}"' in log_output
         assert f'"stream": "{expected_stream}"' in log_output
+
+
+# Thread-safety tests for logging initialization
+class TestThreadSafeLogging:
+    """Tests for thread-safe logging initialization."""
+
+    def test__get_logger__thread_safe_initialization(self) -> None:
+        """Multiple threads calling get_logger concurrently initializes only once."""
+        # Reset configuration state
+        original_configured = src.logging._configured
+        src.logging._configured = False
+
+        call_count = 0
+        original_configure = src.logging.configure_structlog
+
+        def counting_configure(*args, **kwargs):  # type: ignore[no-untyped-def]
+            nonlocal call_count
+            call_count += 1
+            return original_configure(*args, **kwargs)
+
+        # Patch to count calls
+        src.logging.configure_structlog = counting_configure  # type: ignore[assignment]
+
+        try:
+
+            def get_logger_task() -> object:
+                logger = get_logger(f"test_thread_{threading.current_thread().ident}")
+                return logger
+
+            # Execute from 10 threads concurrently
+            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                futures = [executor.submit(get_logger_task) for _ in range(10)]
+                results = [f.result() for f in futures]
+
+            # Should only configure once despite 10 concurrent calls
+            assert call_count == 1
+            assert len(results) == 10
+        finally:
+            # Cleanup
+            src.logging.configure_structlog = original_configure  # type: ignore[assignment]
+            src.logging._configured = original_configured
+
+    def test__get_logger__returns_logger_after_concurrent_init(self) -> None:
+        """All threads receive valid logger instances."""
+        src.logging._configured = False
+
+        loggers: list[object] = []
+        lock = threading.Lock()
+
+        def collect_logger() -> None:
+            logger = get_logger(f"thread_{threading.current_thread().ident}")
+            with lock:
+                loggers.append(logger)
+
+        threads = [threading.Thread(target=collect_logger) for _ in range(5)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        # All threads should have received valid loggers
+        assert len(loggers) == 5
+        for logger in loggers:
+            assert logger is not None
+            assert hasattr(logger, "info")
+
+    def test__configure_lock_exists__prevents_race_conditions(self) -> None:
+        """Verify the configure lock attribute exists."""
+        assert hasattr(src.logging, "_configure_lock")
+        assert isinstance(src.logging._configure_lock, type(threading.Lock()))
+
+    def test__configured_flag__is_set_after_init(self) -> None:
+        """Verify _configured flag is set after initialization."""
+        # Force reconfiguration
+        src.logging._configured = False
+        get_logger("test")
+
+        assert src.logging._configured is True

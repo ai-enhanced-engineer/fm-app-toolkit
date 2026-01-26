@@ -16,8 +16,7 @@ and provides better error handling and observability.
 """
 
 import operator
-from dataclasses import dataclass
-from typing import Annotated, Any, Callable, Literal, TypedDict
+from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
@@ -25,14 +24,7 @@ from langchain_core.tools import tool as langchain_tool
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-
-@dataclass
-class Tool:
-    """Simple tool representation - a function with metadata."""
-
-    name: str
-    description: str
-    function: Callable[..., Any]
+from src.agents.common import Tool
 
 
 # Define the agent's state - this is what gets passed between graph nodes

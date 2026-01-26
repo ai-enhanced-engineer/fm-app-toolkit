@@ -6,7 +6,8 @@ JSON and key-value formats, context variables, and proper log field handling.
 
 import logging
 import sys
-from typing import Any, Optional, TextIO
+import threading
+from typing import Any, TextIO
 
 import structlog
 from pydantic import Field
@@ -107,7 +108,7 @@ def _process_log_fields(logger: WrappedLogger, log_method: str, event_dict: Even
     return event_dict
 
 
-def configure_structlog(context: Optional[LoggingContext] = None) -> None:
+def configure_structlog(context: LoggingContext | None = None) -> None:
     if context is None:
         context = LoggingContext()
 
@@ -142,8 +143,8 @@ def configure_structlog(context: Optional[LoggingContext] = None) -> None:
 
     try:
         set_context_fields(context)
-    except Exception as e:
-        logging.error(f"Failed to configure structlog context: {e}")
+    except (ValueError, TypeError, AttributeError) as e:
+        logging.error("Failed to configure structlog context: %s", e)
         raise
 
 
@@ -177,7 +178,8 @@ def get_correlation_id() -> str:
     return str(contextvars.get("correlation_id", "unknown"))
 
 
-# Configure the logger when the module is imported
+# Thread-safe logger configuration
+_configure_lock = threading.Lock()
 _configured = False
 
 
@@ -185,9 +187,12 @@ def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
     """Get a configured structlog BoundLogger instance."""
     global _configured
     if not _configured:
-        configure_structlog()
-        _configured = True
+        with _configure_lock:
+            # Double-check pattern to avoid race conditions
+            if not _configured:
+                configure_structlog()
+                _configured = True
 
     if not name:
         name = __name__
-    return structlog.get_logger(name)  # type: ignore  # type: ignore
+    return structlog.get_logger(name)  # type: ignore[no-any-return]

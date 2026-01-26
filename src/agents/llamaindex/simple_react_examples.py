@@ -17,7 +17,8 @@ Or import the example function:
 
 from llama_index.core.llms.llm import LLM
 
-from src.agents.llamaindex.simple_react import SimpleReActAgent, Tool
+from src.agents.common import Tool
+from src.agents.llamaindex.simple_react import SimpleReActAgent
 
 
 async def example_usage(llm: LLM) -> None:

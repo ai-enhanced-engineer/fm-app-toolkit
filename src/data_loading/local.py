@@ -1,7 +1,5 @@
 """Local filesystem document repository implementation."""
 
-from typing import Optional
-
 import pandas as pd
 from llama_index.core import Document, SimpleDirectoryReader
 from pydantic import BaseModel, validate_call
@@ -22,9 +20,9 @@ class LocalDocumentRepository(DocumentRepository, BaseModel):
 
     input_dir: str
     recursive: bool = True
-    required_exts: Optional[list[str]] = None
+    required_exts: list[str] | None = None
     exclude_hidden: bool = True
-    num_files_limit: Optional[int] = None
+    num_files_limit: int | None = None
 
     @validate_call
     def load_documents(self, location: str) -> list[Document]:
